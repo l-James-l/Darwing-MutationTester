@@ -1,4 +1,8 @@
-﻿static class Program
+﻿using Microsoft.Build.Locator;
+using Microsoft.CodeAnalysis.CSharp.Scripting;
+using Microsoft.CodeAnalysis.Scripting;
+
+static class Program
 {
     public static void Main(string[] args)
     {
@@ -8,5 +12,18 @@
         //  Calling the class that will handle initating the process of mutation testing
 
         Console.WriteLine("Hello world");
+
+
+        LoadingSyntaxTreePrototype prototype = new LoadingSyntaxTreePrototype();
+        try
+        {
+            prototype.LoadSlnUsingBuildAnalyzer();
+            //prototype.LoadSyntaxTree();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+
     }
 }
