@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 public class LoadingSyntaxTreePrototype
 {
     private Dictionary<SyntaxNode, SyntaxNode> _mutatedTrees = new();
+    private Dictionary<string, string> _mutatedDlls = new();
 
     public async Task LoadSyntaxTree()
     {
@@ -142,6 +143,35 @@ public class LoadingSyntaxTreePrototype
         //{
         //    BuildProject(project);
         //});
+
+        RestoreDependenciesToMutatedProjects(analyzerManager, slnWorkspace);
+    }
+
+    private void RestoreDependenciesToMutatedProjects(AnalyzerManager analyzerManager, AdhocWorkspace slnWorkspace)
+    {
+        Console.WriteLine("Restoring mutated DLLs to dependent output directories...");
+
+        foreach (Project project in slnWorkspace.CurrentSolution.Projects)
+        {
+            string outputFile = project.OutputFilePath ?? throw new Exception("Output file path is null.");
+            string outputDir = Path.GetDirectoryName(outputFile) ?? throw new Exception("Could not establish the output directory");
+            foreach ((string dllName, string dllPath) in _mutatedDlls)
+            {
+                if (outputFile == dllPath)
+                {
+                    // Skip copying to self
+                    continue;
+                }
+
+                if (File.Exists(Path.Combine(outputDir, dllName)))
+                {
+                    string destinationPath = Path.Combine(outputDir, dllName);
+                    File.Copy(dllPath, destinationPath, true);
+
+                    Console.WriteLine($"Copied mutated DLL {dllName} to {destinationPath}");
+                }
+            }
+        }
     }
 
     private void BuildProject(Project project)
@@ -161,18 +191,20 @@ public class LoadingSyntaxTreePrototype
             string path = project.OutputFilePath ?? throw new Exception("Output file path is null.");
             string folderPath = path.Substring(0, path.LastIndexOf(Path.DirectorySeparatorChar));
             string fileName = path.Substring(path.LastIndexOf(Path.DirectorySeparatorChar) + 1);
-            //folderPath = Path.Combine(folderPath, "DarwingMutatedBuild");
+
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            EmitResult emitResult = compilation.Emit(Path.Combine(folderPath, fileName));
+            EmitResult emitResult = compilation.Emit(path);
 
             if (!emitResult.Success) 
             {
                 throw new Exception($"Compilation failed for project {project.Name}. {emitResult.Diagnostics}");
             }
+
+            _mutatedDlls.Add(fileName, path);
 
             Console.WriteLine($"Compilation completion status: {(emitResult.Success ? "Success" : "Failure")}");
 
