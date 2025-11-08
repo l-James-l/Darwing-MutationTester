@@ -1,11 +1,26 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36511.14 d17.14
+VisualStudioVersion = 17.14.36511.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mutator", "Mutator\Mutator.csproj", "{AD623C0D-196C-4389-9F9B-04BBAB61962D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutatatorTests", "MutatatorTests\MutatatorTests.csproj", "{D3CB8735-864C-4110-9931-CDEF99FC45C9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{B8199AA8-20F0-48C0-A2DB-25742CD864E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{F9FEEA2E-0036-4357-9133-BAE3B62EEB38}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreTests", "CoreTests\CoreTests.csproj", "{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLI", "CLI\CLI.csproj", "{DE78DAAD-5616-404D-A672-E31B1AF51E22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLITests", "CLITests\CLITests.csproj", "{2BEB7754-8586-490B-9581-93C93BC858D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +36,30 @@ Global
 		{D3CB8735-864C-4110-9931-CDEF99FC45C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3CB8735-864C-4110-9931-CDEF99FC45C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3CB8735-864C-4110-9931-CDEF99FC45C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9FEEA2E-0036-4357-9133-BAE3B62EEB38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9FEEA2E-0036-4357-9133-BAE3B62EEB38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9FEEA2E-0036-4357-9133-BAE3B62EEB38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9FEEA2E-0036-4357-9133-BAE3B62EEB38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE78DAAD-5616-404D-A672-E31B1AF51E22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE78DAAD-5616-404D-A672-E31B1AF51E22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE78DAAD-5616-404D-A672-E31B1AF51E22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE78DAAD-5616-404D-A672-E31B1AF51E22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BEB7754-8586-490B-9581-93C93BC858D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BEB7754-8586-490B-9581-93C93BC858D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BEB7754-8586-490B-9581-93C93BC858D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BEB7754-8586-490B-9581-93C93BC858D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D3CB8735-864C-4110-9931-CDEF99FC45C9} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
+		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
+		{2BEB7754-8586-490B-9581-93C93BC858D2} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4998069E-100D-48FB-BC54-DBF5BC1358F3}
