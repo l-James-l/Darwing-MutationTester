@@ -1,6 +1,5 @@
-﻿using Core.Startup;
-using Core;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Models.Exceptions;
 
 /// <summary>
 /// Main entry point for the CLI application.
@@ -11,6 +10,8 @@ public class Program
     {
         //Create a new container to pass to the DependencyRegistrar
 
-        new DependencyRegistrar(new ServiceCollection());        
+        IServiceProvider serviceProvider = new CliDependencyRegistrar(new ServiceCollection()).Build();
+        CLIApp cLIApp = serviceProvider.GetService<CLIApp>() ?? throw new FatalException("Failed to resolve CLI");
+        cLIApp.Run(args);
     }
 }

@@ -15,6 +15,6 @@ public partial class MainWindow : Window
 
         Title = "Darwing GUI";
 
-        new DependencyRegistrar(new ServiceCollection());
+        //new DependencyRegistrar(new ServiceCollection()).Build();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Serilog;
+using Serilog.Events;
 
 namespace CoreTests.Startup;
 
@@ -29,11 +30,11 @@ public class EstablishLoggerConfiguration
         try
         {
             Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .WriteTo.File(logFilePath)
+            .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information)
+            .WriteTo.File(logFilePath).MinimumLevel.Debug()
             .CreateLogger();
 
-            Log.Information($"Logger established at {logFilePath}.");
+            Log.Debug($"Logger established at {logFilePath}.");
         }
         catch
         {
@@ -44,6 +45,21 @@ public class EstablishLoggerConfiguration
             if (!File.Exists(logFilePath))
             {
                 throw new Exception("Logger file was not created successfully.");
+            }
+        }
+
+        RemoveOldLogFiles(workingDir);
+    }
+
+    private void RemoveOldLogFiles(string workingDir)
+    {
+        // Keep only the 5 most recent log files to avoid excessive disk usage.
+        string[] files = Directory.GetFiles(workingDir, "Logs\\Log-*.txt");
+        if (files.Length > 5)
+        {
+            foreach (string file in files.OrderBy(File.GetCreationTime).Take(files.Length - 5))
+            {
+                File.Delete(file);
             }
         }
     }

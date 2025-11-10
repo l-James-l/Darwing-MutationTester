@@ -1,31 +1,66 @@
-﻿using CoreTests.Startup;
+﻿using Core.IndustrialEstate;
+using CoreTests.Startup;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Core.Startup;
 
-public class DependencyRegistrar
+public abstract class DependencyRegistrar
 {
-    private readonly IServiceCollection _services;
-    private readonly ServiceProvider _serviceProvider;
+    protected readonly IServiceCollection Services;
+    private ServiceProvider? _serviceProvider;
 
     public DependencyRegistrar(IServiceCollection serviceCollection)
     {
         ArgumentNullException.ThrowIfNull(serviceCollection);
 
-        _services = serviceCollection;
+        Services = serviceCollection;
+    }
+
+    public IServiceProvider Build()
+    { 
+        if (_serviceProvider != null)
+        {
+            throw new InvalidOperationException("Service provider has already been built.");
+        }
 
         RegisterDependencies();
 
-        _serviceProvider = _services.BuildServiceProvider();
+        _serviceProvider = Services.BuildServiceProvider();
 
         //Get the logger configuration to ensure it's created at startup, thus logging is available immediately.
         _serviceProvider.GetService<EstablishLoggerConfiguration>();
+        StartUpProcesses();
+
+        return _serviceProvider;
+    }
+
+    protected virtual void RegisterLocalDependencies()
+    {
+        // For override in different interaces to core.
     }
 
     private void RegisterDependencies()
     {
-        _services.AddSingleton<IEventAggregator, EventAggregator>();
-        _services.AddSingleton<EstablishLoggerConfiguration>();
-        _services.AddSingleton<ISolutionPathProvidedAwaiter, SolutionPathProvidedAwaiter>();
+        Services.AddSingleton<IEventAggregator, EventAggregator>();
+        Services.AddSingleton<EstablishLoggerConfiguration>();
+        Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
+
+        Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //Startup process and solution provider.
+
+        RegisterLocalDependencies();
+    }
+
+    private void StartUpProcesses()
+    {
+        if (_serviceProvider == null)
+        {
+            throw new RegistrationException("Attempted to register Start up process before creating the service provider.");
+        }
+
+        IEnumerable<IStartUpProcess> startUpProcesses = _serviceProvider.GetServices<IStartUpProcess>();
+        foreach (IStartUpProcess process in startUpProcesses)
+        {
+            process.StartUp();
+        }
     }
 }

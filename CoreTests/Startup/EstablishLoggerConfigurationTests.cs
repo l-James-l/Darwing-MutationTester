@@ -63,4 +63,37 @@ public class EstablishLoggerConfigurationTests
         // Act & Assert - constructor should not throw
         Assert.DoesNotThrow(() => new EstablishLoggerConfiguration());
     }
+
+    [Test]
+    public void GivenMoreThanFiveLogFiles_WhenLoggerConstructed_OldFilesAreDeletedLeavingFive()
+    {
+        // Arrange
+        var logsDir = Path.Combine(_tempDir, "Logs");
+        Directory.CreateDirectory(logsDir);
+
+        // Create 6 existing log files with different creation times (older to newer)
+        var existingFiles = Enumerable.Range(1, 6).Select(i =>
+        {
+            var path = Path.Combine(logsDir, $"Log-old-{i}.txt");
+            File.WriteAllText(path, $"old file {i}");
+            // set creation time so that lower i => older
+            File.SetCreationTime(path, DateTime.UtcNow.AddDays(-10).AddMinutes(i));
+            return path;
+        }).ToArray();
+
+        // Sanity: there are 6 files before construction
+        Assert.That(Directory.GetFiles(logsDir, "Log-*.txt").Length, Is.EqualTo(6));
+
+        // Act - constructing will create another log file and then prune old files to 5
+        Assert.DoesNotThrow(() => new EstablishLoggerConfiguration());
+
+        // Assert - only 5 most recent log files remain
+        var finalFiles = Directory.GetFiles(logsDir, "Log-*.txt").OrderBy(File.GetCreationTime).ToArray();
+        Assert.That(finalFiles.Length, Is.EqualTo(5), "There should only be 5 log files after pruning");
+
+        // Ensure the remaining files are the newest ones (i.e., not the oldest existing files)
+        // The oldest existing file (Log-old-1) should have been deleted
+        bool oldestExists = finalFiles.Any(f => Path.GetFileName(f).Contains("Log-old-1"));
+        Assert.IsFalse(oldestExists, "The oldest log file should have been deleted");
+    }
 }
