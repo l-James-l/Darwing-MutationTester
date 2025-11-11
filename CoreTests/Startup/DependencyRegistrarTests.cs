@@ -3,6 +3,7 @@ using Core;
 using Core.IndustrialEstate;
 using Core.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using Models;
 using NSubstitute;
 
 namespace CoreTests.Startup;
@@ -31,6 +32,8 @@ internal class DependencyRegistrarTests
         AssertBasicRegistartion<EstablishLoggerConfiguration>();
         AssertBasicRegistartion<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         AssertBasicRegistartion<IEventAggregator, EventAggregator>();
+        AssertBasicRegistartion<IMutationSettings, MutationSettings>();
+        AssertBasicRegistartion<IStartUpProcess, SolutionProfileDeserializer>();
     }
 
     [Test]

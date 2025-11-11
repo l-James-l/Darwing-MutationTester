@@ -47,6 +47,7 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<EstablishLoggerConfiguration>();
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
+        Services.AddSingleton<IStartUpProcess, SolutionProfileDeserializer>();
 
         Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //Startup process and solution provider.
 

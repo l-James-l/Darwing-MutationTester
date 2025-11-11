@@ -1,0 +1,17 @@
+﻿TestProjects:
+  - Project1
+  - Project2
+  
+ProjectsToMutate:
+  - MutateMe
+  
+SpecificMutations:
+  AddToSubtract: true
+  SubtractToAdd: false
+  
+MutationCategories:
+  Arithmetic: true
+  Logical: true
+
+GeneralSettings:
+  SingleMutantPerLine: false    

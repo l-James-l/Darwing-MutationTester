@@ -3,7 +3,10 @@
 public class MutationSettings : IMutationSettings
 {
     /// <inheritdoc/>
-    public bool DevMode { get; set; }
+    public SolutionProfileData? SolutionProfileData { get; set; }
+
+    /// <inheritdoc/>
+    public bool DevMode { get; set; } = false;
 
     /// <inheritdoc/>
     public string SolutionPath { get; set; } = "";
