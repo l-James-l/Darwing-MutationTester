@@ -1,4 +1,5 @@
-﻿using Core;
+﻿using CLI;
+using Core;
 using Core.IndustrialEstate;
 using Core.Startup;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +58,7 @@ internal class DependencyRegistrarTests
 
     private void AssertRegisterManySingleton<T>(Type[] baseTypes)
     {
-        AssertBasicRegistartion<T, T>();
+        AssertBasicRegistartion<T>();
         foreach (Type type in baseTypes)
         {
             _services.Received(1).Add(Arg.Is<ServiceDescriptor>(x =>

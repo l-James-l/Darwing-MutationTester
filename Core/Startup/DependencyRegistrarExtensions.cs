@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Models.Exceptions;
 
 namespace Core.Startup;
 
@@ -19,17 +20,5 @@ public static class DependencyRegistrarExtensions
         {
             services.AddSingleton(type, provider => provider.GetService<T>() ?? throw new RegistrationException(typeof(T), type));
         }
-    }
-}
-
-public class RegistrationException : Exception
-{
-    public RegistrationException(string msg) : base(msg)
-    {
-        
-    }
-
-    public RegistrationException(Type t1, Type t2) : base($"Failed to register insance of {t1} against {t2}")
-    {
     }
 }

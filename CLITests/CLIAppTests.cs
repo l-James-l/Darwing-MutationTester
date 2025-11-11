@@ -1,4 +1,6 @@
-﻿using Core;
+﻿using CLI;
+using Core;
+using Models;
 using Models.Events;
 using NSubstitute;
 
@@ -8,8 +10,10 @@ public class CLIAppTests
 {
     private CLIApp _app; //SUT
 
-    private TextReader _originalIn;
     private IEventAggregator _eventAggregator;
+    private IMutationSettings _mutationSettings;
+
+    private TextReader _originalIn;
     private SolutionPathProvided _solutionPathProvided;
 
     [SetUp]
@@ -17,12 +21,13 @@ public class CLIAppTests
     {
         _originalIn = Console.In;
         _eventAggregator = Substitute.For<IEventAggregator>();
+        _mutationSettings = Substitute.For<IMutationSettings>();
 
         _solutionPathProvided = Substitute.For<SolutionPathProvided>();
 
         _eventAggregator.GetEvent<SolutionPathProvided>().Returns(_solutionPathProvided);
 
-        _app = new CLIApp(_eventAggregator);
+        _app = new CLIApp(_eventAggregator, _mutationSettings);
     }
 
     [TearDown]
@@ -72,6 +77,33 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _solutionPathProvided.Received(1).Publish(Arg.Is<SolutionPathProvidedPayload>(x => x.SolutionPath == string.Empty));
+        _solutionPathProvided.Received(0).Publish(Arg.Any<SolutionPathProvidedPayload>());
+    }
+
+    [Test]
+    public void GivenNotDevModeAndNoInput_WhenRun_ThenLogsErrorAndDoesNotPublish()
+    {
+        // Arrange
+        Console.SetIn(new StringReader(Environment.NewLine));
+        
+        // Act
+        _app.Run(Array.Empty<string>());
+     
+        // Assert
+        _solutionPathProvided.DidNotReceive().Publish(Arg.Any<SolutionPathProvidedPayload>());
+    }
+
+    [Test]
+    public void GivenSlnPathInArgs_WhenRun_ThenPublishesThatPath()
+    {
+        // Arrange
+        const string argPath = "C:\\temp\\ArgSolution.sln";
+        var args = new[] { "--sln", argPath };
+        
+        // Act
+        _app.Run(args);
+        
+        // Assert
+        _solutionPathProvided.Received(1).Publish(Arg.Is<SolutionPathProvidedPayload>(x => x.SolutionPath == argPath));
     }
 }

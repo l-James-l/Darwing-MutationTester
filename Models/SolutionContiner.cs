@@ -2,7 +2,7 @@
 using Buildalyzer.Workspaces;
 using Microsoft.CodeAnalysis;
 
-namespace Core;
+namespace Models;
 
 public class SolutionContiner : ISolutionContainer
 {

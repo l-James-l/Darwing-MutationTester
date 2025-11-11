@@ -1,6 +1,7 @@
 ﻿using Buildalyzer;
 using Core.IndustrialEstate;
 using Core.Startup;
+using Models;
 using Models.Events;
 using Serilog;
 

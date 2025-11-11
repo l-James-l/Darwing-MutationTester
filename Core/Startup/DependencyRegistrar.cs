@@ -1,6 +1,8 @@
 ﻿using Core.IndustrialEstate;
 using CoreTests.Startup;
 using Microsoft.Extensions.DependencyInjection;
+using Models;
+using Models.Exceptions;
 
 namespace Core.Startup;
 
@@ -44,6 +46,7 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<IEventAggregator, EventAggregator>();
         Services.AddSingleton<EstablishLoggerConfiguration>();
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
+        Services.AddSingleton<IMutationSettings, MutationSettings>();
 
         Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //Startup process and solution provider.
 

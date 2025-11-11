@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CLI;
+using Microsoft.Extensions.DependencyInjection;
 using Models.Exceptions;
 
 /// <summary>
