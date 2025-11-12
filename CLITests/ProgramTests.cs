@@ -20,10 +20,6 @@ public class ProgramTests
         _originalIn = Console.In;
         // Provide a blank line so CLIApp.ReadLine will return and not block
         Console.SetIn(new StringReader(Environment.NewLine));
-
-        // Set the console out and logging to be intercepted so we dont clog up the test output
-        Console.SetOut(new StringWriter(new StringBuilder()));
-        Log.Logger = new LoggerConfiguration().WriteTo.TestCorrelator().CreateLogger();
     }
 
     [TearDown]
@@ -44,7 +40,7 @@ public class ProgramTests
         }
     }
 
-    [Test]
+    [Test, Explicit("This test is basically just for the sake of it, and it cloggs up the test output because it creates a real logger.")]
     public void WhenMainCalled_ThenDoesNotThrow()
     {
         //TODO, this doesnt actually test anything. exeptions dont cause this test to fail. find fix.
