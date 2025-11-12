@@ -41,4 +41,12 @@ public class SolutionProfileGeneralSettings
 {
     [DefaultValue(true)]
     public bool SingleMutantPerLine { get; set; } = true;
+
+    /// <summary>
+    /// Allows setting of custom timeouts for when a build process is considered failed.
+    /// It is possible for builds to get stuck, so after some time we need to assume its failed.
+    /// But some projects may just need longer to build.
+    /// Value is in seconds.
+    /// </summary>
+    public int? BuildTimeout { get; set; }
 }

@@ -9,10 +9,21 @@ namespace Core;
 
 public class ProjectBuilder : IProjectBuilder
 {
+    private readonly IMutationSettings _mutationSettings;
+    private const int _defaultProcessTimeout = 5;
+    private TimeSpan _processTimeout = TimeSpan.FromSeconds(_defaultProcessTimeout);
+
     private Regex _errorOutPutRegex = new Regex(@"error (\S)*: ", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
+    public ProjectBuilder(IMutationSettings settings)
+    {
+        _mutationSettings = settings;
+    }
 
     public bool InitialBuild(SolutionContainer solution)
     {
+        _processTimeout = TimeSpan.FromSeconds(_mutationSettings.SolutionProfileData?.GeneralSettings.BuildTimeout ?? _defaultProcessTimeout);
+
         // The build process will have exit code 1 if the build failed.
         Log.Information("Performing initial build");
         List<Project> failedBuilds = new();
@@ -26,39 +37,6 @@ public class ProjectBuilder : IProjectBuilder
 
         return true;
     }
-
-    private bool RetryFailedProjectBuilds(List<Project> failedBuilds)
-    {
-        foreach (Project projToRety in failedBuilds)
-        {
-            //Clean the project
-            Process cleaningProcess = GenerateCleanProcess(projToRety.FilePath);
-            cleaningProcess.Start();
-            cleaningProcess.WaitForExit();
-
-            //Restore project dependencies
-            Process restoreProcess = GenerateRestoreProcess(projToRety.FilePath);
-            restoreProcess.Start();
-            restoreProcess.WaitForExit();
-
-            //Retry the build
-            Process buildRetyProcess = GenerateBuildProcess(projToRety.FilePath);
-            buildRetyProcess.Start();
-            buildRetyProcess.WaitForExit();
-
-            if (buildRetyProcess.ExitCode == 0)
-            {
-                Log.Information($"Retrying build for {projToRety.Name} was successful");
-                continue;
-            }
-
-            // Second attempt at building the project failed. Return out, dont bother retrying any other failed projects.
-            return false;
-        }
-
-        return true;
-    }
-
     private void TryBuildAllProjects(SolutionContainer solution, List<Project> failedBuilds)
     {
         foreach (Project proj in solution.AllProjects)
@@ -67,9 +45,9 @@ public class ProjectBuilder : IProjectBuilder
 
             var buildingProcess = GenerateBuildProcess(proj.FilePath);
             buildingProcess.Start();
-            buildingProcess.WaitForExit();
+            bool buildCompleted = buildingProcess.WaitForExit(_processTimeout);
 
-            if (buildingProcess.ExitCode == 0)
+            if (buildCompleted && buildingProcess.ExitCode == 0)
             {
                 Log.Information($"{proj.Name} build succesful");
                 continue;
@@ -95,6 +73,53 @@ public class ProjectBuilder : IProjectBuilder
                 }
             }
         }
+    }
+
+    private bool RetryFailedProjectBuilds(List<Project> failedBuilds)
+    {
+        Log.Information("Retrying builds for failed projects.");
+
+        foreach (Project projToRetry in failedBuilds)
+        {
+            Log.Information($"Cleaning {projToRetry.Name}");
+            //Clean the project
+            Process cleaningProcess = GenerateCleanProcess(projToRetry.FilePath);
+            cleaningProcess.Start();
+            bool cleaningCompleted = cleaningProcess.WaitForExit(_processTimeout);
+            if (!cleaningCompleted || cleaningProcess.ExitCode != 0)
+            {
+                Log.Information($"Failed to clean {projToRetry.Name}");
+                return false;
+            }
+
+            Log.Information($"Restoring dependencies for {projToRetry.Name}");
+            //Restore project dependencies
+            Process restoreProcess = GenerateRestoreProcess(projToRetry.FilePath);
+            restoreProcess.Start();
+            bool restoreCompleted = restoreProcess.WaitForExit(_processTimeout);
+            if (!restoreCompleted || cleaningProcess.ExitCode != 0)
+            {
+                Log.Information($"Failed to retore dependecies for {projToRetry.Name}");
+                return false;
+            }
+
+            Log.Information($"Rebuilding {projToRetry.Name}");
+            //Retry the build
+            Process buildRetyProcess = GenerateBuildProcess(projToRetry.FilePath);
+            buildRetyProcess.Start();
+            bool buildCompleted = buildRetyProcess.WaitForExit(_processTimeout);
+
+            if (!buildCompleted || buildRetyProcess.ExitCode != 0)
+            {
+                // Second attempt at building the project failed. Return out, dont bother retrying any other failed projects.
+                Log.Information($"Rebuilding {projToRetry.Name} failed.");
+                return false;
+            }
+
+            Log.Information($"Retrying build for {projToRetry.Name} was successful");
+        }
+
+        return true;
     }
 
     private Process GenerateBuildProcess(string? path)

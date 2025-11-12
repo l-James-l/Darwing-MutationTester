@@ -22,6 +22,8 @@ public class SolutionProfileDeserializer : ISolutionProfileDeserializer
     {
         ArgumentNullException.ThrowIfNull(slnFilePath);
 
+        _mutationSettings.SolutionProfileData = null;
+
         string? directory = Path.GetDirectoryName(slnFilePath);
         if (directory == null)
         {

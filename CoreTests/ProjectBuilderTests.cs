@@ -9,12 +9,12 @@ namespace CoreTests;
 /// </summary>
 public class ProjectBuilderTests
 {
-    private ProjectBuilder _projectBuilder;
+    //private ProjectBuilder _projectBuilder;
 
     [SetUp]
     public void SetUp()
     {
-        _projectBuilder = new ProjectBuilder();
+        //_projectBuilder = new ProjectBuilder();
     }
 
     [Test]
