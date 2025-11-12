@@ -1,4 +1,5 @@
 using Castle.Core.Resource;
+using System.Text;
 namespace CLITests;
 
 public class ProgramTests
@@ -18,7 +19,7 @@ public class ProgramTests
         _originalIn = Console.In;
         // Provide a blank line so CLIApp.ReadLine will return and not block
         Console.SetIn(new StringReader(Environment.NewLine));
-        Console.SetOut(new StringWriter());
+        Console.SetOut(new StringWriter(new StringBuilder()));
     }
 
     [TearDown]
