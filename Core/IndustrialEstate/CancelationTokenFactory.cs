@@ -1,8 +1,22 @@
-﻿namespace Core.IndustrialEstate;
+namespace Core.IndustrialEstate;
 
-public class CancelationTokenFactory : ICancelationTokenFactory
+public class CancelationTokenFactory : ICancelationTokenFactory, IDisposable
 {
-    public ICancellationTokenWrapper Generate() => new CancellationTokenWrapper();
+    private List<CancellationTokenWrapper> _allTokens = new();
+
+    public void Dispose()
+    {
+        _allTokens.ForEach(t => t.Dispose());
+        GC.SuppressFinalize(this);
+    }
+
+    public ICancellationTokenWrapper Generate()
+    {
+
+        CancellationTokenWrapper cancellationTokenWrapper = new();
+        _allTokens.Add(cancellationTokenWrapper);
+        return cancellationTokenWrapper;
+    }
 }
 
 public interface ICancelationTokenFactory
