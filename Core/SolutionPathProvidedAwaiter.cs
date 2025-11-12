@@ -21,7 +21,6 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     private readonly IAnalyzerManagerFactory _analyzerManagerFactory;
     private readonly ISolutionProfileDeserializer _slnProfileDeserializer;
     private readonly IMutationSettings _mutationSettings;
-    private readonly IProjectBuilder _projectBuilder;
 
     public SolutionContainer SolutionContiner => _solutionContainer ?? throw new InvalidOperationException("Attempted to retrieve a solution before one has been loaded.");
     private SolutionContainer? _solutionContainer;
@@ -29,26 +28,24 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     public bool IsAvailable => _solutionContainer != null;
 
     public SolutionPathProvidedAwaiter(IEventAggregator eventAggregator, IAnalyzerManagerFactory analyzerManagerFactory, 
-        ISolutionProfileDeserializer slnProfileDeserializer, IMutationSettings mutationSettings, IProjectBuilder projectBuilder)
+        ISolutionProfileDeserializer slnProfileDeserializer, IMutationSettings mutationSettings)
     {
         ArgumentNullException.ThrowIfNull(eventAggregator);
         ArgumentNullException.ThrowIfNull(analyzerManagerFactory);
         ArgumentNullException.ThrowIfNull(slnProfileDeserializer);
         ArgumentNullException.ThrowIfNull(mutationSettings);
-        ArgumentNullException.ThrowIfNull(projectBuilder);
 
         _eventAggregator = eventAggregator;
         _analyzerManagerFactory = analyzerManagerFactory;
         _slnProfileDeserializer = slnProfileDeserializer;
         _mutationSettings = mutationSettings;
-        _projectBuilder = projectBuilder;
     }
 
     public void StartUp()
     {
         //By using the startup process, we ensure the DI container will construct this class at application start.
         //Thus ensuring the subscription is made.
-        _eventAggregator.GetEvent<SolutionPathProvided>().Subscribe(OnSolutionPathProvided);
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided);
     }
 
     private void OnSolutionPathProvided(SolutionPathProvidedPayload payload)
@@ -80,7 +77,7 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
             //Deserializer shall handle its own exceptions.
             _slnProfileDeserializer.LoadSlnProfileIfPresent(payload.SolutionPath);
             _solutionContainer.FindTestProjects(_mutationSettings);
-            _projectBuilder.InitialBuild(_solutionContainer);
+            _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Publish();
         }
     }
 }

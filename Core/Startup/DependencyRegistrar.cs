@@ -49,9 +49,9 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
         Services.AddSingleton<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        Services.AddSingleton<IProjectBuilder, ProjectBuilder>();
-
-        Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //Startup process and solution provider.
+        Services.RegisterManySingleton<ProjectBuilder>(); //IStartupProcess && IWasBuildSuccessful
+        Services.AddSingleton<ICancelationTokenFactory, CancelationTokenFactory>();
+        Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //IStartupProcess and ISolutionProvider.
 
         RegisterLocalDependencies();
     }

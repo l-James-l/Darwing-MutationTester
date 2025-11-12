@@ -22,22 +22,8 @@ public class CLICommandLineParserTests
         _mutationSettings.ParseCliArgs(args);
         
         // Assert
-        Assert.That(_mutationSettings.DevMode, Is.False);
         Assert.That(_mutationSettings.SolutionPath, Is.Empty);
         Assert.That(_mutationSettings.TestProjectNames, Is.Empty);
-    }
-
-    [Test]
-    public void GivenDevModeFlag_WhenParseCliArgs_ThenDevModeSet()
-    {
-        // Arrange
-        string[] args = new[] { "--dev" };
-
-        // Act
-        _mutationSettings.ParseCliArgs(args);
-        
-        // Assert
-        Assert.That(_mutationSettings.DevMode, Is.True);
     }
 
     [Test]

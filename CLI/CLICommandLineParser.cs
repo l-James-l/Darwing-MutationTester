@@ -2,7 +2,6 @@
 
 public static class CLICommandLineParser
 {
-    private const string devModeFlag = "--dev";
     private const string slnPathFlag = "--sln";
     private const string testProjectFlag = "--test-projects";
 
@@ -17,8 +16,6 @@ public static class CLICommandLineParser
         ArgumentNullException.ThrowIfNull(args);
 
         List<string> argsList = args.ToList();
-
-        mutationSettings.DevMode = args.Any(x => x == devModeFlag);
 
         // Check for solution path flag. --sln <path>
         if (argsList.IndexOf(slnPathFlag) is int slnFlagIndex && slnFlagIndex != -1)

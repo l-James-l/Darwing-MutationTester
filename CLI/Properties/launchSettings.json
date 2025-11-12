@@ -2,7 +2,7 @@
   "profiles": {
     "CLI": {
       "commandName": "Project",
-      "commandLineArgs": "--dev"
+      "commandLineArgs": "--sln C:\\Users\\THINKPAD\\Documents\\git\\SimpleTestProject\\SimpleTestProject.sln"
     }
   }
 }

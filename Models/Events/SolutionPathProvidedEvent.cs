@@ -1,6 +1,6 @@
 ﻿namespace Models.Events;
 
-public class SolutionPathProvided : PubSubEvent<SolutionPathProvidedPayload> { }
+public class SolutionPathProvidedEvent : PubSubEvent<SolutionPathProvidedPayload> { }
 
 public class SolutionPathProvidedPayload
 {

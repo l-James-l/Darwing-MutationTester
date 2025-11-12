@@ -6,9 +6,6 @@ public class MutationSettings : IMutationSettings
     public SolutionProfileData? SolutionProfileData { get; set; }
 
     /// <inheritdoc/>
-    public bool DevMode { get; set; } = false;
-
-    /// <inheritdoc/>
     public string SolutionPath { get; set; } = "";
 
     /// <inheritdoc/>

@@ -18,9 +18,9 @@ public class SolutionPathProvidedAwaiterTests
     private IAnalyzerManagerFactory _analyzerManagerFactory;
     private ISolutionProfileDeserializer _slnProfileDeserializer;
     private IMutationSettings _mutationSettings;
-    private IProjectBuilder _projectBuilder;
 
-    private SolutionPathProvided _solutionPathProvided;
+    private SolutionPathProvidedEvent _solutionPathProvided;
+    private RequestSolutionBuildEvent _requestSolutionBuild;
 
     [SetUp]
     public void Setup()
@@ -29,33 +29,32 @@ public class SolutionPathProvidedAwaiterTests
         _analyzerManagerFactory = Substitute.For<IAnalyzerManagerFactory>();
         _slnProfileDeserializer = Substitute.For<ISolutionProfileDeserializer>();
         _mutationSettings = Substitute.For<IMutationSettings>();
-        _projectBuilder = Substitute.For<IProjectBuilder>();
 
-        _solutionPathProvided = new SolutionPathProvided();
+        _solutionPathProvided = new SolutionPathProvidedEvent();
+        _requestSolutionBuild = new RequestSolutionBuildEvent();
 
-        _eventAggregator.GetEvent<SolutionPathProvided>().Returns(_solutionPathProvided);
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Returns(_solutionPathProvided);
+        _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Returns(_requestSolutionBuild);
 
-        _awaiter = new SolutionPathProvidedAwaiter(_eventAggregator, _analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _projectBuilder);
+        _awaiter = new SolutionPathProvidedAwaiter(_eventAggregator, _analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings);
     }
 
     [Test, Explicit("Fails on build sever due to local path. TODO to fix")]
     public void WhenOnSolutionPathProvidedWithValidPath_ThenCreateSolutionContainer()
     {
         // Arrange
-        var mockAnalyzerManager = Substitute.For<IAnalyzerManager>();
-
-        _analyzerManagerFactory.CreateAnalyzerManager(Arg.Any<string>()).Returns(mockAnalyzerManager);
+        _analyzerManagerFactory.CreateAnalyzerManager(Arg.Any<string>()).Returns(Substitute.For<IAnalyzerManager>());
         _awaiter.StartUp();
 
         //TODO this would fail on a build server
         const string SolutionPath = @"C:\Users\THINKPAD\Documents\git\SimpleTestProject\SimpleTestProject.sln";
 
         // Act
-        _eventAggregator.GetEvent<SolutionPathProvided>().Publish(new SolutionPathProvidedPayload(SolutionPath));
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(SolutionPath));
 
         // Assert
         _analyzerManagerFactory.Received(1).CreateAnalyzerManager(Arg.Is<string>(x => x == SolutionPath));
-        _projectBuilder.Received(1).InitialBuild(Arg.Is<SolutionContainer>(x => x.AnalyzerManager == mockAnalyzerManager));
+        _requestSolutionBuild.Received(1).Publish();
         _slnProfileDeserializer.Received(1).LoadSlnProfileIfPresent(SolutionPath);
     }
 

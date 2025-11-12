@@ -25,7 +25,7 @@ internal class DependencyRegistrarTests
     public void GivenConstructed_ThenAllDependenciesRegistered()
     {
         //Arrange
-        DependencyRegistrar registrar = new TetsRegistrar(_services);
+        DependencyRegistrar registrar = new TestRegistrar(_services);
 
         //Act
         registrar.Build();
@@ -37,7 +37,8 @@ internal class DependencyRegistrarTests
         AssertBasicRegistartion<IEventAggregator, EventAggregator>();
         AssertBasicRegistartion<IMutationSettings, MutationSettings>();
         AssertBasicRegistartion<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        AssertBasicRegistartion<IProjectBuilder, ProjectBuilder>();
+        AssertRegisterManySingleton<ProjectBuilder>([typeof(IStartUpProcess), typeof(IWasBuildSuccessfull)]);
+        AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
 
         _services.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
     }
@@ -74,12 +75,13 @@ internal class DependencyRegistrarTests
         {
             _expectedRegistrations++;
 
-            _services.Received(1).Add(Arg.Is<ServiceDescriptor>(x =>
+            _services.Received().Add(Arg.Is<ServiceDescriptor>(x =>
             x.Lifetime == ServiceLifetime.Singleton
             && x.ServiceType == type
             && x.ImplementationFactory != null));
         }
         //TODO: Further validate the implementation factory creates the correct instance. Dont currently know how to do this.
+        //This also means that where multiple classes are registered against the same class, cant assert this.
     }
 }
 
@@ -90,9 +92,9 @@ file class TestCliRegistrar : CliDependencyRegistrar
     }
 }
 
-file class TetsRegistrar : DependencyRegistrar
+file class TestRegistrar : DependencyRegistrar
 {
-    public TetsRegistrar(IServiceCollection serviceCollection) : base(serviceCollection)
+    public TestRegistrar(IServiceCollection serviceCollection) : base(serviceCollection)
     {
     }
 }
