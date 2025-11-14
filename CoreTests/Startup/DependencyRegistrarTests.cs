@@ -39,6 +39,9 @@ internal class DependencyRegistrarTests
         AssertBasicRegistartion<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
         AssertRegisterManySingleton<ProjectBuilder>([typeof(IStartUpProcess), typeof(IWasBuildSuccessfull)]);
         AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
+        AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
+        AssertBasicRegistartion<InitialTestRunInfo>();
+        AssertBasicRegistartion<IStartUpProcess, InitialTestRunnner>();
 
         _services.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
     }

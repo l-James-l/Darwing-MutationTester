@@ -1,6 +1,3 @@
-using Castle.Core.Resource;
-using Serilog;
-using System.Text;
 namespace CLITests;
 
 public class ProgramTests

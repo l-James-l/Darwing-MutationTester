@@ -49,4 +49,10 @@ public class SolutionProfileGeneralSettings
     /// Value is in seconds.
     /// </summary>
     public int? BuildTimeout { get; set; }
+
+    /// <summary>
+    /// Allows setting of a custom timeout for when a test run will be considered failed.
+    /// A generic timeout cannot be because it is impossoble to know how long a test run might take before it has been completed.
+    /// </summary>
+    public int? TestRunTimeout { get; set; }
 }

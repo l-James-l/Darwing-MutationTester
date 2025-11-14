@@ -6,6 +6,6 @@ public interface ISolutionProvider
 {
     public bool IsAvailable { get; }
 
-    SolutionContainer SolutionContiner { get; }
+    ISolutionContainer SolutionContiner { get; }
 
 }

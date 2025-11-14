@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Models;
 
-public class SolutionContainer
+public class SolutionContainer: ISolutionContainer
 {
     public IAnalyzerManager AnalyzerManager { get; init; }
 
@@ -12,16 +12,26 @@ public class SolutionContainer
 
     public Solution Solution => Workspace.CurrentSolution;
 
-    public List<Project> TestProjects { get; private set; } = new List<Project>();
+    public List<IProjectContainer> TestProjects { get; private set; } = new List<IProjectContainer>();
 
-    public List<Project> SolutionProjects { get; private set; } = new List<Project>();
+    public List<IProjectContainer> SolutionProjects { get; private set; } = new List<IProjectContainer>();
 
-    public List<Project> AllProjects => Solution.Projects.ToList();
+    public List<IProjectContainer> AllProjects { get; } = new List<IProjectContainer>();
 
     public SolutionContainer(IAnalyzerManager analyzerManager)
     {
         AnalyzerManager = analyzerManager;
         Workspace = analyzerManager.GetWorkspace();
+
+        DiscoverProjects();
+    }
+
+    private void DiscoverProjects()
+    {
+        foreach (Project project in Solution.Projects)
+        {
+            AllProjects.Add(new ProjectContainer(project));
+        }
     }
 
     public void FindTestProjects(IMutationSettings settings)
@@ -37,3 +47,9 @@ public class SolutionContainer
 }
 
 //TODO maybe: Create project container to hold information about each project, such as its path, analyzer and project instance etc.
+
+
+public interface ISolutionContainer
+{
+    public List<IProjectContainer> AllProjects { get; }
+}

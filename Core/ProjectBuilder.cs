@@ -1,4 +1,5 @@
-﻿using Core.Interfaces;
+﻿using Core.IndustrialEstate;
+using Core.Interfaces;
 using Core.Startup;
 using Microsoft.CodeAnalysis;
 using Models;
@@ -13,6 +14,7 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
 {
     private IEventAggregator _eventAggrgator;
     private readonly ISolutionProvider _solutionProvider;
+    private readonly IProcessWrapperFactory _processFactory;
     private readonly IMutationSettings _mutationSettings;
 
     private const int _defaultProcessTimeout = 5;
@@ -22,11 +24,13 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
 
     public bool WasLastBuildSuccessful { get; private set; } = false;
 
-    public ProjectBuilder(IMutationSettings settings, IEventAggregator eventAggregator, ISolutionProvider solutionProvider)
+    public ProjectBuilder(IMutationSettings settings, IEventAggregator eventAggregator, ISolutionProvider solutionProvider,
+        IProcessWrapperFactory processFactory)
     {
         _mutationSettings = settings;
         _eventAggrgator = eventAggregator;
         _solutionProvider = solutionProvider;
+        _processFactory = processFactory;
     }
 
     public void StartUp()
@@ -37,7 +41,7 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
     private void InitialBuild()
     {
         WasLastBuildSuccessful = false;
-        if (!_solutionProvider.IsAvailable || _solutionProvider.SolutionContiner is not { } solution)
+        if (!_solutionProvider.IsAvailable || _solutionProvider.SolutionContiner is null)
         {
             return;
         }
@@ -46,9 +50,9 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
 
         // The build process will have exit code 1 if the build failed.
         Log.Information("Performing initial build");
-        List<Project> failedBuilds = new();
+        List<IProjectContainer> failedBuilds = new();
 
-        TryBuildAllProjects(solution, failedBuilds);
+        TryBuildAllProjects(failedBuilds);
         
         if (failedBuilds.Count > 0 && !RetryFailedProjectBuilds(failedBuilds))
         {
@@ -60,67 +64,66 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             Log.Information("Building of solution succesful.");
         }
     }
-    private void TryBuildAllProjects(SolutionContainer solution, List<Project> failedBuilds)
+
+    private void TryBuildAllProjects(List<IProjectContainer> failedBuilds)
     {
-        foreach (Project proj in solution.AllProjects)
+        foreach (IProjectContainer proj in _solutionProvider.SolutionContiner.AllProjects)
         {
             Log.Information("Building project: " + proj.Name);
 
-            var buildingProcess = GenerateBuildProcess(proj.FilePath);
-            buildingProcess.Start();
-            bool buildCompleted = buildingProcess.WaitForExit(_processTimeout);
+            var buildingProcess = GenerateBuildProcess(proj.CsprojFilePath);
+            bool buildCompleted = buildingProcess.StartAndAwait(_processTimeout);
 
-            if (buildCompleted && buildingProcess.ExitCode == 0)
+            if (buildCompleted && buildingProcess.Success)
             {
                 Log.Information($"{proj.Name} build succesful");
                 continue;
             }
-            Log.Information($"{proj.Name} build failed");
+            Log.Error($"{proj.Name} build failed");
             failedBuilds.Add(proj);
             LogProcessOutput(proj, buildingProcess);
         }
     }
 
-    private bool RetryFailedProjectBuilds(List<Project> failedBuilds)
+    private bool RetryFailedProjectBuilds(List<IProjectContainer> failedBuilds)
     {
         Log.Information("Retrying builds for failed projects.");
 
-        foreach (Project projToRetry in failedBuilds)
+        foreach (IProjectContainer projToRetry in failedBuilds)
         {
             Log.Information($"Cleaning {projToRetry.Name}");
-            //Clean the project
-            Process cleaningProcess = GenerateCleanProcess(projToRetry.FilePath);
-            cleaningProcess.Start();
-            bool cleaningCompleted = cleaningProcess.WaitForExit(_processTimeout);
-            if (!cleaningCompleted || cleaningProcess.ExitCode != 0)
+
+            IProcessWrapper cleaningProcess = GenerateCleanProcess(projToRetry.CsprojFilePath);
+            bool cleaningCompleted = cleaningProcess.StartAndAwait(_processTimeout);
+            
+            if (!cleaningCompleted || !cleaningProcess.Success)
             {
-                Log.Information($"Failed to clean {projToRetry.Name}");
+                Log.Error($"Failed to clean {projToRetry.Name}");
                 LogProcessOutput(projToRetry, cleaningProcess);
                 return false;
             }
 
             Log.Information($"Restoring dependencies for {projToRetry.Name}");
-            //Restore project dependencies
-            Process restoreProcess = GenerateRestoreProcess(projToRetry.FilePath);
-            restoreProcess.Start();
-            bool restoreCompleted = restoreProcess.WaitForExit(_processTimeout);
-            if (!restoreCompleted || cleaningProcess.ExitCode != 0)
+
+            IProcessWrapper restoreProcess = GenerateRestoreProcess(projToRetry.CsprojFilePath);
+            bool restoreCompleted = restoreProcess.StartAndAwait(_processTimeout);
+
+            if (!restoreCompleted || !cleaningProcess.Success)
             {
-                Log.Information($"Failed to retore dependecies for {projToRetry.Name}");
+                Log.Error($"Failed to retore dependecies for {projToRetry.Name}");
                 LogProcessOutput(projToRetry, restoreProcess);
                 return false;
             }
 
             Log.Information($"Rebuilding {projToRetry.Name}");
-            //Retry the build
-            Process buildRetyProcess = GenerateBuildProcess(projToRetry.FilePath);
-            buildRetyProcess.Start();
-            bool buildCompleted = buildRetyProcess.WaitForExit(_processTimeout);
 
-            if (!buildCompleted || buildRetyProcess.ExitCode != 0)
+            IProcessWrapper buildRetyProcess = GenerateBuildProcess(projToRetry.CsprojFilePath);
+            bool buildCompleted = buildRetyProcess.StartAndAwait(_processTimeout);
+
+            if (!buildCompleted || !buildRetyProcess.Success)
             {
                 // Second attempt at building the project failed. Return out, dont bother retrying any other failed projects.
-                Log.Information($"Rebuilding {projToRetry.Name} failed.");
+                Log.Error($"Rebuilding {projToRetry.Name} failed.");
                 LogProcessOutput(projToRetry, buildRetyProcess);
                 return false;
             }
@@ -131,15 +134,15 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
         return true;
     }
 
-    private void LogProcessOutput(Project proj, Process buildingProcess)
+    private void LogProcessOutput(IProjectContainer proj, IProcessWrapper process)
     {
-        if (buildingProcess.StandardError.ReadToEnd() is string errorsOutput)
+        if (process.Errors.Count > 0)
         {
             Log.Information($"Errors encountered while trying to build {proj.Name}. Will clean and retry");
-            Log.Debug(errorsOutput);
+            process.Errors.ForEach(Log.Debug);
         }
 
-        while (buildingProcess.StandardOutput.ReadLine() is { } output)
+        foreach (string output in process.Output)
         {
             if (_errorOutPutRegex.IsMatch(output))
             {
@@ -152,51 +155,48 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
         }
     }
 
-    private Process GenerateBuildProcess(string? path)
+    private IProcessWrapper GenerateBuildProcess(string? path)
     {
-        return new Process
+        ProcessStartInfo startinfo = new()
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = $"build {Path.GetFileName(path)}",
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                WorkingDirectory = Path.GetDirectoryName(path)
-            }
+            FileName = "dotnet",
+            Arguments = $"build {Path.GetFileName(path)}",
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            WorkingDirectory = Path.GetDirectoryName(path)
         };
+
+        return _processFactory.Create(startinfo);
     }
 
-    private Process GenerateCleanProcess(string? path)
+    private IProcessWrapper GenerateCleanProcess(string? path)
     {
-        return new Process
+        ProcessStartInfo startInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = $"clean {Path.GetFileName(path)}",
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                WorkingDirectory = Path.GetDirectoryName(path)
-            }
+            FileName = "dotnet",
+            Arguments = $"clean {Path.GetFileName(path)}",
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            WorkingDirectory = Path.GetDirectoryName(path)
         };
+
+        return _processFactory.Create(startInfo);
     }
 
-    private Process GenerateRestoreProcess(string? path)
+    private IProcessWrapper GenerateRestoreProcess(string? path)
     {
-        return new Process
+        ProcessStartInfo startInfo = new ProcessStartInfo
         {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = $"restore {Path.GetFileName(path)}",
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                WorkingDirectory = Path.GetDirectoryName(path)
-            }
+            FileName = "dotnet",
+            Arguments = $"restore {Path.GetFileName(path)}",
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            WorkingDirectory = Path.GetDirectoryName(path)
         };
+
+        return _processFactory.Create(startInfo);
     }
 }

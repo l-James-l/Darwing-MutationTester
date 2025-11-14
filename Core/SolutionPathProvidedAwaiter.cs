@@ -22,7 +22,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     private readonly ISolutionProfileDeserializer _slnProfileDeserializer;
     private readonly IMutationSettings _mutationSettings;
 
-    public SolutionContainer SolutionContiner => _solutionContainer ?? throw new InvalidOperationException("Attempted to retrieve a solution before one has been loaded.");
+    //By making the public property the interface, we can mock the solution in testing.
+    public ISolutionContainer SolutionContiner => _solutionContainer ?? throw new InvalidOperationException("Attempted to retrieve a solution before one has been loaded.");
     private SolutionContainer? _solutionContainer;
 
     public bool IsAvailable => _solutionContainer != null;
