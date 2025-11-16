@@ -42,10 +42,17 @@ public class ProcessWrapper : Process, IProcessWrapper
 
     public List<string> Errors { get; } = new List<string>();
 
+    public TimeSpan Duration { get; private set; } = TimeSpan.MaxValue;
+
     public bool StartAndAwait(TimeSpan timeout)
     {
         Start();
-        return WaitForExit(timeout);
+        bool completed = WaitForExit(timeout);
+        if (completed)
+        {
+            Duration = ExitTime - StartTime;
+        }
+        return completed;
     }
 }
 
@@ -58,4 +65,6 @@ public interface IProcessWrapper
     List<string> Output { get; }
 
     List<string> Errors { get; }
+
+    TimeSpan Duration { get; }
 }

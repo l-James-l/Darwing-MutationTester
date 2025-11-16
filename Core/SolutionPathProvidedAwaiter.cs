@@ -2,6 +2,8 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Core.Startup;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Models;
 using Models.Events;
 using Serilog;
@@ -84,9 +86,46 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
             //Deserializer shall handle its own exceptions.
             _slnProfileDeserializer.LoadSlnProfileIfPresent(payload.SolutionPath);
             _solutionContainer.FindTestProjects(_mutationSettings);
+            DiscoverSourceCodeFiles();
         }
 
         // Always publish this at the end so that the most recent build info can be updated, including where the new solution path was invalid.
         _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Publish();
+    }
+
+    private void DiscoverSourceCodeFiles()
+    {
+        ArgumentNullException.ThrowIfNull(_solutionContainer);
+
+        EnumerationOptions enumerationOptions = new()
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            ReturnSpecialDirectories = false,
+            AttributesToSkip = FileAttributes.System | FileAttributes.Hidden | FileAttributes.Compressed | FileAttributes.Temporary | FileAttributes.ReadOnly
+        };
+
+        foreach (IProjectContainer project in _solutionContainer.SolutionProjects)
+        {
+            Log.Information($"Loading source code files for {project.Name}");
+
+            List<string> files = Directory.EnumerateFiles(project.DirectoryPath, "*.cs", enumerationOptions).ToList();
+            files.RemoveAll(path => 
+                path.StartsWith(Path.Combine(project.DirectoryPath, "obj")) ||
+                path.StartsWith(Path.Combine(project.DirectoryPath, "bin")));
+
+            foreach (string file in files)
+            {
+                Log.Information($"Discovered: {file}");
+                project.SyntaxTrees.Add(GetSyntaxTree(file));
+            }
+        }
+    }
+
+    private SyntaxTree GetSyntaxTree(string path)
+    {
+        string code = File.ReadAllText(path);
+        SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
+        return tree;
     }
 }

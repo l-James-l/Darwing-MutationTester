@@ -16,13 +16,20 @@ public class ProjectContainer : IProjectContainer
         ArgumentNullException.ThrowIfNull(project.FilePath);
 
         _project = project;
+        CsprojFilePath = project.FilePath;
+        DirectoryPath = Path.GetDirectoryName(_project.FilePath) ??
+            CsprojFilePath.Remove(CsprojFilePath.Count() - _project.Name.Count());
     }
 
-    public string CsprojFilePath => _project.FilePath!;
+    public string CsprojFilePath { get; }
+
+    public string DirectoryPath { get; }
 
     public string Name => _project.Name;
 
     public string AssemblyName => _project.AssemblyName;
+
+    public List<SyntaxTree> SyntaxTrees { get; } = new();
 }
 
 
@@ -32,5 +39,10 @@ public interface IProjectContainer
 
     string CsprojFilePath { get; }
 
+    public string DirectoryPath { get; }
+
     string AssemblyName { get; }
+
+    public List<SyntaxTree> SyntaxTrees { get; }
+
 }

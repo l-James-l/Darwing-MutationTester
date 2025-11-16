@@ -53,7 +53,6 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<ICancelationTokenFactory, CancelationTokenFactory>();
         Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //IStartupProcess and ISolutionProvider.
         Services.AddSingleton<IStartUpProcess, InitialTestRunnner>();
-        Services.AddSingleton<InitialTestRunInfo>(); // No interface because its just a data container, doesnt have any logic worth mocking.
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
 
         RegisterLocalDependencies();

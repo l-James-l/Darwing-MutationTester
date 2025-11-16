@@ -46,8 +46,6 @@ public class SolutionContainer: ISolutionContainer
     }
 }
 
-//TODO maybe: Create project container to hold information about each project, such as its path, analyzer and project instance etc.
-
 
 public interface ISolutionContainer
 {
