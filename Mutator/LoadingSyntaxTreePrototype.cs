@@ -96,15 +96,18 @@ public class LoadingSyntaxTreePrototype
             (SyntaxTree tree, SyntaxNode root) x = GetSyntaxTreeFromCsFilePath(files[0]); // For testing
             //(SyntaxTree tree, SyntaxNode root) y = GetSyntaxTreeFromCsFilePath(files[^1]); // For testing 
             //y.root.DescendantTrivia();
-            TraverseSyntaxNode(x.root);
 
-            foreach ((SyntaxNode oldNode, SyntaxNode newNode) in _mutatedTrees)
-            {
-                x.root = x.root.ReplaceNode(oldNode, newNode);
-            }
+            //TraverseSyntaxNode(x.root);
+            //SyntaxNode mutatedRoot = x.root.ReplaceNodes(_mutatedTrees.Keys, (x, _) => _mutatedTrees[x]);
+            //foreach ((SyntaxNode oldNode, SyntaxNode newNode) in _mutatedTrees)
+            //{
+            //    x.root = x.root.ReplaceNode(oldNode, newNode);
+            //}
+            SyntaxNode mutatedRoot = TraverseV2(x.root);
+            Console.Write(mutatedRoot.ToFullString());
 
             DocumentId documentId = slnWorkspace.CurrentSolution.GetDocumentIdsWithFilePath(files[0]).First();
-            Solution solution = slnWorkspace.CurrentSolution.WithDocumentSyntaxRoot(documentId, x.root);
+            Solution solution = slnWorkspace.CurrentSolution.WithDocumentSyntaxRoot(documentId, /*x.root*/ mutatedRoot);
             Project project = solution.Projects.FirstOrDefault(x => x.Name == analyzer.ProjectInSolution.ProjectName) ?? throw new Exception();
             slnWorkspace.TryApplyChanges(solution);
 
@@ -222,21 +225,39 @@ public class LoadingSyntaxTreePrototype
         {
             if (child.ChildNodes().Any())
             {
+                child.GetTrailingTrivia();
                 if (child is MethodDeclarationSyntax methodNode)
                 {
                     //Console.WriteLine($"Method: {methodNode.Identifier}");
                 }
-                else if (child.IsKind(SyntaxKind.SubtractExpression) && 
-                    child is BinaryExpressionSyntax binaryExp)
+                else if (child is BinaryExpressionSyntax binaryExp)
                 {
-                    //Console.WriteLine($"Subtract Node Kind Type: {child.GetType()}");
+                    if (child.IsKind(SyntaxKind.SubtractExpression))
+                    {
+                        //Console.WriteLine($"Subtract Node Kind Type: {child.GetType()}");
 
-                    BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression,
-                        binaryExp.Left,
-                        binaryExp.Right);
+                        BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression,
+                            binaryExp.Left,
+                            binaryExp.Right);
 
-                    
-                    _mutatedTrees.Add(binaryExp, newSyntaxNode);
+
+                        _mutatedTrees.Add(binaryExp, newSyntaxNode);
+                    }
+                    else if (child.IsKind(SyntaxKind.AddExpression))
+                    {
+                        //Console.WriteLine($"Subtract Node Kind Type: {child.GetType()}");
+
+                        BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression,
+                            binaryExp.Left,
+                            binaryExp.Right);
+
+
+                        _mutatedTrees.Add(binaryExp, newSyntaxNode);
+                    }
+                    else
+                    {
+                        //Console.WriteLine($"Node: {child.Kind()}");
+                    }
                 }
                 else
                 {
@@ -251,14 +272,53 @@ public class LoadingSyntaxTreePrototype
         }
     }
 
-    private (SyntaxTree, SyntaxNode) GetSyntaxTreeFromCsFilePath(string path)
+    private SyntaxNode TraverseV2(SyntaxNode node)
+    {
+        Dictionary<SyntaxNode, SyntaxNode> mutatedChildren = new Dictionary<SyntaxNode, SyntaxNode>();
+        foreach (SyntaxNode child in node.ChildNodes())
+        {
+            SyntaxNode nodePostTraversal = TraverseV2(child);
+            mutatedChildren.Add(child, nodePostTraversal);
+        }
+        node = node.ReplaceNodes(node.ChildNodes(), (x, _) => mutatedChildren[x]);
+
+        if (node is BinaryExpressionSyntax binaryExp)
+        {
+            if (binaryExp.IsKind(SyntaxKind.SubtractExpression))
+            {
+                //Console.WriteLine($"Subtract Node Kind Type: {child.GetType()}");
+
+                BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression,
+                    binaryExp.Left,
+                    binaryExp.Right);
+
+                return newSyntaxNode;
+                //node = binaryExp.Parent?.ReplaceNode(binaryExp, newSyntaxNode) ?? node;
+            }
+            else if (binaryExp.IsKind(SyntaxKind.AddExpression))
+            {
+                //Console.WriteLine($"Subtract Node Kind Type: {child.GetType()}");
+
+                BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression,
+                    binaryExp.Left,
+                    binaryExp.Right);
+
+                return newSyntaxNode;
+                //node = binaryExp.Parent?.ReplaceNode(binaryExp, newSyntaxNode) ?? node;
+            }
+        }
+
+        // Unmuated node.
+        return node;
+    }
+
+    private (SyntaxTree, SyntaxNode)  GetSyntaxTreeFromCsFilePath(string path)
     {
         Console.WriteLine($"Processing file: {path}");  
 
         string code = File.ReadAllText(path);
         SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
         SyntaxNode root = tree.GetRoot();
-
         return (tree, root);
     }
 
@@ -351,7 +411,11 @@ public class LoadingSyntaxTreePrototype
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "dotnet",
-                    Arguments = $"clean {path}",
+                    Arguments = $"clean {Path.GetFileName(path)}",
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    //RedirectStandardOutput = true,
+                    WorkingDirectory = Path.GetDirectoryName(path)
                 }
             };
             cleaningProcess.Start();
@@ -371,8 +435,10 @@ public class LoadingSyntaxTreePrototype
             };
             buildingProcess.Start();
 
+            List<string> outputs = new List<string>();
             while (buildingProcess.StandardOutput.ReadLine() is { } output)
             {
+                outputs.Add(output);
                 Console.WriteLine($"{output}");
             }
 
