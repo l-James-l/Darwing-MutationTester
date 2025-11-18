@@ -117,7 +117,21 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
             foreach (string file in files)
             {
                 Log.Information($"Discovered: {file}");
-                project.SyntaxTrees.Add(GetSyntaxTree(file));
+                SyntaxTree syntaxTree = GetSyntaxTree(file);
+
+                _solutionContainer.Solution.GetDocumentId(syntaxTree);
+                if (_solutionContainer.Solution.GetDocumentId(syntaxTree) is { } documentId)
+                {
+                    project.SyntaxTrees.Add(documentId, syntaxTree);
+                }
+                else if (_solutionContainer.Solution.GetDocumentIdsWithFilePath(syntaxTree.FilePath) is { Length: 1 } documentIds)
+                {
+                    project.SyntaxTrees.Add(documentIds.First(), syntaxTree);
+                }
+                else
+                {
+                    Log.Error($"Unable to find document ID for {syntaxTree.FilePath}. This file will not be mutated.");
+                }
             }
         }
     }
@@ -126,6 +140,6 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     {
         string code = File.ReadAllText(path);
         SyntaxTree tree = CSharpSyntaxTree.ParseText(code);
-        return tree;
+        return tree.WithFilePath(path);
     }
 }

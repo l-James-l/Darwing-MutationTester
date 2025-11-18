@@ -58,8 +58,9 @@ public class InitialTestRunnner : IStartUpProcess
             WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath)
         };
         IProcessWrapper testRun = _processFactory.Create(startInfo);
+
         int? timeout = _mutationSettings.SolutionProfileData?.GeneralSettings.TestRunTimeout;
-        bool processSuccess = testRun.StartAndAwait(TimeSpan.FromSeconds(timeout ?? TimeSpan.MaxValue.TotalSeconds));
+        bool processSuccess = testRun.StartAndAwait(timeout);
 
         foreach (string output in testRun.Output)
         {
@@ -72,6 +73,7 @@ public class InitialTestRunnner : IStartUpProcess
         }
         else
         {
+            Log.Information("Initial test run successful, starting mutant discovery.");
             testRunInfo.WasSuccesful = true;
             testRunInfo.InitialRunDuration = testRun.Duration;
             _mutationRunManager.Run(testRunInfo);

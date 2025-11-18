@@ -29,7 +29,7 @@ public class ProjectContainer : IProjectContainer
 
     public string AssemblyName => _project.AssemblyName;
 
-    public List<SyntaxTree> SyntaxTrees { get; } = new();
+    public Dictionary<DocumentId, SyntaxTree> SyntaxTrees { get; } = new();
 }
 
 
@@ -43,6 +43,5 @@ public interface IProjectContainer
 
     string AssemblyName { get; }
 
-    public List<SyntaxTree> SyntaxTrees { get; }
-
+    public Dictionary<DocumentId, SyntaxTree> SyntaxTrees { get; }
 }

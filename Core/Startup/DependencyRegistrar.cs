@@ -1,9 +1,11 @@
-﻿using Core.IndustrialEstate;
+using Core.IndustrialEstate;
 using Core.Interfaces;
 using CoreTests.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.Exceptions;
+using Mutator;
+using Mutator.MutationImplementations;
 
 namespace Core.Startup;
 
@@ -55,7 +57,19 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<IStartUpProcess, InitialTestRunnner>();
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
 
+        RegisterMutators();
+
         RegisterLocalDependencies();
+    }
+
+    private void RegisterMutators()
+    {
+        Services.AddSingleton<IMutationRunManager, MutationRunManager>();
+        Services.AddSingleton<IMutationDiscoveryManager, MutationDiscoveryManager>();
+
+        //Specific implementations:
+        Services.AddSingleton<IMutationImplementation, SubtractToAddMutator>();
+        Services.AddSingleton<IMutationImplementation, AddToSubtractMutator>();
     }
 
     private void StartUpProcesses()

@@ -72,7 +72,7 @@ public class InitialTestRunnerTests
         _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
         _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build")).Returns(testProcess);
-        testProcess.StartAndAwait(TimeSpan.MaxValue).Returns(true);
+        testProcess.StartAndAwait(null).Returns(true);
         testProcess.Success.Returns(true);
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
@@ -88,7 +88,7 @@ public class InitialTestRunnerTests
             x.Arguments == "test solution.sln --no-build" &&
             x.WorkingDirectory == "this\\is\\the\\path\\to" &&
             x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
-        testProcess.Received(1).StartAndAwait(TimeSpan.MaxValue);
+        testProcess.Received(1).StartAndAwait(null);
         _mutationRunManager.Received(1).Run(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful));
     }
 
@@ -100,7 +100,7 @@ public class InitialTestRunnerTests
         _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
         _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build")).Returns(testProcess);
-        testProcess.StartAndAwait(TimeSpan.MaxValue).Returns(true);
+        testProcess.StartAndAwait(null).Returns(true);
         testProcess.Success.Returns(false);
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
@@ -116,7 +116,7 @@ public class InitialTestRunnerTests
             x.Arguments == "test solution.sln --no-build" &&
             x.WorkingDirectory == "this\\is\\the\\path\\to" &&
             x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
-        testProcess.Received(1).StartAndAwait(TimeSpan.MaxValue);
+        testProcess.Received(1).StartAndAwait(null);
         _mutationRunManager.DidNotReceiveWithAnyArgs().Run(default!);
     }
 }

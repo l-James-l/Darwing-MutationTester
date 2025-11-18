@@ -5,6 +5,8 @@ using Core.Interfaces;
 using Core.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
+using Mutator;
+using Mutator.MutationImplementations;
 using NSubstitute;
 
 namespace CoreTests.Startup;
@@ -42,8 +44,16 @@ internal class DependencyRegistrarTests
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
         AssertBasicRegistartion<IStartUpProcess, InitialTestRunnner>();
 
+        AssertBasicRegistartion<IMutationRunManager, MutationRunManager>();
+        AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
+
+        //IMutationImplementation's
+        AssertMutatorRegistration<AddToSubtractMutator>();
+        AssertMutatorRegistration<SubtractToAddMutator>();
+
         _services.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
     }
+
 
     [Test]
     public void GivenCliConstructed_ThenAllDependenciesRegistered()
@@ -57,6 +67,8 @@ internal class DependencyRegistrarTests
         //Assert
         AssertBasicRegistartion<CLIApp>();
     }
+
+    private void AssertMutatorRegistration<T>() => AssertBasicRegistartion<IMutationImplementation, T>(true);
 
     private void AssertBasicRegistartion<T>(bool isSingleton = true) => AssertBasicRegistartion<T, T>(isSingleton);
 
