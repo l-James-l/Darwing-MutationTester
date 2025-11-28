@@ -1,7 +1,6 @@
 ﻿using Buildalyzer;
 using Core.IndustrialEstate;
 using Core.Interfaces;
-using Core.Startup;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Models;
@@ -122,11 +121,13 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
                 _solutionContainer.Solution.GetDocumentId(syntaxTree);
                 if (_solutionContainer.Solution.GetDocumentId(syntaxTree) is { } documentId)
                 {
-                    project.SyntaxTrees.Add(documentId, syntaxTree);
+                    project.UnMutatedSyntaxTrees.Add(documentId, syntaxTree);
+                    project.DocumentsByPath.Add(file, documentId);
                 }
                 else if (_solutionContainer.Solution.GetDocumentIdsWithFilePath(syntaxTree.FilePath) is { Length: 1 } documentIds)
                 {
-                    project.SyntaxTrees.Add(documentIds.First(), syntaxTree);
+                    project.UnMutatedSyntaxTrees.Add(documentIds.First(), syntaxTree);
+                    project.DocumentsByPath.Add(file, documentIds.First());
                 }
                 else
                 {

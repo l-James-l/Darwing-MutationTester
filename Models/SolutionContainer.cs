@@ -6,8 +6,6 @@ namespace Models;
 
 public class SolutionContainer: ISolutionContainer
 {
-    public IAnalyzerManager AnalyzerManager { get; init; }
-
     public AdhocWorkspace Workspace { get; init; }
 
     public Solution Solution => Workspace.CurrentSolution;
@@ -16,11 +14,10 @@ public class SolutionContainer: ISolutionContainer
 
     public List<IProjectContainer> SolutionProjects { get; private set; } = new List<IProjectContainer>();
 
-    public List<IProjectContainer> AllProjects { get; } = new List<IProjectContainer>();
+    public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
 
     public SolutionContainer(IAnalyzerManager analyzerManager)
     {
-        AnalyzerManager = analyzerManager;
         Workspace = analyzerManager.GetWorkspace();
 
         DiscoverProjects();
@@ -44,16 +41,12 @@ public class SolutionContainer: ISolutionContainer
         // If a project isnt a test project, it is project we can mutate.
         SolutionProjects = AllProjects.Except(TestProjects).ToList();
     }
-}
 
-
-public interface ISolutionContainer
-{
-    public List<IProjectContainer> AllProjects { get; }
-
-    public List<IProjectContainer> SolutionProjects { get; }
-
-    public Solution Solution { get; }
-
-    public AdhocWorkspace Workspace { get; }
+    public void RestoreProjects()
+    {
+        foreach (Project proj in Solution.Projects)
+        {
+            AllProjects.FirstOrDefault(x => x.Name == proj.Name)?.UpdateFromMutatedProject(proj);
+        }
+    }
 }

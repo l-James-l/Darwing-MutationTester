@@ -64,8 +64,9 @@ public abstract class DependencyRegistrar
 
     private void RegisterMutators()
     {
-        Services.AddSingleton<IMutationRunManager, MutationRunManager>();
-        Services.AddSingleton<IMutationDiscoveryManager, MutationDiscoveryManager>();
+        Services.RegisterManySingleton<MutationDiscoveryManager>(); //IMutationRunInitiator and IMutationDiscoveryManager
+        Services.AddSingleton<IMutationImplementationProvider, MutationImplementationProvider>();
+        Services.AddSingleton<IStartUpProcess, MutatedProjectBuilder>();
 
         //Specific implementations:
         Services.AddSingleton<IMutationImplementation, SubtractToAddMutator>();

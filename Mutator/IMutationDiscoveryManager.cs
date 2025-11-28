@@ -1,10 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
-using Mutator.MutationImplementations;
-using System.Diagnostics.CodeAnalysis;
+using Models;
 
 namespace Mutator;
 
 public interface IMutationDiscoveryManager
 {
-    bool CanMutate(SyntaxNode node, [NotNullWhen(true)] out IMutationImplementation? mutator);
+    List<DiscoveredMutation> DiscoveredMutations { get; }
+
+    void RediscoverMutationsInTree(SyntaxNode mutatedRoot);
+
 }

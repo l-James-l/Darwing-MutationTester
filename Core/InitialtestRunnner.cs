@@ -1,6 +1,5 @@
 ﻿using Core.IndustrialEstate;
 using Core.Interfaces;
-using Core.Startup;
 using Models;
 using Models.Events;
 using Mutator;
@@ -15,10 +14,10 @@ public class InitialTestRunnner : IStartUpProcess
     private readonly IMutationSettings _mutationSettings;
     private readonly IWasBuildSuccessfull _wasBuildSuccessfull;
     private readonly IProcessWrapperFactory _processFactory;
-    private IMutationRunManager _mutationRunManager;
+    private IMutationRunInitiator _mutationRunManager;
 
     public InitialTestRunnner(IEventAggregator eventAggregator, IMutationSettings mutationSettings, IWasBuildSuccessfull wasBuildSuccessfull,
-        IProcessWrapperFactory processFactory, IMutationRunManager mutationRunManager)
+        IProcessWrapperFactory processFactory, IMutationRunInitiator mutationRunManager)
     {
         _eventAggregator = eventAggregator;
         _mutationSettings = mutationSettings;

@@ -1,6 +1,5 @@
 ﻿using Core.IndustrialEstate;
 using Core.Interfaces;
-using Core.Startup;
 using Microsoft.CodeAnalysis;
 using Models;
 using Models.Events;
@@ -100,7 +99,6 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             {
                 Log.Error($"Failed to clean {projToRetry.Name}");
                 LogProcessOutput(projToRetry, cleaningProcess);
-                return false;
             }
 
             Log.Information($"Restoring dependencies for {projToRetry.Name}");
@@ -112,7 +110,6 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             {
                 Log.Error($"Failed to retore dependecies for {projToRetry.Name}");
                 LogProcessOutput(projToRetry, restoreProcess);
-                return false;
             }
 
             Log.Information($"Rebuilding {projToRetry.Name}");

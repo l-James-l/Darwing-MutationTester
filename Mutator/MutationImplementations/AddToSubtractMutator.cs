@@ -1,11 +1,12 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using Models.Enums;
 
 namespace Mutator.MutationImplementations;
 
-public class AddToSubtractMutator : IMutationImplementation
+public class AddToSubtractMutator : BaseMutationImplementation, IMutationImplementation
 {
     public SpecifcMutation Mutation => SpecifcMutation.AddToSubtract;
 
@@ -15,7 +16,8 @@ public class AddToSubtractMutator : IMutationImplementation
 
     public Type RequiredNodeType => typeof(BinaryExpressionSyntax);
 
-    public SyntaxNode Mutate(SyntaxNode node)
+
+    public (SyntaxNode mutatedNode, SyntaxAnnotation identififer) Mutate(SyntaxNode node)
     {
         if (node is BinaryExpressionSyntax binaryExp)
         {
@@ -23,10 +25,14 @@ public class AddToSubtractMutator : IMutationImplementation
                         binaryExp.Left,
                         binaryExp.Right);
 
-            return newSyntaxNode;
+            //SyntaxFactory.ConditionalExpression();
+            Environment.GetEnvironmentVariable("DarwingActiveMutaitonIndex");
+            SourceText sourceText = SourceText.From("Environment.GetEnvironmentVariable(\"DarwingActiveMutaitonIndex\")");
+            //SyntaxFactory.ConditionalExpression(sourceText, newSyntaxNode, node);
+
+            return GenerateIdAnnotation(newSyntaxNode);
         }
 
         throw new MutationException($"Failed to cast syntax node to required type in {nameof(AddToSubtractMutator)}");
-
     }
 }

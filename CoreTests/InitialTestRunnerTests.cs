@@ -17,7 +17,7 @@ public class InitialTestRunnerTests
     private IMutationSettings _mutationSettings;
     private IWasBuildSuccessfull _buildSuccessfull;
     private IProcessWrapperFactory _processWrapperFactory;
-    private IMutationRunManager _mutationRunManager;
+    private IMutationRunInitiator _mutationRunManager;
 
     private InitiateTestRunEvent _initiateTestRunEvent;
 
@@ -28,7 +28,7 @@ public class InitialTestRunnerTests
         _mutationSettings = Substitute.For<IMutationSettings>();
         _buildSuccessfull = Substitute.For<IWasBuildSuccessfull>();
         _processWrapperFactory = Substitute.For<IProcessWrapperFactory>();
-        _mutationRunManager = Substitute.For<IMutationRunManager>();
+        _mutationRunManager = Substitute.For<IMutationRunInitiator>();
 
         _runner = new InitialTestRunnner(_eventAggregator, _mutationSettings, _buildSuccessfull, _processWrapperFactory, _mutationRunManager);
 

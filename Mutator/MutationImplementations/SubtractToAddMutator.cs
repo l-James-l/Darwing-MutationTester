@@ -5,7 +5,7 @@ using Models.Enums;
 
 namespace Mutator.MutationImplementations;
 
-public class SubtractToAddMutator : IMutationImplementation
+public class SubtractToAddMutator : BaseMutationImplementation, IMutationImplementation
 {
     public SpecifcMutation Mutation => SpecifcMutation.SubtractToAdd;
 
@@ -15,7 +15,7 @@ public class SubtractToAddMutator : IMutationImplementation
 
     public Type RequiredNodeType => typeof(BinaryExpressionSyntax);
 
-    public SyntaxNode Mutate(SyntaxNode node)
+    public (SyntaxNode mutatedNode, SyntaxAnnotation identififer) Mutate(SyntaxNode node)
     {
         if (node is BinaryExpressionSyntax binaryExp)
         {
@@ -23,7 +23,7 @@ public class SubtractToAddMutator : IMutationImplementation
                         binaryExp.Left,
                         binaryExp.Right);
 
-            return newSyntaxNode;
+            return GenerateIdAnnotation(newSyntaxNode);
         }
 
         throw new MutationException($"Failed to cast syntax node to required type in {nameof(SubtractToAddMutator)}");

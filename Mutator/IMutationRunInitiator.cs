@@ -2,7 +2,7 @@
 
 namespace Mutator;
 
-public interface IMutationRunManager
+public interface IMutationRunInitiator
 {
     void Run(InitialTestRunInfo testRunInfo);
 }

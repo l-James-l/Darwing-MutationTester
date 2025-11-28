@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Serilog;
 
 namespace Models;
 
@@ -8,7 +9,7 @@ namespace Models;
 /// </summary>
 public class ProjectContainer : IProjectContainer
 {
-    private readonly Project _project;
+    private Project _project;
 
     public ProjectContainer(Project project)
     {
@@ -19,6 +20,9 @@ public class ProjectContainer : IProjectContainer
         CsprojFilePath = project.FilePath;
         DirectoryPath = Path.GetDirectoryName(_project.FilePath) ??
             CsprojFilePath.Remove(CsprojFilePath.Count() - _project.Name.Count());
+        
+        //TODO: maybe throwing here isnt the most robust solution.
+        DllFilePath = project.OutputFilePath ?? throw new Exception($"Could not establish the output file path for {Name}");
     }
 
     public string CsprojFilePath { get; }
@@ -29,19 +33,23 @@ public class ProjectContainer : IProjectContainer
 
     public string AssemblyName => _project.AssemblyName;
 
-    public Dictionary<DocumentId, SyntaxTree> SyntaxTrees { get; } = new();
-}
+    public string DllFilePath { get; }
 
+    public Dictionary<DocumentId, SyntaxTree> UnMutatedSyntaxTrees { get; } = new();
 
-public interface IProjectContainer
-{
-    string Name { get; }
+    public Dictionary<string, DocumentId> DocumentsByPath { get; } = new();
 
-    string CsprojFilePath { get; }
+    public Compilation? GetCompilation() => _project.GetCompilationAsync().GetAwaiter().GetResult();
 
-    public string DirectoryPath { get; }
-
-    string AssemblyName { get; }
-
-    public Dictionary<DocumentId, SyntaxTree> SyntaxTrees { get; }
+    public void UpdateFromMutatedProject(Project proj)
+    {
+        if (proj.Id == _project.Id)
+        {
+            _project = proj;
+        }
+        else
+        {
+            Log.Error("Could not update project {project} as IDS did not match.", _project.Name);
+        }
+    }
 }

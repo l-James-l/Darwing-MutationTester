@@ -8,6 +8,8 @@ namespace Core;
 /// </summary>
 public class ProcessWrapper : Process, IProcessWrapper
 {
+    private bool _processCompleted = false;
+
     public ProcessWrapper(ProcessStartInfo startInfo) : base()
     {
         ArgumentNullException.ThrowIfNull(startInfo);
@@ -36,7 +38,7 @@ public class ProcessWrapper : Process, IProcessWrapper
         }
     }
 
-    public bool Success => ExitCode == 0;
+    public bool Success => _processCompleted && ExitCode == 0;
 
     public List<string> Output { get; } = new List<string>();
 
@@ -59,13 +61,13 @@ public class ProcessWrapper : Process, IProcessWrapper
     {
         Start();
 
-        bool completed = WaitForExit(timeout);
+        _processCompleted = WaitForExit(timeout);
 
-        if (completed)
+        if (_processCompleted)
         {
             Duration = ExitTime - StartTime;
         }
-        return completed;
+        return _processCompleted;
     }
 }
 
