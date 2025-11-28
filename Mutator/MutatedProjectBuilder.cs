@@ -140,7 +140,7 @@ public class MutatedProjectBuilder : IStartUpProcess
             FileLinePositionSpan failureLocation = failure.Location.GetLineSpan();
             if (project.DocumentsByPath.TryGetValue(failureLocation.Path, out DocumentId? document))
             {
-                Log.Information("Attempting to address build failures in file: {path}", failureLocation.Path);
+                Log.Information("Attempting to address a build failure in file: {path}", failureLocation.Path);
 
                 IEnumerable<DiscoveredMutation> mutationsInFile = _mutationDiscovery.DiscoveredMutations.Where(x => x.Document == document && x.Status >= MutantStatus.Available);
 
@@ -177,15 +177,21 @@ public class MutatedProjectBuilder : IStartUpProcess
 
         while (mutantsToRemove.Count > 0)
         {
-            DiscoveredMutation? mutant = mutantsToRemove.FirstOrDefault();
-            //After removing mutants, our list of 'MutantsToRemove' 
-            mutant = _mutationDiscovery.DiscoveredMutations.FirstOrDefault(x => x.ID == mutant?.ID);
+            //Take the first mutation which is not contained within another mutation we need to remove.
+            DiscoveredMutation? mutant = mutantsToRemove.FirstOrDefault(x => mutantsToRemove.Except([x]).None(y => y.LineSpan.Contains(x.LineSpan)));
+
             if (mutant is null)
             {
                 Log.Warning("Attempted to remove a mutation that couldnt be found");
-                return;
+                mutant = mutantsToRemove.First();
             }
             mutantsToRemove.Remove(mutant);
+            foreach (DiscoveredMutation embededMutation in new List<DiscoveredMutation>(mutantsToRemove.Where(x => mutant.LineSpan.Contains(x.LineSpan))))
+            {
+                //Removing a mutation that contains this one will by default remove this mutant.
+                embededMutation.Status = MutantStatus.CausedBuildError;
+                mutantsToRemove.Remove(embededMutation);
+            }
 
             mutant.Status = MutantStatus.CausedBuildError;
 
@@ -207,4 +213,3 @@ public class MutatedProjectBuilder : IStartUpProcess
         _solutionProvider.SolutionContiner.RestoreProjects();
     }
 }
-

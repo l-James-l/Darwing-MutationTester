@@ -14,7 +14,7 @@ namespace Mutator;
 public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscoveryManager
 {
     private ISolutionProvider _solutionProvider;
-    private IMutationImplementationProvider _mutationDiscoveryManager;
+    private IMutationImplementationProvider _mutationImplementationProvider;
     private IEventAggregator _eventAggregator;
 
     /// <summary>
@@ -24,15 +24,15 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
 
     private Solution? _mutatedSolution;
 
-    public MutationDiscoveryManager(ISolutionProvider solutionProvider, IMutationImplementationProvider mutationDiscoveryManager,
+    public MutationDiscoveryManager(ISolutionProvider solutionProvider, IMutationImplementationProvider mutationImplementationProvider,
         IEventAggregator eventAggregator)
     {
         ArgumentNullException.ThrowIfNull(solutionProvider);
-        ArgumentNullException.ThrowIfNull(mutationDiscoveryManager);
+        ArgumentNullException.ThrowIfNull(mutationImplementationProvider);
         ArgumentNullException.ThrowIfNull(eventAggregator);
 
         _solutionProvider = solutionProvider;
-        _mutationDiscoveryManager = mutationDiscoveryManager;
+        _mutationImplementationProvider = mutationImplementationProvider;
         _eventAggregator = eventAggregator;
     }
 
@@ -60,7 +60,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
                 Log.Information($"Discovering mutations for {tree.FilePath}.");
 
                 List<DiscoveredMutation> tempDiscoveredMutations = new List<DiscoveredMutation>();
-                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(tempDiscoveredMutations, tree.GetRoot());
+                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(tree.GetRoot(), tempDiscoveredMutations);
                 Log.Information($"Discovered {tempDiscoveredMutations.Count} mutations for {tree.FilePath}.");
                
                 SyntaxTree mutatedTree = tree.WithRootAndOptions(mutatedRoot, tree.Options);
@@ -125,20 +125,19 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         Log.Debug(mutatedRoot.ToFullString());
     }
 
-    private SyntaxNode TraverseSyntaxNodeForMutation(List<DiscoveredMutation> mutations, SyntaxNode node)
+    private SyntaxNode TraverseSyntaxNodeForMutation(SyntaxNode node, List<DiscoveredMutation> mutations)
     {
-        //TODO: should probably include some recursion protection here.
+        node = TryMutateNode(mutations, node);
 
         //Itterate/ mutate children first to achieve depth first search.
         Dictionary<SyntaxNode, SyntaxNode> mutatedChildren = new();
         foreach (SyntaxNode child in node.ChildNodes())
         {
-            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(mutations, child);
+            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(child, mutations);
             mutatedChildren.Add(child, childAfterTraversal);
         }
 
-        //Replace all the nodes children with thier mutated counterparts. Note that because we do a depth first search, this will include
-        //all mutation to children of the children and so on...
+        //Replace all the nodes children with thier mutated counterparts. 
         node = node.ReplaceNodes(node.ChildNodes(), (x, _) =>
         {
             if (mutatedChildren.TryGetValue(x, out var mutated))
@@ -148,13 +147,12 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
             return x;
         });
 
-        // Once we have completed mutation checks for all the nodes children, we can try and mutate the node itself
-        return TryMutateNode(mutations, node);
+        return node;
     }
 
     private SyntaxNode TryMutateNode(List<DiscoveredMutation> mutations, SyntaxNode node)
     {
-        if (_mutationDiscoveryManager.CanMutate(node, out IMutationImplementation? mutator))
+        if (_mutationImplementationProvider.CanMutate(node, out IMutationImplementation? mutator))
         {
             try
             {
