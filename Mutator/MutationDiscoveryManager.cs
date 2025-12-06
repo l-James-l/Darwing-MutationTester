@@ -78,7 +78,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         {
             // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
             _solutionProvider.SolutionContiner.RestoreProjects();
-            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish(_solutionProvider.SolutionContiner);
+            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish();
         }
         else
         {

@@ -5,17 +5,17 @@ using Models.Enums;
 
 namespace Mutator.MutationImplementations;
 
-public class SubtractToAddMutator : BaseMutationImplementation, IMutationImplementation
+public class SubtractToAddMutator : BaseMutationImplementation
 {
-    public SpecifcMutation Mutation => SpecifcMutation.SubtractToAdd;
+    public override SpecifcMutation Mutation => SpecifcMutation.SubtractToAdd;
 
-    public MutationCategory Category => MutationCategory.Arithmetic;
+    public override MutationCategory Category => MutationCategory.Arithmetic;
 
-    public SyntaxKind Kind => SyntaxKind.SubtractExpression;
+    public override SyntaxKind Kind => SyntaxKind.SubtractExpression;
 
-    public Type RequiredNodeType => typeof(BinaryExpressionSyntax);
+    public override Type RequiredNodeType => typeof(BinaryExpressionSyntax);
 
-    public (SyntaxNode mutatedNode, SyntaxAnnotation identififer) Mutate(SyntaxNode node)
+    protected override SyntaxNode SpecificMutationImplementation(SyntaxNode node)
     {
         if (node is BinaryExpressionSyntax binaryExp)
         {
@@ -23,7 +23,7 @@ public class SubtractToAddMutator : BaseMutationImplementation, IMutationImpleme
                         binaryExp.Left,
                         binaryExp.Right);
 
-            return GenerateIdAnnotation(newSyntaxNode);
+            return newSyntaxNode;
         }
 
         throw new MutationException($"Failed to cast syntax node to required type in {nameof(SubtractToAddMutator)}");
