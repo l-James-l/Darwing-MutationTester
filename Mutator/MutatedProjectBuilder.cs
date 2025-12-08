@@ -26,11 +26,11 @@ public class MutatedProjectBuilder : IStartUpProcess
         _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Subscribe(EmitAllChanges);
     }
 
-    public void EmitAllChanges(ISolutionContainer mutatedSolution)
+    public void EmitAllChanges()
     {
         const int maxRetrys = 5;
         
-        foreach (IProjectContainer project in mutatedSolution.SolutionProjects)
+        foreach (IProjectContainer project in _solutionProvider.SolutionContiner.SolutionProjects)
         {
             int retryCount = 0;
             bool doFinalRetry = false;
@@ -41,7 +41,7 @@ public class MutatedProjectBuilder : IStartUpProcess
                 dllCreated = EmitMutatedDll(project, out List<Diagnostic> failures);
                 if (!dllCreated)
                 {
-                    bool anyFailuresActioned = FindAndRemoveMutationsCausingFailures(mutatedSolution, project, failures);
+                    bool anyFailuresActioned = FindAndRemoveMutationsCausingFailures(project, failures);
                     if (!anyFailuresActioned)
                     {
                         Log.Warning("Build encountered errors that could not be resolved. Will make 1 final attempt.");
@@ -73,7 +73,8 @@ public class MutatedProjectBuilder : IStartUpProcess
             }
         }
 
-        RestoreDependencies(mutatedSolution);
+        RestoreDependencies();
+        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().Publish();
     }
 
     private bool EmitMutatedDll(IProjectContainer mutatedProject, out List<Diagnostic> failures)
@@ -101,15 +102,17 @@ public class MutatedProjectBuilder : IStartUpProcess
         return true;
     }
 
-    private void RestoreDependencies(ISolutionContainer mutatedSolution)
+    private void RestoreDependencies()
     {
         // For every project that has a dependency on another project that has been mutated, we need to replace the dll in that project.
-        foreach (IProjectContainer project in mutatedSolution.AllProjects)
+        foreach (IProjectContainer project in _solutionProvider.SolutionContiner.AllProjects)
         {
+            Log.Information("Restoring dependencies for {project}.", project.Name);
+
             // Get the folder containg the projects build artifacts, which will include dll's of any other projects.
             string projectOutputDirectory = Path.GetDirectoryName(project.DllFilePath) ?? "";
 
-            foreach (IProjectContainer mutatedProject in mutatedSolution.SolutionProjects.Except([project]))
+            foreach (IProjectContainer mutatedProject in _solutionProvider.SolutionContiner.SolutionProjects.Except([project]))
             {
                 // Check if the unmutated dll exists in the output directory, and if it does, replace it
                 string wouldBeDependency = Path.Combine(projectOutputDirectory, Path.GetFileName(mutatedProject.DllFilePath));
@@ -126,7 +129,7 @@ public class MutatedProjectBuilder : IStartUpProcess
     /// For each failure in the build diagnostics, we will remove the mutations which was introduced closest to that location.
     /// </summary>
     /// <returns>True if all failures were actioned, False if any failures were unable to be actioned.</returns>
-    private bool FindAndRemoveMutationsCausingFailures(ISolutionContainer mutatedSolution, IProjectContainer project, List<Diagnostic> failures)
+    private bool FindAndRemoveMutationsCausingFailures(IProjectContainer project, List<Diagnostic> failures)
     {
         bool anyActioned = false;
         foreach (Diagnostic failure in failures)
@@ -155,7 +158,7 @@ public class MutatedProjectBuilder : IStartUpProcess
 
                 IEnumerable<DiscoveredMutation> mutantsToRemove = mutationStartBeforeErrorEnd.Intersect(mutationsEndAfterErrorStart);
 
-                RemoveMutants(mutatedSolution, mutantsToRemove.ToList(), document);
+                RemoveMutants(mutantsToRemove.ToList(), document);
                 anyActioned = true;
 
                 //TODO maybe it would be better to not remove all the mutants at once,
@@ -171,9 +174,9 @@ public class MutatedProjectBuilder : IStartUpProcess
         return anyActioned;
     }
 
-    private void RemoveMutants(ISolutionContainer mutatedSolution, List<DiscoveredMutation> mutantsToRemove, DocumentId document)
+    private void RemoveMutants(List<DiscoveredMutation> mutantsToRemove, DocumentId document)
     {
-        Solution slnWithMutantsRemoved = mutatedSolution.Solution;
+        Solution slnWithMutantsRemoved = _solutionProvider.SolutionContiner.Solution;
 
         while (mutantsToRemove.Count > 0)
         {

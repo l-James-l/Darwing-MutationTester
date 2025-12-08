@@ -43,6 +43,7 @@ internal class DependencyRegistrarTests
         AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
         AssertBasicRegistartion<IStartUpProcess, InitialTestRunnner>();
+        AssertBasicRegistartion<IStartUpProcess, MutatedSolutionTester>();
 
         AssertRegisterManySingleton<MutationDiscoveryManager>([typeof(IMutationRunInitiator), typeof(IMutationDiscoveryManager)]);
         AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();

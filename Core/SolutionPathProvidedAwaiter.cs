@@ -54,6 +54,7 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     {
         try
         {
+            Log.Information("Creating analyzer for soltution");
             IAnalyzerManager analyzerManager = _analyzerManagerFactory.CreateAnalyzerManager(path);
             _solutionContainer = new SolutionContainer(analyzerManager);
         }
@@ -67,6 +68,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     private void OnSolutionPathProvided(SolutionPathProvidedPayload payload)
     {
         ArgumentNullException.ThrowIfNull(payload);
+
+        Log.Information("Recieved solution path: {path}", payload.SolutionPath);
 
         if (string.IsNullOrWhiteSpace(payload.SolutionPath) || !payload.SolutionPath.EndsWith(".sln") || !File.Exists(payload.SolutionPath))
         {

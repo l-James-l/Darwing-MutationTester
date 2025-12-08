@@ -19,6 +19,12 @@ public class MutationImplementationProvider : IMutationImplementationProvider
 
     public bool CanMutate(SyntaxNode node, [NotNullWhen(true)] out IMutationImplementation? mutator)
     {
+        mutator = null;
+        if (node.HasAnnotation(BaseMutationImplementation.DontMutateAnnotation))
+        {
+            return false;
+        }
+
         mutator = _availableMutations.FirstOrDefault(x => node.GetType() == x.RequiredNodeType && node.IsKind(x.Kind));
         return mutator is not null;
     }

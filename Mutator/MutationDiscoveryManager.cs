@@ -45,7 +45,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         // - Once all mutations have been applied to a project, emit a new dll
         // - If emmitting the dll causes build errors, find where the error occured and remove mutations there.
         // - Update other projects that are dependent on the new dll
-        // - Activate mutants 1 by 1 (TODO multiple at a time?) and run all tests (TODO only covering tests)
+        // - Activate mutants 1 by 1 and run all tests (TODO only covering tests)
         // - Report if the mutant was killed or not
 
         ArgumentNullException.ThrowIfNull(testRunInfo);
@@ -78,7 +78,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         {
             // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
             _solutionProvider.SolutionContiner.RestoreProjects();
-            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish(_solutionProvider.SolutionContiner);
+            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish();
         }
         else
         {

@@ -20,6 +20,7 @@ public class InitialTestRunnerTests
     private IMutationRunInitiator _mutationRunManager;
 
     private InitiateTestRunEvent _initiateTestRunEvent;
+    private InitialTestRunCompleteEvent _initiateTestRunCompleteEvent;
 
     [SetUp]
     public void SetUp()
@@ -33,7 +34,9 @@ public class InitialTestRunnerTests
         _runner = new InitialTestRunnner(_eventAggregator, _mutationSettings, _buildSuccessfull, _processWrapperFactory, _mutationRunManager);
 
         _initiateTestRunEvent = new InitiateTestRunEvent();
+        _initiateTestRunCompleteEvent = Substitute.For<InitialTestRunCompleteEvent>();
         _eventAggregator.GetEvent<InitiateTestRunEvent>().Returns(_initiateTestRunEvent);
+        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Returns(_initiateTestRunCompleteEvent);
     }
 
     [Test]
@@ -76,6 +79,7 @@ public class InitialTestRunnerTests
         testProcess.Success.Returns(true);
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
+        testProcess.Duration.Returns(TimeSpan.FromSeconds(30));
 
         _runner.StartUp();
 
@@ -90,6 +94,7 @@ public class InitialTestRunnerTests
             x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
         testProcess.Received(1).StartAndAwait(null);
         _mutationRunManager.Received(1).Run(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful));
+        _initiateTestRunCompleteEvent.Received(1).Publish(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful && x.InitialRunDuration.Seconds == 30));
     }
 
     [Test]

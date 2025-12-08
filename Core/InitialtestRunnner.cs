@@ -68,13 +68,14 @@ public class InitialTestRunnner : IStartUpProcess
 
         if (!processSuccess || !testRun.Success)
         {
-            Log.Error("Initial test run wihout mutations has failures. Cannot perform mutation testing.");
+            Log.Error("Initial test run without mutations has failures. Cannot perform mutation testing.");
         }
         else
         {
             Log.Information("Initial test run successful, starting mutant discovery.");
             testRunInfo.WasSuccesful = true;
             testRunInfo.InitialRunDuration = testRun.Duration;
+            _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Publish(testRunInfo);
             _mutationRunManager.Run(testRunInfo);
         }
     }

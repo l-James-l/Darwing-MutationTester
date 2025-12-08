@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Core.Interfaces;
+using System.Diagnostics;
 
 namespace Core.IndustrialEstate;
 
