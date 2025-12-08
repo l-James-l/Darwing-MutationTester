@@ -85,11 +85,15 @@ public abstract class BaseMutationImplementation : IMutationImplementation
                     )
                 );
 
+        condition = ApplyDontMutateAnnotation(condition) as BinaryExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
+        mutatedNode = ApplyDontMutateAnnotation(mutatedNode) as ExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
+        origionalNode = origionalNode.WithAdditionalAnnotations(DontMutateAnnotation); // origional node only needs the top level dont mutate annotation.
+
         // should be equivalent to: (Environment.GetEnvironmentVariable("DarwingActiveMutaitonIndex") == id ? mutatedNode : origionalNode)
-        ConditionalExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, origionalNode);
-        ParenthesizedExpressionSyntax parenthesizedSwticher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher);
+        ConditionalExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, origionalNode).WithAdditionalAnnotations(DontMutateAnnotation);
+        ParenthesizedExpressionSyntax parenthesizedSwticher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(DontMutateAnnotation);
         
-        return ApplyDontMutateAnnotation(parenthesizedSwticher.NormalizeWhitespace());
+        return parenthesizedSwticher.NormalizeWhitespace();
     }
 
     /// <summary>

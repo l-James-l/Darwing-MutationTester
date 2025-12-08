@@ -1,4 +1,5 @@
 
+using Core.Interfaces;
 using System.Diagnostics;
 
 namespace Core;
@@ -69,19 +70,4 @@ public class ProcessWrapper : Process, IProcessWrapper
         }
         return _processCompleted;
     }
-}
-
-public interface IProcessWrapper
-{
-    public bool StartAndAwait(TimeSpan timeout);
-
-    public bool StartAndAwait(double? timeout);
-
-    bool Success { get; }
-
-    List<string> Output { get; }
-
-    List<string> Errors { get; }
-
-    TimeSpan Duration { get; }
 }

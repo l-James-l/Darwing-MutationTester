@@ -1,5 +1,5 @@
-﻿using Core;
-using Core.IndustrialEstate;
+﻿using Core.IndustrialEstate;
+using Core.Interfaces;
 using Models;
 using Models.Enums;
 using Models.Events;
@@ -48,8 +48,10 @@ public class MutatedSolutionTester : IStartUpProcess
 
         if (DoInitialTestWithNoActiveMutants())
         {
-            int survivedMutants = 0;
             IEnumerable<DiscoveredMutation> availableMutants = _mutationDiscoveryManager.DiscoveredMutations.Where(x => x.Status is MutantStatus.Available);
+
+            int survivedMutants = 0;
+            int testedMutantCount = availableMutants.Count();
             foreach (DiscoveredMutation mutant in availableMutants)
             {
                 if (!TestMutant(mutant))
@@ -58,7 +60,7 @@ public class MutatedSolutionTester : IStartUpProcess
                 }
             }
 
-            Log.Information("Mutation testing complete. {survived} mutants survived out of {total} tested.", survivedMutants, availableMutants.Count());
+            Log.Information("Mutation testing complete. {survived} mutants survived out of {total} tested.", survivedMutants, testedMutantCount);
         }
 
     }
@@ -120,6 +122,8 @@ public class MutatedSolutionTester : IStartUpProcess
     {
         Log.Information("Testing mutant {mutant} in {file}.", mutant.MutatedNode.ToString(), mutant.OriginalNode.SyntaxTree.FilePath);
 
+        mutant.Status = MutantStatus.TestOngoing;
+
         //TODO add filter for covered test cases
         ProcessStartInfo startInfo = new()
         {
@@ -147,17 +151,20 @@ public class MutatedSolutionTester : IStartUpProcess
         //TODO improve reporting so we get more than just a count of killed/survived
         if (!processSuccess)
         {
-            Log.Information("Mutation killed by introducing infiniate test run.");
+            mutant.Status = MutantStatus.Killed;
+            Log.Information("Mutation killed by introducing infinite test run.");
             return true;
         }
         if (!testRun.Success)
         {
+            mutant.Status = MutantStatus.Killed;
             //TODO - should be able to say which tests failed.
             Log.Information("Mutation killed by failing test.");
             return true;
         }
         else
         {
+            mutant.Status = MutantStatus.Survived;
             Log.Warning("Mutant survived.");
             return false;
         }

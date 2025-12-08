@@ -68,7 +68,7 @@ public class InitialTestRunnner : IStartUpProcess
 
         if (!processSuccess || !testRun.Success)
         {
-            Log.Error("Initial test run wihout mutations has failures. Cannot perform mutation testing.");
+            Log.Error("Initial test run without mutations has failures. Cannot perform mutation testing.");
         }
         else
         {
