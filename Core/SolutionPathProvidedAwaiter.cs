@@ -47,7 +47,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     {
         //By using the startup process, we ensure the DI container will construct this class at application start.
         //Thus ensuring the subscription is made.
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided);
+        //Have to have keep subscriber reference alive true to stop prism garbage collecting.
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
     }
 
     private void TryCreateManager(string path)

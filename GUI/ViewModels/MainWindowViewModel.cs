@@ -1,6 +1,5 @@
 ﻿using GUI.Services;
 using Models.Events;
-using System.Windows.Input;
 
 namespace GUI.ViewModels;
 

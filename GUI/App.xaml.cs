@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
 namespace GUI;
+
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>

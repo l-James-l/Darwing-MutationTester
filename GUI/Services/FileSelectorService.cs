@@ -11,8 +11,10 @@ public class FileSelectorService : IFileSelectorService
     {
         try
         {
-            OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = filter;
+            OpenFileDialog dialog = new()
+            {
+                Filter = filter
+            };
 
             bool? result = dialog.ShowDialog();
             if (result == true)
