@@ -1,6 +1,11 @@
 ﻿namespace GUI.ViewModels;
 
-public class SolutionExplorerViewModel
+public interface ISolutionExplorerViewModel
+{
+
+}
+
+public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewModel
 {
 
 }

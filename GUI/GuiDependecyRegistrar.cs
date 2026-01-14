@@ -25,6 +25,8 @@ public class GuiDependecyRegistrar : DependencyRegistrar
     private void RegisterViewModels()
     {
         Services.AddSingleton<MainWindowViewModel>();
-        Services.AddSingleton<DashBoardViewModel>();
+        Services.AddSingleton<IDashBoardViewModel, DashBoardViewModel>();
+        Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
+        Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
     }
 }

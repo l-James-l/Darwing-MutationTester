@@ -6,9 +6,10 @@ namespace GUI.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private DashBoardViewModel _dashBoardViewModel { get; }
-    private SolutionExplorerViewModel _solutionExplorerViewModel { get; }
-    private SettingsViewModel _settingsViewModel { get; }
+    private readonly IDashBoardViewModel _dashBoardViewModel;
+    private readonly ISolutionExplorerViewModel _solutionExplorerViewModel;
+    private readonly ISettingsViewModel _settingsViewModel;
+
     private readonly IFileSelectorService _fileSelectorService;
     private readonly IEventAggregator _eventAggregator;
     private readonly IMutationSettings _mutationSettings;
@@ -17,12 +18,14 @@ public class MainWindowViewModel : ViewModelBase
     /// The mainwindow will contain the main structure for the UI.
     /// Is responsible for managing naviagation between individual sub windows (namley the dashboard, solution explorer and settings page)
     /// </summary>
-    public MainWindowViewModel(IFileSelectorService fileSelectorService, IEventAggregator eventAggregator, IMutationSettings mutationSettings)
+    public MainWindowViewModel(IFileSelectorService fileSelectorService, IEventAggregator eventAggregator,
+        IMutationSettings mutationSettings, IDashBoardViewModel dashBoard, ISolutionExplorerViewModel slnExplorer,
+        ISettingsViewModel settings)
     {
         // TODO DI these
-        _dashBoardViewModel = new DashBoardViewModel();
-        _solutionExplorerViewModel = new SolutionExplorerViewModel();
-        _settingsViewModel = new SettingsViewModel();
+        _dashBoardViewModel = dashBoard;
+        _solutionExplorerViewModel = slnExplorer;
+        _settingsViewModel = settings;
         
         _currentViewModel = default!; //Make the compilar happy. Setting the tab index will set this.
         SelectedTabIndex = 0;
@@ -81,7 +84,6 @@ public class MainWindowViewModel : ViewModelBase
     
 
     public DelegateCommand SolutionPathSelection { get; }
-
     private void SelectSolutionPath()
     {
         string? path = _fileSelectorService.OpenFileDialog("Solution Files (*.sln)|*.sln");

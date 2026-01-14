@@ -1,6 +1,11 @@
 ﻿namespace GUI.ViewModels;
 
-public class SettingsViewModel
+public interface ISettingsViewModel
+{
+
+}
+
+public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 {
 
 }

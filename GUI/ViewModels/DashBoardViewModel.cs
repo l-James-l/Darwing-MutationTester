@@ -2,7 +2,12 @@
 
 namespace GUI.ViewModels;
 
-public class DashBoardViewModel
+public interface IDashBoardViewModel
+{
+
+}
+
+public class DashBoardViewModel : ViewModelBase, IDashBoardViewModel
 {
     public StatusBarViewModel StatusBarViewModel { get; set; }
 

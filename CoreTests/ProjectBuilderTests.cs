@@ -18,6 +18,7 @@ public class ProjectBuilderTests
     private IProcessWrapperFactory _processWrapperFactory;
 
     private RequestSolutionBuildEvent _buildEvent;
+    private Action _buildEventCallBack;
 
     [SetUp]
     public void SetUp()
@@ -29,22 +30,23 @@ public class ProjectBuilderTests
 
         _projectBuilder = new ProjectBuilder(_mutationSettings, _eventAggregator, _solutionProvider, _processWrapperFactory);
 
-        _buildEvent = new();
+        _buildEvent = Substitute.For<RequestSolutionBuildEvent>();
         _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Returns(_buildEvent);
+
+        _buildEvent.When(x => x.Subscribe(Arg.Any<Action>(), Arg.Any<ThreadOption>(), Arg.Any<bool>()))
+            .Do(x => _buildEventCallBack = x.Arg<Action>());
     }
 
     [Test]
     public void WhenStrartUp_ThenSubscribesToEvent()
     {
         //Arrange
-        _buildEvent = Substitute.For<RequestSolutionBuildEvent>();
-        _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Returns(_buildEvent);
-
         //Act
         _projectBuilder.StartUp();
 
         //Assert
-        _buildEvent.Received(1).Subscribe(Arg.Any<Action>());
+        _buildEvent.Received(1).Subscribe(Arg.Any<Action>(), ThreadOption.BackgroundThread, true);
+        Assert.That(_buildEventCallBack, Is.Not.Null);
     }
 
     [Test]
@@ -55,7 +57,7 @@ public class ProjectBuilderTests
         _projectBuilder.StartUp();
 
         //Act
-        _buildEvent.Publish();
+        _buildEventCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(0).Create(Arg.Any<ProcessStartInfo>());
@@ -72,7 +74,7 @@ public class ProjectBuilderTests
         _projectBuilder.StartUp();
 
         //Act
-        _buildEvent.Publish();
+        _buildEventCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(0).Create(Arg.Any<ProcessStartInfo>());
@@ -111,7 +113,7 @@ public class ProjectBuilderTests
         _projectBuilder.StartUp();
 
         //Act
-        _buildEvent.Publish();
+        _buildEventCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(2).Create(Arg.Any<ProcessStartInfo>()); 
@@ -170,7 +172,7 @@ public class ProjectBuilderTests
         _projectBuilder.StartUp();
 
         //Act
-        _buildEvent.Publish();
+        _buildEventCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(4).Create(Arg.Any<ProcessStartInfo>());

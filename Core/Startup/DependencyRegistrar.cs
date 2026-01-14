@@ -48,7 +48,6 @@ public abstract class DependencyRegistrar
     {
         Services.AddSingleton<IEventAggregator, EventAggregator>();
         Services.AddSingleton<EstablishLoggerConfiguration>();
-        Services.AddSingleton<StartUpProcessManager>();
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
         Services.AddSingleton<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
@@ -82,6 +81,10 @@ public abstract class DependencyRegistrar
             throw new RegistrationException("Attempted to register Start up process before creating the service provider.");
         }
 
-        _serviceProvider.GetRequiredService<StartUpProcessManager>().Initialize();
+        IEnumerable<IStartUpProcess> startUpProcesses = _serviceProvider.GetServices<IStartUpProcess>();
+        foreach (IStartUpProcess process in startUpProcesses)
+        {
+            process.StartUp();
+        }
     }
 }

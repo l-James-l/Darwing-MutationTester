@@ -1,5 +1,4 @@
-﻿using CLI;
-using Core;
+﻿using Core;
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Core.Startup;
@@ -11,11 +10,8 @@ using NSubstitute;
 
 namespace CoreTests.Startup;
 
-internal class DependencyRegistrarTests
+internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
 {
-    private IServiceCollection _services;
-    private int _expectedRegistrations;
-
     [SetUp]
     public void Setup()
     {
@@ -27,7 +23,7 @@ internal class DependencyRegistrarTests
     public void GivenConstructed_ThenAllDependenciesRegistered()
     {
         //Arrange
-        DependencyRegistrar registrar = new TestRegistrar(_services);
+        DependencyRegistrar registrar = new TestRegistrar(_services!);
 
         //Act
         registrar.Build();
@@ -53,60 +49,10 @@ internal class DependencyRegistrarTests
         AssertMutatorRegistration<AddToSubtractMutator>();
         AssertMutatorRegistration<SubtractToAddMutator>();
 
-        _services.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
-    }
-
-
-    [Test]
-    public void GivenCliConstructed_ThenAllDependenciesRegistered()
-    {
-        //Arrange
-        DependencyRegistrar registrar = new TestCliRegistrar(_services);
-
-        //Act
-        registrar.Build();
-
-        //Assert
-        AssertBasicRegistartion<CLIApp>();
-    }
-
-    private void AssertMutatorRegistration<T>() => AssertBasicRegistartion<IMutationImplementation, T>(true);
-
-    private void AssertBasicRegistartion<T>(bool isSingleton = true) => AssertBasicRegistartion<T, T>(isSingleton);
-
-    private void AssertBasicRegistartion<T1, T2>(bool isSingleton = true)
-    {
-        _expectedRegistrations++;
-
-        _services.Received(1).Add(Arg.Is<ServiceDescriptor>(x => 
-        x.Lifetime == (isSingleton ? ServiceLifetime.Singleton : ServiceLifetime.Transient)
-        && x.ImplementationType == typeof(T2)
-        && x.ServiceType == typeof(T1)));
-    }
-
-    private void AssertRegisterManySingleton<T>(Type[] baseTypes)
-    {
-        AssertBasicRegistartion<T>();
-        foreach (Type type in baseTypes)
-        {
-            _expectedRegistrations++;
-
-            _services.Received().Add(Arg.Is<ServiceDescriptor>(x =>
-            x.Lifetime == ServiceLifetime.Singleton
-            && x.ServiceType == type
-            && x.ImplementationFactory != null));
-        }
-        //TODO: Further validate the implementation factory creates the correct instance. Dont currently know how to do this.
-        //This also means that where multiple classes are registered against the same class, cant assert this.
+        _services!.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
     }
 }
 
-file class TestCliRegistrar : CliDependencyRegistrar
-{
-    public TestCliRegistrar(IServiceCollection serviceCollection) : base(serviceCollection)
-    {
-    }
-}
 
 file class TestRegistrar : DependencyRegistrar
 {
