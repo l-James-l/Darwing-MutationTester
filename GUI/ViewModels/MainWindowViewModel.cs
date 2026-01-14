@@ -1,4 +1,5 @@
 ﻿using GUI.Services;
+using Models;
 using Models.Events;
 
 namespace GUI.ViewModels;
@@ -10,12 +11,13 @@ public class MainWindowViewModel : ViewModelBase
     private SettingsViewModel _settingsViewModel { get; }
     private readonly IFileSelectorService _fileSelectorService;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IMutationSettings _mutationSettings;
 
     /// <summary>
     /// The mainwindow will contain the main structure for the UI.
     /// Is responsible for managing naviagation between individual sub windows (namley the dashboard, solution explorer and settings page)
     /// </summary>
-    public MainWindowViewModel(IFileSelectorService fileSelectorService, IEventAggregator eventAggregator)
+    public MainWindowViewModel(IFileSelectorService fileSelectorService, IEventAggregator eventAggregator, IMutationSettings mutationSettings)
     {
         // TODO DI these
         _dashBoardViewModel = new DashBoardViewModel();
@@ -27,8 +29,12 @@ public class MainWindowViewModel : ViewModelBase
 
         _fileSelectorService = fileSelectorService;
         _eventAggregator = eventAggregator;
+        _mutationSettings = mutationSettings;
 
         SolutionPathSelection = new DelegateCommand(SelectSolutionPath);
+        ReloadCurrentSolution = new DelegateCommand(ReloadCurrentSolutionCommand);
+        RebuildCurrentSolution = new DelegateCommand(RebuildCurrentSolutionCommand);
+        TestSolution = new DelegateCommand(TestSolutionCommand);
     }
 
     /// <summary>
@@ -83,5 +89,23 @@ public class MainWindowViewModel : ViewModelBase
         {
             _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(path));
         }
+    }
+
+    public DelegateCommand ReloadCurrentSolution { get; }
+    private void ReloadCurrentSolutionCommand()
+    {
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(_mutationSettings.SolutionPath));
+    }
+
+    public DelegateCommand RebuildCurrentSolution { get; }
+    private void RebuildCurrentSolutionCommand()
+    {
+        _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Publish();
+    }
+
+    public DelegateCommand TestSolution { get; }
+    private void TestSolutionCommand()
+    {
+        _eventAggregator.GetEvent<InitiateTestRunEvent>().Publish();
     }
 }

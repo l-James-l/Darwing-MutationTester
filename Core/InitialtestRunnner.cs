@@ -28,7 +28,7 @@ public class InitialTestRunnner : IStartUpProcess
 
     public void StartUp()
     {
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Subscribe(InitialTestRun);
+        _eventAggregator.GetEvent<InitiateTestRunEvent>().Subscribe(InitialTestRun, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
     }
     
     /// <summary>
@@ -52,7 +52,6 @@ public class InitialTestRunnner : IStartUpProcess
             FileName = "dotnet",
             Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath)
         };

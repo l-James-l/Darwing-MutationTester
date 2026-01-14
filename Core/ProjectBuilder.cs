@@ -34,7 +34,7 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
 
     public void StartUp()
     {
-        _eventAggrgator.GetEvent<RequestSolutionBuildEvent>().Subscribe(InitialBuild);
+        _eventAggrgator.GetEvent<RequestSolutionBuildEvent>().Subscribe(InitialBuild, ThreadOption.BackgroundThread, true);
     }
 
     private void InitialBuild()
@@ -159,7 +159,6 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             FileName = "dotnet",
             Arguments = $"build {Path.GetFileName(path)}",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(path)
         };
@@ -174,7 +173,6 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             FileName = "dotnet",
             Arguments = $"clean {Path.GetFileName(path)}",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(path)
         };
@@ -189,7 +187,6 @@ public class ProjectBuilder : IStartUpProcess, IWasBuildSuccessfull
             FileName = "dotnet",
             Arguments = $"restore {Path.GetFileName(path)}",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(path)
         };

@@ -23,7 +23,7 @@ public class MutatedProjectBuilder : IStartUpProcess
 
     public void StartUp()
     {
-        _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Subscribe(EmitAllChanges);
+        _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Subscribe(EmitAllChanges, ThreadOption.BackgroundThread, true);
     }
 
     public void EmitAllChanges()

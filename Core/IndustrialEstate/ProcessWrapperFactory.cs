@@ -8,7 +8,13 @@ namespace Core.IndustrialEstate;
 /// </summary>
 public class ProcessWrapperFactory: IProcessWrapperFactory
 {
-    public IProcessWrapper Create(ProcessStartInfo processStartInfo) => new ProcessWrapper(processStartInfo);
+    public IProcessWrapper Create(ProcessStartInfo processStartInfo)
+    {
+        processStartInfo.CreateNoWindow = true;
+        processStartInfo.UseShellExecute = false;
+
+        return new ProcessWrapper(processStartInfo);
+    }
 }
 
 public interface IProcessWrapperFactory
