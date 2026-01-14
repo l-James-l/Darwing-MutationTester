@@ -135,11 +135,7 @@ public class CLIApp
 
         string path = commandParams[0];
 
-        _mutationSettings.SolutionPath = path;
-
-        // We pulish the event with the sln path in the payload, rather than relying on the mutation settings directly, so that
-        // in the instance a new sln path is provided later, we can handle that too.
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(_mutationSettings.SolutionPath));
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(path));
     }
 
     private void SolutionBuilderCommand(string[] commandParams, out string? response)

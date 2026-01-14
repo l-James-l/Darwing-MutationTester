@@ -1,4 +1,4 @@
-﻿using Buildalyzer;
+using Buildalyzer;
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Microsoft.CodeAnalysis;
@@ -47,7 +47,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
     {
         //By using the startup process, we ensure the DI container will construct this class at application start.
         //Thus ensuring the subscription is made.
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided);
+        //Have to have keep subscriber reference alive true to stop prism garbage collecting.
+        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
     }
 
     private void TryCreateManager(string path)
@@ -60,6 +61,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
         }
         catch (Exception ex)
         {
+            _solutionContainer = null;
+            _mutationSettings.SolutionPath = "";
             Log.Error("Failed to load solution.");
             Log.Debug($"Failed to create AnalyzerManager for solution at location: {path}. {ex}");
         }
@@ -79,6 +82,8 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
         }
         else
         {
+            _mutationSettings.SolutionPath = payload.SolutionPath;
+
             TryCreateManager(payload.SolutionPath);
         }
 

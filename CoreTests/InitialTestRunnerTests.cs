@@ -22,6 +22,8 @@ public class InitialTestRunnerTests
     private InitiateTestRunEvent _initiateTestRunEvent;
     private InitialTestRunCompleteEvent _initiateTestRunCompleteEvent;
 
+    private Action _initTestRunSubCallBack;
+
     [SetUp]
     public void SetUp()
     {
@@ -33,24 +35,34 @@ public class InitialTestRunnerTests
 
         _runner = new InitialTestRunnner(_eventAggregator, _mutationSettings, _buildSuccessfull, _processWrapperFactory, _mutationRunManager);
 
-        _initiateTestRunEvent = new InitiateTestRunEvent();
+        _initiateTestRunEvent = Substitute.For<InitiateTestRunEvent>();
         _initiateTestRunCompleteEvent = Substitute.For<InitialTestRunCompleteEvent>();
         _eventAggregator.GetEvent<InitiateTestRunEvent>().Returns(_initiateTestRunEvent);
         _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Returns(_initiateTestRunCompleteEvent);
+
+        _initiateTestRunEvent.When(x => x.Subscribe(Arg.Any<Action>(), Arg.Any<ThreadOption>(), Arg.Any<bool>()))
+            .Do(x => _initTestRunSubCallBack = x.Arg<Action>());
+    }
+
+    private void InitiateRunner()
+    {
+        _runner.StartUp();
+        if (_initTestRunSubCallBack == null)
+        {
+            Assert.Fail($"{nameof(InitiateTestRunEvent)} subscription not made");
+        }
     }
 
     [Test]
     public void WhenStartUp_ThenTestrunEventSubscribed()
     {
         //Arrange
-        InitiateTestRunEvent testRunEvent = Substitute.For<InitiateTestRunEvent>();
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Returns(testRunEvent);
-
         //Act
         _runner.StartUp();
 
         //Assert
-        testRunEvent.Received(1).Subscribe(Arg.Any<Action>());
+        _initiateTestRunEvent.Received(1).Subscribe(Arg.Any<Action>(), ThreadOption.BackgroundThread, true);
+        Assert.That(_initTestRunSubCallBack, Is.Not.Null);
     }
 
     [Test]
@@ -58,14 +70,15 @@ public class InitialTestRunnerTests
     {
         //Arrange
         _buildSuccessfull.WasLastBuildSuccessful.Returns(false);
-        _runner.StartUp();
+        InitiateRunner();
 
         //Act
-        _initiateTestRunEvent.Publish();
+        _initTestRunSubCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(0).Create(Arg.Any<ProcessStartInfo>());
     }
+
 
     [Test]
     public void GivenSuccessfulBuild_WhenPublishEvent_ThenTestRunStarted()
@@ -81,17 +94,17 @@ public class InitialTestRunnerTests
         testProcess.Errors.Returns([]);
         testProcess.Duration.Returns(TimeSpan.FromSeconds(30));
 
-        _runner.StartUp();
+        InitiateRunner();
 
         //Act
-        _initiateTestRunEvent.Publish();
+        _initTestRunSubCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
             x.FileName == "dotnet" &&
             x.Arguments == "test solution.sln --no-build" &&
             x.WorkingDirectory == "this\\is\\the\\path\\to" &&
-            x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
+            x.RedirectStandardError && x.RedirectStandardOutput));
         testProcess.Received(1).StartAndAwait(null);
         _mutationRunManager.Received(1).Run(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful));
         _initiateTestRunCompleteEvent.Received(1).Publish(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful && x.InitialRunDuration.Seconds == 30));
@@ -110,10 +123,10 @@ public class InitialTestRunnerTests
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
 
-        _runner.StartUp();
+        InitiateRunner();
 
         //Act
-        _initiateTestRunEvent.Publish();
+        _initTestRunSubCallBack.Invoke();
 
         //Assert
         _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>

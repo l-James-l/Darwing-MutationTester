@@ -1,6 +1,4 @@
-﻿using Core.Startup;
-using Microsoft.Extensions.DependencyInjection;
-using System.Windows;
+﻿using System.Windows;
 
 namespace GUI;
 
@@ -12,9 +10,5 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-
-        Title = "Darwing GUI";
-
-        //new DependencyRegistrar(new ServiceCollection()).Build();
     }
 }

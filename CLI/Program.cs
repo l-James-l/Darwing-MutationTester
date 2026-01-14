@@ -10,7 +10,7 @@ public class Program
     public static void Main(string[] args)
     {
         IServiceProvider serviceProvider = new CliDependencyRegistrar(new ServiceCollection()).Build();
-        CLIApp cLIApp = serviceProvider.GetService<CLIApp>() ?? throw new FatalException("Failed to resolve CLI");
+        CLIApp cLIApp = serviceProvider.GetRequiredService<CLIApp>();
         cLIApp.Run(args);
     }
 }

@@ -41,7 +41,7 @@ public abstract class DependencyRegistrar
 
     protected virtual void RegisterLocalDependencies()
     {
-        // For override in different interaces to core.
+        // For override in different interfaces to core.
     }
 
     private void RegisterDependencies()

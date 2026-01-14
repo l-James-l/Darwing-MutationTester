@@ -22,6 +22,8 @@ public class SolutionPathProvidedAwaiterTests
     private SolutionPathProvidedEvent _solutionPathProvided;
     private RequestSolutionBuildEvent _requestSolutionBuild;
 
+    private Action<SolutionPathProvidedPayload> _requestSolutionBuildCallback;
+
     [SetUp]
     public void Setup()
     {
@@ -30,8 +32,11 @@ public class SolutionPathProvidedAwaiterTests
         _slnProfileDeserializer = Substitute.For<ISolutionProfileDeserializer>();
         _mutationSettings = Substitute.For<IMutationSettings>();
 
-        _solutionPathProvided = new SolutionPathProvidedEvent();
+        _solutionPathProvided = Substitute.For<SolutionPathProvidedEvent>();
         _requestSolutionBuild = new RequestSolutionBuildEvent();
+
+        _solutionPathProvided.When(x => x.Subscribe(Arg.Any<Action<SolutionPathProvidedPayload>>(), Arg.Any<ThreadOption>(), Arg.Any<bool>()))
+            .Do(x => _requestSolutionBuildCallback = x.Arg<Action<SolutionPathProvidedPayload>>());
 
         _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Returns(_solutionPathProvided);
         _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Returns(_requestSolutionBuild);
@@ -69,7 +74,7 @@ public class SolutionPathProvidedAwaiterTests
         string path = @"C:\InvalidPath\NonExistentSolution.sln";
 
         // Act
-        _solutionPathProvided.Publish(new SolutionPathProvidedPayload(path));
+        _requestSolutionBuildCallback.Invoke(new SolutionPathProvidedPayload(path));
 
         // Assert
         _analyzerManagerFactory.DidNotReceive().CreateAnalyzerManager(Arg.Any<string>());

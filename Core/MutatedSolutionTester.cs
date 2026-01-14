@@ -34,8 +34,8 @@ public class MutatedSolutionTester : IStartUpProcess
 
     public void StartUp()
     {
-        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Subscribe(x => _initialTestRunInfo = x);
-        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().Subscribe(RunTestsOnMutatedSolution);
+        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Subscribe(x => _initialTestRunInfo = x, ThreadOption.BackgroundThread, true);
+        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().Subscribe(RunTestsOnMutatedSolution, ThreadOption.BackgroundThread, true);
     }
 
     private void RunTestsOnMutatedSolution()

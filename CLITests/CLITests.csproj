@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CLI\CLI.csproj" />
+    <ProjectReference Include="..\CoreTests\CoreTests.csproj" />
     <ProjectReference Include="..\Models\Models.csproj" />
   </ItemGroup>
 
