@@ -4,5 +4,5 @@ namespace Mutator;
 
 public interface IMutationRunInitiator
 {
-    void Run(InitialTestRunInfo testRunInfo);
+    void Run();
 }

@@ -11,7 +11,7 @@ namespace CoreTests;
 
 public class InitialTestRunnerTests
 {
-    private InitialTestRunnner _runner; // SUT
+    private InitialTestRunner _runner; // SUT
 
     private IEventAggregator _eventAggregator;
     private IMutationSettings _mutationSettings;

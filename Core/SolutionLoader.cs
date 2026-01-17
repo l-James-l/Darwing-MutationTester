@@ -4,7 +4,9 @@ using Core.Interfaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Models;
+using Models.Enums;
 using Models.Events;
+using Models.SharedInterfaces;
 using Serilog;
 
 namespace Core;
@@ -16,46 +18,81 @@ namespace Core;
 ///     - Checking for a solution profile
 ///     - Performing an initial build
 /// </summary>
-public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
+public class SolutionLoader : ISolutionLoader, ISolutionProvider
 {
-    private readonly IEventAggregator _eventAggregator;
     private readonly IAnalyzerManagerFactory _analyzerManagerFactory;
     private readonly ISolutionProfileDeserializer _slnProfileDeserializer;
     private readonly IMutationSettings _mutationSettings;
+    private readonly ISolutionBuilder _solutionBuilder;
+    private readonly IStatusTracker _statusTracker;
 
     //By making the public property the interface, we can mock the solution in testing.
-    public ISolutionContainer SolutionContiner => _solutionContainer ?? throw new InvalidOperationException("Attempted to retrieve a solution before one has been loaded.");
+    public ISolutionContainer SolutionContainer => _solutionContainer ?? throw new InvalidOperationException("Attempted to retrieve a solution before one has been loaded.");
     private SolutionContainer? _solutionContainer;
 
     public bool IsAvailable => _solutionContainer != null;
 
-    public SolutionPathProvidedAwaiter(IEventAggregator eventAggregator, IAnalyzerManagerFactory analyzerManagerFactory, 
-        ISolutionProfileDeserializer slnProfileDeserializer, IMutationSettings mutationSettings)
+    public SolutionLoader(IAnalyzerManagerFactory analyzerManagerFactory, ISolutionProfileDeserializer slnProfileDeserializer,
+        IMutationSettings mutationSettings, ISolutionBuilder solutionBuilder, IStatusTracker statusTracker)
     {
-        ArgumentNullException.ThrowIfNull(eventAggregator);
         ArgumentNullException.ThrowIfNull(analyzerManagerFactory);
         ArgumentNullException.ThrowIfNull(slnProfileDeserializer);
         ArgumentNullException.ThrowIfNull(mutationSettings);
+        ArgumentNullException.ThrowIfNull(solutionBuilder);
+        ArgumentNullException.ThrowIfNull(statusTracker);
 
-        _eventAggregator = eventAggregator;
         _analyzerManagerFactory = analyzerManagerFactory;
         _slnProfileDeserializer = slnProfileDeserializer;
         _mutationSettings = mutationSettings;
+        _solutionBuilder = solutionBuilder;
+        _statusTracker = statusTracker;
     }
 
-    public void StartUp()
+    public void Load(string solutionPath)
     {
-        //By using the startup process, we ensure the DI container will construct this class at application start.
-        //Thus ensuring the subscription is made.
-        //Have to have keep subscriber reference alive true to stop prism garbage collecting.
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Subscribe(OnSolutionPathProvided, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
+        ArgumentNullException.ThrowIfNull(solutionPath);
+
+        Log.Information("Received solution path: {path}", solutionPath);
+
+        if (!_statusTracker.TryStartOperation(DarwingOperation.LoadSolution))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(solutionPath) || !solutionPath.EndsWith(".sln") || !File.Exists(solutionPath))
+        {
+            Log.Error($"Solution file not found at location: {solutionPath}");
+            _mutationSettings.SolutionPath = "";
+            _solutionContainer = null;
+        }
+        else
+        {
+            _mutationSettings.SolutionPath = solutionPath;
+
+            TryCreateManager(solutionPath);
+        }
+
+        if (_solutionContainer is not null)
+        {
+            //Do this outside the try catch so that errors caught are only for loading the solution.
+            //Deserializer shall handle its own exceptions.
+            _slnProfileDeserializer.LoadSlnProfileIfPresent(solutionPath);
+            _solutionContainer.FindTestProjects(_mutationSettings);
+            DiscoverSourceCodeFiles();
+            _statusTracker.FinishOperation(DarwingOperation.LoadSolution, IsAvailable);
+            _solutionBuilder.InitialBuild();
+        }
+        else
+        {
+            _statusTracker.FinishOperation(DarwingOperation.LoadSolution, false);
+        }
     }
 
     private void TryCreateManager(string path)
     {
         try
         {
-            Log.Information("Creating analyzer for soltution");
+            Log.Information("Creating analyzer for solution.");
             IAnalyzerManager analyzerManager = _analyzerManagerFactory.CreateAnalyzerManager(path);
             _solutionContainer = new SolutionContainer(analyzerManager);
         }
@@ -66,38 +103,6 @@ public class SolutionPathProvidedAwaiter : IStartUpProcess, ISolutionProvider
             Log.Error("Failed to load solution.");
             Log.Debug($"Failed to create AnalyzerManager for solution at location: {path}. {ex}");
         }
-    }
-
-    private void OnSolutionPathProvided(SolutionPathProvidedPayload payload)
-    {
-        ArgumentNullException.ThrowIfNull(payload);
-
-        Log.Information("Recieved solution path: {path}", payload.SolutionPath);
-
-        if (string.IsNullOrWhiteSpace(payload.SolutionPath) || !payload.SolutionPath.EndsWith(".sln") || !File.Exists(payload.SolutionPath))
-        {
-            Log.Error($"Solution file not found at location: {payload.SolutionPath}");
-            _mutationSettings.SolutionPath = "";
-            _solutionContainer = null;
-        }
-        else
-        {
-            _mutationSettings.SolutionPath = payload.SolutionPath;
-
-            TryCreateManager(payload.SolutionPath);
-        }
-
-        if (_solutionContainer is not null)
-        {
-            //Do this outside the try catch so that errors caught are only for loading the solution.
-            //Deserializer shall handle its own exceptions.
-            _slnProfileDeserializer.LoadSlnProfileIfPresent(payload.SolutionPath);
-            _solutionContainer.FindTestProjects(_mutationSettings);
-            DiscoverSourceCodeFiles();
-        }
-
-        // Always publish this at the end so that the most recent build info can be updated, including where the new solution path was invalid.
-        _eventAggregator.GetEvent<SolutionLoadedEvent>().Publish(IsAvailable);
     }
 
     private void DiscoverSourceCodeFiles()

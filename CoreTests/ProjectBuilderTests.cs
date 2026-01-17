@@ -10,7 +10,7 @@ namespace CoreTests;
 
 public class ProjectBuilderTests
 {
-    private ProjectBuilder _projectBuilder; //SUT
+    private SolutionBuilder _projectBuilder; //SUT
 
     private IMutationSettings _mutationSettings;
     private IEventAggregator _eventAggregator;
@@ -28,7 +28,7 @@ public class ProjectBuilderTests
         _solutionProvider = Substitute.For<ISolutionProvider>();
         _processWrapperFactory = Substitute.For<IProcessWrapperFactory>();
 
-        _projectBuilder = new ProjectBuilder(_mutationSettings, _eventAggregator, _solutionProvider, _processWrapperFactory);
+        _projectBuilder = new SolutionBuilder(_mutationSettings, _eventAggregator, _solutionProvider, _processWrapperFactory);
 
         _buildEvent = Substitute.For<SolutionLoadedEvent>();
         _eventAggregator.GetEvent<SolutionLoadedEvent>().Returns(_buildEvent);
@@ -69,7 +69,7 @@ public class ProjectBuilderTests
         //Arrange
         _solutionProvider.IsAvailable.Returns(true);
         ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
-        _solutionProvider.SolutionContiner.Returns(solutionContainer);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
         solutionContainer.AllProjects.Returns(new List<IProjectContainer>());
         _projectBuilder.StartUp();
 
@@ -86,7 +86,7 @@ public class ProjectBuilderTests
         //Arrange
         _solutionProvider.IsAvailable.Returns(true);
         ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
-        _solutionProvider.SolutionContiner.Returns(solutionContainer);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
 
         IProjectContainer project1 = Substitute.For<IProjectContainer>();
         project1.Name.Returns("Project1");
@@ -139,7 +139,7 @@ public class ProjectBuilderTests
         //Arrange
         _solutionProvider.IsAvailable.Returns(true);
         ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
-        _solutionProvider.SolutionContiner.Returns(solutionContainer);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
 
         IProjectContainer project1 = Substitute.For<IProjectContainer>();
         project1.Name.Returns("Project1");

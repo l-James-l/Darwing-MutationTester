@@ -54,7 +54,7 @@ public class ProcessWrapper : Process, IProcessWrapper
             return StartAndAwait(TimeSpan.FromSeconds(timeout.Value));
         }
 
-        // Caller didnt specify a timeout, so use a reasonably high one
+        // Caller didn't specify a timeout, so use a reasonably high one
         return StartAndAwait(TimeSpan.FromHours(1));
     }
 

@@ -1,8 +1,7 @@
-﻿using Core.Interfaces;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Models;
 using Models.Enums;
-using Models.Events;
+using Models.SharedInterfaces;
 using Mutator.MutationImplementations;
 using Serilog;
 
@@ -11,11 +10,12 @@ namespace Mutator;
 /// <summary>
 /// This class if responsible for something probably
 /// </summary>
-public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscoveryManager
+public class MutationDiscoveryManager : IMutationDiscoveryManager
 {
     private ISolutionProvider _solutionProvider;
     private IMutationImplementationProvider _mutationImplementationProvider;
-    private IEventAggregator _eventAggregator;
+    private readonly IStatusTracker _statusTracker;
+    private readonly IMutatedProjectBuilder _mutatedProjectBuilder;
 
     /// <summary>
     /// All discovered mutations
@@ -25,18 +25,20 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
     private Solution? _mutatedSolution;
 
     public MutationDiscoveryManager(ISolutionProvider solutionProvider, IMutationImplementationProvider mutationImplementationProvider,
-        IEventAggregator eventAggregator)
+        IStatusTracker statusTracker, IMutatedProjectBuilder mutatedProjectBuilder)
     {
         ArgumentNullException.ThrowIfNull(solutionProvider);
         ArgumentNullException.ThrowIfNull(mutationImplementationProvider);
-        ArgumentNullException.ThrowIfNull(eventAggregator);
+        ArgumentNullException.ThrowIfNull(statusTracker);
+        ArgumentNullException.ThrowIfNull(mutatedProjectBuilder);
 
         _solutionProvider = solutionProvider;
         _mutationImplementationProvider = mutationImplementationProvider;
-        _eventAggregator = eventAggregator;
+        _statusTracker = statusTracker;
+        _mutatedProjectBuilder = mutatedProjectBuilder;
     }
 
-    public void Run(InitialTestRunInfo testRunInfo)
+    public void PerformMutationDiscovery()
     {
         // A mutation run must:
         // - traverse the syntax trees of each file to discover mutation opportunities.
@@ -48,13 +50,40 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         // - Activate mutants 1 by 1 and run all tests (TODO only covering tests)
         // - Report if the mutant was killed or not
 
-        ArgumentNullException.ThrowIfNull(testRunInfo);
+        if (!_statusTracker.TryStartOperation(DarwingOperation.DiscoveringMutants))
+        {
+            return;
+        }
 
         _mutatedSolution = null;
         DiscoveredMutations.Clear();
-        bool sucess = false;
 
-        foreach (IProjectContainer project in _solutionProvider.SolutionContiner.SolutionProjects)
+        try
+        {
+            DiscoverMutants();
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Error thrown while discovering mutants.", ex);
+        }
+
+        if (_mutatedSolution != null && _solutionProvider.SolutionContainer.Workspace.TryApplyChanges(_mutatedSolution))
+        {
+            // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
+            _solutionProvider.SolutionContainer.RestoreProjects();
+            _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, true);
+            _mutatedProjectBuilder.Build();
+        }
+        else
+        {
+            Log.Error("Failed to created mutated solution");
+            _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, false);
+        }
+    }
+
+    private void DiscoverMutants()
+    {
+        foreach (IProjectContainer project in _solutionProvider.SolutionContainer.SolutionProjects)
         {
             foreach ((DocumentId documentId, SyntaxTree tree) in project.UnMutatedSyntaxTrees)
             {
@@ -63,10 +92,10 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
                 List<DiscoveredMutation> tempDiscoveredMutations = new List<DiscoveredMutation>();
                 SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(tree.GetRoot(), tempDiscoveredMutations);
                 Log.Information($"Discovered {tempDiscoveredMutations.Count} mutations for {tree.FilePath}.");
-               
+
                 SyntaxTree mutatedTree = tree.WithRootAndOptions(mutatedRoot, tree.Options);
 
-                // By applying the document ID here, we remove the need for the recrsion to be aware of the document its traversing.
+                // By applying the document ID here, we remove the need for the recursion to be aware of the document its traversing.
                 tempDiscoveredMutations.ForEach(mutation => mutation.Document = documentId);
                 DiscoveredMutations.AddRange(tempDiscoveredMutations);
                 RediscoverMutationsInTree(mutatedRoot);
@@ -74,24 +103,12 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
                 ApplyDiscoveredMutationsToDocument(documentId, mutatedRoot);
             }
         }
-
-        if (_mutatedSolution != null && _solutionProvider.SolutionContiner.Workspace.TryApplyChanges(_mutatedSolution))
-        {
-            // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
-            _solutionProvider.SolutionContiner.RestoreProjects();
-            sucess = true;
-        }
-        else
-        {
-            Log.Error("Failed to created mutated solution");
-        }
-        _eventAggregator.GetEvent<MutantDiscoveryCompleteEvent>().Publish(sucess);
     }
 
     /// <summary>
-    /// Since each mutation we apply generates a whole new tree, the mutated nodes weve kept a reference to arent the same nodes in our
+    /// Since each mutation we apply generates a whole new tree, the mutated nodes we've kept a reference to aren't the same nodes in our
     /// final mutated tree, so we need to rediscover them and where they are.
-    /// This does mean we are traversing each file twice, but oh well, cant really do anything about it I dont think...
+    /// This does mean we are traversing each file twice, but oh well, cant really do anything about it I don't think...
     /// </summary>
     public void RediscoverMutationsInTree(SyntaxNode syntaxNode)
     {
@@ -99,7 +116,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
         {
             //Update the mutated node to the node in the actual mutated tree.
             rediscoveredMutation.MutatedNode = syntaxNode;
-            //Only update the status to availble if it was previously 'Discovered' to avoid making removed mutations show as available.
+            //Only update the status to available if it was previously 'Discovered' to avoid making removed mutations show as available.
             if (rediscoveredMutation.Status == MutantStatus.Discovered)
             {
                 rediscoveredMutation.Status = MutantStatus.Available;
@@ -118,7 +135,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
     private void ApplyDiscoveredMutationsToDocument(DocumentId documentId, SyntaxNode mutatedRoot)
     {
         // If this is the first file being mutated, the mutated solution will be null, so just copy over the unmutated solution.
-        _mutatedSolution ??= _solutionProvider.SolutionContiner.Solution;
+        _mutatedSolution ??= _solutionProvider.SolutionContainer.Solution;
 
         // This creates a new solution instance from the _mutatedSolution, rather than applying the changes directly to it.
         _mutatedSolution = _mutatedSolution.WithDocumentSyntaxRoot(documentId, mutatedRoot);
@@ -131,7 +148,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
     {
         node = TryMutateNode(mutations, node);
 
-        //Itterate/ mutate children first to achieve depth first search.
+        //Iterate/ mutate children first to achieve depth first search.
         Dictionary<SyntaxNode, SyntaxNode> mutatedChildren = new();
         foreach (SyntaxNode child in node.ChildNodes())
         {
@@ -139,7 +156,7 @@ public class MutationDiscoveryManager : IMutationRunInitiator, IMutationDiscover
             mutatedChildren.Add(child, childAfterTraversal);
         }
 
-        //Replace all the nodes children with thier mutated counterparts. 
+        //Replace all the nodes children with their mutated counterparts. 
         node = node.ReplaceNodes(node.ChildNodes(), (x, _) =>
         {
             if (mutatedChildren.TryGetValue(x, out var mutated))

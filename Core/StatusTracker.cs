@@ -1,5 +1,6 @@
-﻿using Models;
-using Models.Events;
+﻿using Models.Enums;
+using Models.SharedInterfaces;
+using Serilog;
 
 namespace Core;
 
@@ -8,65 +9,161 @@ namespace Core;
 /// This class will subscribe to various events and update the status accordingly.
 /// Used by the UI to display current status, and by other classes to check if certain actions can be performed.
 /// </summary>
-public class StatusTracker : IStartUpProcess
+public class StatusTracker : IStatusTracker
 {
-    private readonly IEventAggregator _eventAggregator;
-
-    public StatusTracker(IEventAggregator eventAggregator)
+    private Dictionary<DarwingOperation, OperationStates> _operations = new()
     {
-        _eventAggregator = eventAggregator;
+        { DarwingOperation.Idle, OperationStates.Ongoing },
+        { DarwingOperation.LoadSolution, OperationStates.NotStarted },
+        { DarwingOperation.BuildSolution, OperationStates.NotStarted },
+        { DarwingOperation.TestUnmutatedSolution, OperationStates.NotStarted  },
+        { DarwingOperation.DiscoveringMutants, OperationStates.NotStarted  },
+        { DarwingOperation.BuildingMutatedSolution, OperationStates.NotStarted  },
+        { DarwingOperation.TestMutants, OperationStates.NotStarted  }
+    };
+
+    private DarwingOperation _currentOperation => _operations.Single(kvp => kvp.Value == OperationStates.Ongoing).Key;
+
+    public OperationStates CheckStatus(DarwingOperation operation)
+    {
+        _operations.TryGetValue(operation, out OperationStates state);
+        return state;
     }
 
-    public void StartUp()
+    public bool TryStartOperation(DarwingOperation operation)
     {
-        // These subscriptions track the overall status of the mutation testing process.
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().BackGroundSubscribe(OnSolutionPathProvided);
-        _eventAggregator.GetEvent<SolutionLoadedEvent>().BackGroundSubscribe(OnSolutionBuildRequested);
-        _eventAggregator.GetEvent<SolutionBuildCompletedEvent>().BackGroundSubscribe(OnSolutionBuildCompleted);
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().BackGroundSubscribe(OnUnmutatedTestRunStarted);
-        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().BackGroundSubscribe(OnUnmutatedRunComplete);
-        _eventAggregator.GetEvent<MutantDiscoveryCompleteEvent>().BackGroundSubscribe(OnMutantDiscoveryComplete);
-        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().BackGroundSubscribe(OnMutatedSolutionBuilt);
-        _eventAggregator.GetEvent<MutatedSolutionTestingCompleteEvent>().BackGroundSubscribe(OnMutationTestingComplete);
+        if (ValidOperation(operation))
+        {
+            Log.Information("Starting operation: {operation}", operation);
+            _operations[DarwingOperation.Idle] = OperationStates.NotStarted;
+            _operations[operation] = OperationStates.Ongoing;
+            ResetStatesIfRegressing(operation);
+            return true;
+        }
+
+        Log.Warning("Attempted to start invalid operation stage: {operation}", operation);
+        return false;        
     }
 
-    private void OnSolutionPathProvided(SolutionPathProvidedPayload payload)
+    private void ResetStatesIfRegressing(DarwingOperation operation)
     {
-        throw new NotImplementedException();
+        // If we are starting an operation that is earlier in the sequence than the current one,
+        // we need to reset the states of the subsequent operations.
+        // Realistically, this should only happen with LoadSolution, BuildSolution & TestUnmutatedSolution
+        switch (operation)
+        {
+            case DarwingOperation.LoadSolution:
+                _operations[DarwingOperation.BuildSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.TestUnmutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.DiscoveringMutants] = OperationStates.NotStarted;
+                _operations[DarwingOperation.BuildingMutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.TestMutants] = OperationStates.NotStarted;
+                break;
+            case DarwingOperation.BuildSolution:
+                _operations[DarwingOperation.TestUnmutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.DiscoveringMutants] = OperationStates.NotStarted;
+                _operations[DarwingOperation.BuildingMutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.TestMutants] = OperationStates.NotStarted;
+                break;
+            case DarwingOperation.TestUnmutatedSolution:
+                _operations[DarwingOperation.DiscoveringMutants] = OperationStates.NotStarted;
+                _operations[DarwingOperation.BuildingMutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.TestMutants] = OperationStates.NotStarted;
+                break;
+            case DarwingOperation.DiscoveringMutants:
+                _operations[DarwingOperation.BuildingMutatedSolution] = OperationStates.NotStarted;
+                _operations[DarwingOperation.TestMutants] = OperationStates.NotStarted;
+                break;
+            case DarwingOperation.TestMutants:
+                // No further operations to reset
+                break;
+        }
     }
 
-    private void OnSolutionBuildRequested(bool obj)
+    public void FinishOperation(DarwingOperation operation, bool success)
     {
-        throw new NotImplementedException();
+        if (_currentOperation != operation)
+        {
+            throw new InvalidOperationException($"Cannot finish operation {operation} because current operation is {_currentOperation}");
+        }
+
+        if (success)
+        {
+            _operations[operation] = OperationStates.Succeeded;
+        }
+        else
+        {
+            _operations[operation] = OperationStates.Failed;
+        }
+        _operations[DarwingOperation.Idle] = OperationStates.Ongoing;
     }
 
-    private void OnSolutionBuildCompleted(bool obj)
+    private bool ValidOperation(DarwingOperation operation)
     {
-        throw new NotImplementedException();
+        switch (operation)
+        {
+            case DarwingOperation.LoadSolution:
+                return CanLoadSolution();
+            case DarwingOperation.BuildSolution:
+                return CanBuildSolution();
+            case DarwingOperation.TestUnmutatedSolution:
+                return CanTestUnmutatedSolution();
+            case DarwingOperation.DiscoveringMutants:
+                return CanStartDiscoveringMutants();
+            case DarwingOperation.BuildingMutatedSolution:
+                return CanBuildMutatedSolution();
+            case DarwingOperation.TestMutants:
+                return CanTestMutants();
+            default:
+                throw new ArgumentOutOfRangeException($"Unknown operation requested: {operation}");
+        }
     }
 
-    private void OnUnmutatedTestRunStarted()
+
+    private bool CanBuildSolution()
     {
-        throw new NotImplementedException();
+        return _currentOperation is DarwingOperation.Idle 
+            && _operations[DarwingOperation.LoadSolution] is OperationStates.Succeeded;
     }
 
-    private void OnUnmutatedRunComplete(InitialTestRunInfo info)
+    private bool CanLoadSolution()
     {
-        throw new NotImplementedException();
+        return _currentOperation is DarwingOperation.Idle;
     }
 
-    private void OnMutantDiscoveryComplete(bool success)
+    private bool CanTestUnmutatedSolution()
     {
-        throw new NotImplementedException();
+        return _currentOperation is DarwingOperation.Idle 
+            && _operations[DarwingOperation.LoadSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.BuildSolution] is OperationStates.Succeeded;
     }
 
-    private void OnMutatedSolutionBuilt(bool success)
+    public bool CanStartDiscoveringMutants()
     {
-        throw new NotImplementedException();
+        return _currentOperation is DarwingOperation.Idle
+            && _operations[DarwingOperation.LoadSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.BuildSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.TestUnmutatedSolution] is OperationStates.Succeeded;
+
     }
 
-    private void OnMutationTestingComplete()
+    private bool CanBuildMutatedSolution()
     {
-        throw new NotImplementedException();
+        return _currentOperation is DarwingOperation.Idle
+            && _operations[DarwingOperation.LoadSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.BuildSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.TestUnmutatedSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.DiscoveringMutants] is OperationStates.Succeeded;
     }
+
+    private bool CanTestMutants()
+    {
+        return _currentOperation is DarwingOperation.Idle
+            && _operations[DarwingOperation.LoadSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.BuildSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.TestUnmutatedSolution] is OperationStates.Succeeded
+            && _operations[DarwingOperation.DiscoveringMutants] is OperationStates.Succeeded
+            && _operations[DarwingOperation.BuildingMutatedSolution] is OperationStates.Succeeded;
+    }
+
 }

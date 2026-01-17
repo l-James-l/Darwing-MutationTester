@@ -1,45 +1,46 @@
 ﻿using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
+using Models.Enums;
 using Models.Events;
+using Models.SharedInterfaces;
 using Mutator;
 using Serilog;
 using System.Diagnostics;
 
 namespace Core;
 
-public class InitialTestRunnner : IStartUpProcess
+public class InitialTestRunner : IMutationRunInitiator
 {
     private readonly IEventAggregator _eventAggregator;
     private readonly IMutationSettings _mutationSettings;
-    private readonly IWasBuildSuccessfull _wasBuildSuccessfull;
+    private readonly IStatusTracker _statusTracker;
     private readonly IProcessWrapperFactory _processFactory;
     private IMutationRunInitiator _mutationRunManager;
 
-    public InitialTestRunnner(IEventAggregator eventAggregator, IMutationSettings mutationSettings, IWasBuildSuccessfull wasBuildSuccessfull,
+    public InitialTestRunner(IEventAggregator eventAggregator, IMutationSettings mutationSettings, IStatusTracker statusTracker,
         IProcessWrapperFactory processFactory, IMutationRunInitiator mutationRunManager)
     {
+        ArgumentNullException.ThrowIfNull(eventAggregator);
+        ArgumentNullException.ThrowIfNull(mutationSettings);
+        ArgumentNullException.ThrowIfNull(statusTracker);
+        ArgumentNullException.ThrowIfNull(processFactory);
+        ArgumentNullException.ThrowIfNull(mutationRunManager);
+
         _eventAggregator = eventAggregator;
         _mutationSettings = mutationSettings;
-        _wasBuildSuccessfull = wasBuildSuccessfull;
+        _statusTracker = statusTracker;
         _processFactory = processFactory;
         _mutationRunManager = mutationRunManager;
     }
-
-    public void StartUp()
-    {
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Subscribe(InitialTestRun, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
-    }
     
     /// <summary>
-    /// When a mutaiotn test run is started, the first step is running all unit test to ensure they all pass
+    /// When a mutation test run is started, the first step is running all unit test to ensure they all pass
     /// </summary>
-    private void InitialTestRun()
+    public void Run()
     {
-        // TODO replace with status manager check
-        if (!_wasBuildSuccessfull.WasLastBuildSuccessful)
+        if (!_statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution))
         {
-            Log.Error("Attempted to start a mutation run without a successful build");
             return;
         }
 
@@ -52,11 +53,11 @@ public class InitialTestRunnner : IStartUpProcess
         }
         finally
         {
-            // Ensure event is published even if the test run failed, and before proceeding to mutation run.
+            _statusTracker.FinishOperation(DarwingOperation.TestUnmutatedSolution, testRunInfo.WasSuccesful);
             _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Publish(testRunInfo);
             if (testRunInfo.WasSuccesful)
             {
-                _mutationRunManager.Run(testRunInfo);
+                _mutationRunManager.Run();
             }
         }
     }

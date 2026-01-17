@@ -1,11 +1,9 @@
-﻿using Models;
-
-namespace Core.Interfaces;
+﻿namespace Models;
 
 public interface ISolutionProvider
 {
     public bool IsAvailable { get; }
 
-    ISolutionContainer SolutionContiner { get; }
+    ISolutionContainer SolutionContainer { get; }
 
 }

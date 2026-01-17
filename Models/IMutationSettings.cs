@@ -16,4 +16,12 @@ public interface IMutationSettings
     /// User can specify which projects are test projects.
     /// </summary>
     public List<string> TestProjectNames { get; set; }
+
+    /// <summary>
+    /// After mutations have been applied to the solution, initial test run with no active mutants is performed
+    /// to ensure that introducing mutations did not break the build or tests.
+    /// This setting allows skipping that test run.
+    /// Warning: Skipping this step may lead to misleading results if the mutated solution is not stable.
+    /// </summary>
+    public bool SkipTestingNoActiveMutants { get; set; }
 }

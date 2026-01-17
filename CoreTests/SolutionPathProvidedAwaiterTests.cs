@@ -12,7 +12,7 @@ namespace CoreTests;
 
 public class SolutionPathProvidedAwaiterTests
 {
-    private SolutionPathProvidedAwaiter _awaiter; //SUT
+    private SolutionLoader _awaiter; //SUT
 
     private IEventAggregator _eventAggregator;
     private IAnalyzerManagerFactory _analyzerManagerFactory;
@@ -41,7 +41,7 @@ public class SolutionPathProvidedAwaiterTests
         _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Returns(_solutionPathProvided);
         _eventAggregator.GetEvent<SolutionLoadedEvent>().Returns(_requestSolutionBuild);
 
-        _awaiter = new SolutionPathProvidedAwaiter(_eventAggregator, _analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings);
+        _awaiter = new SolutionLoader(_eventAggregator, _analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings);
     }
 
     [Test, Explicit("Fails on build sever due to local path. TODO to fix")]

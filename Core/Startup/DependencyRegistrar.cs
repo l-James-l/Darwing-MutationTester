@@ -1,9 +1,9 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
-using CoreTests.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.Exceptions;
+using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
 
@@ -51,11 +51,12 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
         Services.AddSingleton<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        Services.RegisterManySingleton<ProjectBuilder>(); //IStartupProcess && IWasBuildSuccessful
+        Services.RegisterManySingleton<SolutionBuilder>(); 
         Services.AddSingleton<ICancelationTokenFactory, CancelationTokenFactory>();
-        Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //IStartupProcess and ISolutionProvider.
-        Services.AddSingleton<IStartUpProcess, InitialTestRunnner>();
+        Services.RegisterManySingleton<SolutionLoader>();
+        Services.AddSingleton<IMutationRunInitiator, InitialTestRunner>();
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
+        Services.AddSingleton<IStatusTracker, StatusTracker>();
 
         RegisterMutators();
 
@@ -66,8 +67,8 @@ public abstract class DependencyRegistrar
     {
         Services.RegisterManySingleton<MutationDiscoveryManager>(); //IMutationRunInitiator and IMutationDiscoveryManager
         Services.AddSingleton<IMutationImplementationProvider, MutationImplementationProvider>();
-        Services.AddSingleton<IStartUpProcess, MutatedProjectBuilder>();
-        Services.AddSingleton<IStartUpProcess, MutatedSolutionTester>();
+        Services.AddSingleton<IMutatedProjectBuilder, MutatedProjectBuilder>();
+        Services.RegisterManySingleton<MutatedSolutionTester>();
 
         //Specific implementations:
         Services.AddSingleton<IMutationImplementation, SubtractToAddMutator>();

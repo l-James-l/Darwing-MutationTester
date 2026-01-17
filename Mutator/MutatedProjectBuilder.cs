@@ -1,36 +1,65 @@
-﻿using Core.Interfaces;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Emit;
 using Models;
 using Models.Enums;
 using Models.Events;
+using Models.SharedInterfaces;
 using Serilog;
 
 namespace Mutator;
 
-public class MutatedProjectBuilder : IStartUpProcess
+public class MutatedProjectBuilder : IMutatedProjectBuilder
 {
     private readonly IMutationDiscoveryManager _mutationDiscovery;
     private readonly IEventAggregator _eventAggregator;
     private readonly ISolutionProvider _solutionProvider;
+    private readonly IStatusTracker _statusTracker;
+    private readonly IMutatedSolutionTester _mutatedSolutionTester;
 
-    public MutatedProjectBuilder(IMutationDiscoveryManager mutationDiscovery, IEventAggregator eventAggregator, ISolutionProvider solutionProvider)
+    public MutatedProjectBuilder(IMutationDiscoveryManager mutationDiscovery, IEventAggregator eventAggregator,
+        ISolutionProvider solutionProvider, IStatusTracker statusTracker, IMutatedSolutionTester mutatedSolutionTester)
     {
+        ArgumentNullException.ThrowIfNull(mutationDiscovery);
+        ArgumentNullException.ThrowIfNull(eventAggregator);
+        ArgumentNullException.ThrowIfNull(solutionProvider);
+        ArgumentNullException.ThrowIfNull(statusTracker);
+        ArgumentNullException.ThrowIfNull(mutatedSolutionTester);
+
         _mutationDiscovery = mutationDiscovery;
         _eventAggregator = eventAggregator;
         _solutionProvider = solutionProvider;
+        _statusTracker = statusTracker;
+        _mutatedSolutionTester = mutatedSolutionTester;
     }
 
-    public void StartUp()
+    public void Build()
     {
-        _eventAggregator.GetEvent<MutantDiscoveryCompleteEvent>().Subscribe(EmitAllChanges, ThreadOption.BackgroundThread, true);
+        if (!_statusTracker.TryStartOperation(DarwingOperation.BuildingMutatedSolution))
+        {
+            return;
+        }
+
+        bool allProjectsBuilt = false;
+        try
+        {
+            allProjectsBuilt = EmitAllChanges();
+        }
+        catch
+        {
+            Log.Error("An unexpected error occurred while building mutated solution.");
+            allProjectsBuilt = false;
+        }
+
+        RestoreDependencies();
+        _statusTracker.FinishOperation(DarwingOperation.BuildingMutatedSolution, allProjectsBuilt);
+        _mutatedSolutionTester.RunTestsOnMutatedSolution();
     }
 
-    public void EmitAllChanges()
+    private bool EmitAllChanges()
     {
         const int maxRetries = 5;
         bool allProjectsBuilt = true;
-        foreach (IProjectContainer project in _solutionProvider.SolutionContiner.SolutionProjects)
+        foreach (IProjectContainer project in _solutionProvider.SolutionContainer.SolutionProjects)
         {
             int retryCount = 0;
             bool doFinalRetry = false;
@@ -63,7 +92,7 @@ public class MutatedProjectBuilder : IStartUpProcess
                 else
                 {
                     allProjectsBuilt = false;
-                    Log.Error("Final attempt to created mutated DLL for {proj} failed. Will be unable to perform mutation testing. Examin logs for details.", project.Name);
+                    Log.Error("Final attempt to created mutated DLL for {proj} failed. Will be unable to perform mutation testing. Examine logs for details.", project.Name);
                     break;
                 }
             }
@@ -75,8 +104,7 @@ public class MutatedProjectBuilder : IStartUpProcess
             }
         }
 
-        RestoreDependencies();
-        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().Publish(allProjectsBuilt);
+        return allProjectsBuilt;
     }
 
     private bool EmitMutatedDll(IProjectContainer mutatedProject, out List<Diagnostic> failures)
@@ -100,27 +128,27 @@ public class MutatedProjectBuilder : IStartUpProcess
             return false;
         }
 
-        Log.Information($"Mutated dll succesfully created for {mutatedProject.Name}.");
+        Log.Information($"Mutated dll successfully created for {mutatedProject.Name}.");
         return true;
     }
 
     private void RestoreDependencies()
     {
         // For every project that has a dependency on another project that has been mutated, we need to replace the dll in that project.
-        foreach (IProjectContainer project in _solutionProvider.SolutionContiner.AllProjects)
+        foreach (IProjectContainer project in _solutionProvider.SolutionContainer.AllProjects)
         {
             Log.Information("Restoring dependencies for {project}.", project.Name);
 
-            // Get the folder containg the projects build artifacts, which will include dll's of any other projects.
+            // Get the folder containing the projects build artifacts, which will include dll's of any other projects.
             string projectOutputDirectory = Path.GetDirectoryName(project.DllFilePath) ?? "";
 
-            foreach (IProjectContainer mutatedProject in _solutionProvider.SolutionContiner.SolutionProjects.Except([project]))
+            foreach (IProjectContainer mutatedProject in _solutionProvider.SolutionContainer.SolutionProjects.Except([project]))
             {
                 // Check if the unmutated dll exists in the output directory, and if it does, replace it
                 string wouldBeDependency = Path.Combine(projectOutputDirectory, Path.GetFileName(mutatedProject.DllFilePath));
                 if (File.Exists(wouldBeDependency))
                 {
-                    Log.Debug($"Replacing depdency on {mutatedProject.Name} in {project.Name}.");
+                    Log.Debug($"Replacing dependency on {mutatedProject.Name} in {project.Name}.");
                     File.Copy(mutatedProject.DllFilePath, wouldBeDependency, true);
                 }
             }
@@ -149,7 +177,7 @@ public class MutatedProjectBuilder : IStartUpProcess
 
                 IEnumerable<DiscoveredMutation> mutationsInFile = _mutationDiscovery.DiscoveredMutations.Where(x => x.Document == document && x.Status >= MutantStatus.Available);
 
-                //We want to find any mutation where the eror occurs partially or entirly inside it
+                //We want to find any mutation where the error occurs partially or entirely inside it
                 //We do this by finding all mutations which 'start' before the error ends,
                 //then find all the mutations which 'end' after the error starts
                 //Then we take the intersection of these, leaving us with mutations that overlap with the error
@@ -160,15 +188,15 @@ public class MutatedProjectBuilder : IStartUpProcess
 
                 IEnumerable<DiscoveredMutation> mutantsToRemove = mutationStartBeforeErrorEnd.Intersect(mutationsEndAfterErrorStart);
 
-                RemoveMutants(mutantsToRemove.ToList(), document);
+                RemoveMutants(mutantsToRemove.ToList());
                 anyActioned = true;
 
                 //TODO maybe it would be better to not remove all the mutants at once,
-                //and instead remove the most relevant one first (smallest span entirly inside?), and then if that fails, remove them all?
+                //and instead remove the most relevant one first (smallest span entirely inside?), and then if that fails, remove them all?
             }
             else
             {
-                Log.Warning("No document found that matches that path specified in the build faliure. {failure}", failureLocation.Path);
+                Log.Warning("No document found that matches that path specified in the build failure. {failure}", failureLocation.Path);
                 continue;
             }
         }
@@ -176,9 +204,9 @@ public class MutatedProjectBuilder : IStartUpProcess
         return anyActioned;
     }
 
-    private void RemoveMutants(List<DiscoveredMutation> mutantsToRemove, DocumentId document)
+    private void RemoveMutants(List<DiscoveredMutation> mutantsToRemove)
     {
-        Solution slnWithMutantsRemoved = _solutionProvider.SolutionContiner.Solution;
+        Solution slnWithMutantsRemoved = _solutionProvider.SolutionContainer.Solution;
 
         while (mutantsToRemove.Count > 0)
         {
@@ -187,15 +215,15 @@ public class MutatedProjectBuilder : IStartUpProcess
 
             if (mutant is null)
             {
-                Log.Warning("Attempted to remove a mutation that couldnt be found");
+                Log.Warning("Attempted to remove a mutation that couldn't be found");
                 mutant = mutantsToRemove.First();
             }
             mutantsToRemove.Remove(mutant);
-            foreach (DiscoveredMutation embededMutation in new List<DiscoveredMutation>(mutantsToRemove.Where(x => mutant.LineSpan.Contains(x.LineSpan))))
+            foreach (DiscoveredMutation embeddedMutation in new List<DiscoveredMutation>(mutantsToRemove.Where(x => mutant.LineSpan.Contains(x.LineSpan))))
             {
                 //Removing a mutation that contains this one will by default remove this mutant.
-                embededMutation.Status = MutantStatus.CausedBuildError;
-                mutantsToRemove.Remove(embededMutation);
+                embeddedMutation.Status = MutantStatus.CausedBuildError;
+                mutantsToRemove.Remove(embeddedMutation);
             }
 
             mutant.Status = MutantStatus.CausedBuildError;
@@ -211,10 +239,10 @@ public class MutatedProjectBuilder : IStartUpProcess
         }
 
 
-        if (!_solutionProvider.SolutionContiner.Workspace.TryApplyChanges(slnWithMutantsRemoved))
+        if (!_solutionProvider.SolutionContainer.Workspace.TryApplyChanges(slnWithMutantsRemoved))
         {
             Log.Error("Failed to remove mutants causing errors.");
         }
-        _solutionProvider.SolutionContiner.RestoreProjects();
+        _solutionProvider.SolutionContainer.RestoreProjects();
     }
 }

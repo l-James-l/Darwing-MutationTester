@@ -1,6 +1,5 @@
 ﻿using CLI;
 using Microsoft.Extensions.DependencyInjection;
-using Models.Exceptions;
 
 /// <summary>
 /// Main entry point for the CLI application.

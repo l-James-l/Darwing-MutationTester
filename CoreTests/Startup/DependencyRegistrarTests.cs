@@ -29,16 +29,16 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         registrar.Build();
 
         //Assert
-        AssertRegisterManySingleton<SolutionPathProvidedAwaiter>([typeof(IStartUpProcess), typeof(ISolutionProvider)]);
+        AssertRegisterManySingleton<SolutionLoader>([typeof(IStartUpProcess), typeof(ISolutionProvider)]);
         AssertBasicRegistartion<EstablishLoggerConfiguration>();
         AssertBasicRegistartion<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         AssertBasicRegistartion<IEventAggregator, EventAggregator>();
         AssertBasicRegistartion<IMutationSettings, MutationSettings>();
         AssertBasicRegistartion<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        AssertRegisterManySingleton<ProjectBuilder>([typeof(IStartUpProcess), typeof(IWasBuildSuccessfull)]);
+        AssertRegisterManySingleton<SolutionBuilder>([typeof(IStartUpProcess), typeof(IWasBuildSuccessfull)]);
         AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
-        AssertBasicRegistartion<IStartUpProcess, InitialTestRunnner>();
+        AssertBasicRegistartion<IStartUpProcess, InitialTestRunner>();
         AssertBasicRegistartion<IStartUpProcess, MutatedSolutionTester>();
 
         AssertRegisterManySingleton<MutationDiscoveryManager>([typeof(IMutationRunInitiator), typeof(IMutationDiscoveryManager)]);

@@ -49,7 +49,7 @@ public class SolutionProfileDeserializer : ISolutionProfileDeserializer
         }
         catch (Exception ex)
         {
-            Log.Error("Failed to deserialize the provieded solution profile data. Continuing without it.");
+            Log.Error("Failed to deserialize the provided solution profile data. Continuing without it.");
             Log.Debug($"Exception: {ex}");
         }
     }
