@@ -39,12 +39,12 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         _eventAggregator = eventAggregator;
     }
 
+    /// <inheritdoc/>
     public void PerformMutationDiscovery()
     {
         // A mutation run must:
         // - traverse the syntax trees of each file to discover mutation opportunities.
-        // - Once all potential mutations have been discovered, apply them from the bottom up as to reduce the chance
-        //                  of mutations altering the tree in ways that prevent other discovered mutations.
+        // - Once all the child nodes of a node have been traversed, attempt to mutate the node itself.
         // - Once all mutations have been applied to a project, emit a new dll
         // - If emitting the dll causes build errors, find where the error occurred and remove mutations there.
         // - Update other projects that are dependent on the new dll

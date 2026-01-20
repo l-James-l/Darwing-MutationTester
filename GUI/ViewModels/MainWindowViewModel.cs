@@ -93,7 +93,10 @@ public class MainWindowViewModel : ViewModelBase
             _ => _dashBoardViewModel
         };
     }
-    
+
+    // Important: The following commands are async void on purpose.
+    // They are triggered by UI interactions and need to run asynchronously without blocking the UI thread.
+    // Note we don't do any validation or error handling here - that is handled in the services called.
 
     public DelegateCommand SolutionPathSelection { get; }
     private async void SelectSolutionPath()

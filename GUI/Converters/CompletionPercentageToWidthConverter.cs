@@ -1,7 +1,11 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows.Data;
 
+[assembly: InternalsVisibleTo("GuiTests")]
+
 namespace GUI.Converters;
+
 
 internal class CompletionPercentageToWidthConverter : IMultiValueConverter
 {

@@ -4,7 +4,6 @@ using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
 using Models.Enums;
-using Models.Events;
 using Models.SharedInterfaces;
 using NSubstitute;
 using Serilog;
@@ -53,7 +52,10 @@ public class SolutionLoaderTests
         _statusTracker.Received(0).FinishOperation(DarwingOperation.LoadSolution, Arg.Any<bool>());
     }
 
-    [Test, Explicit("Fails on build sever due to local path. TODO to fix")]
+    /// <summary>
+    /// Find a way to make this test not depend on a local path.
+    /// </summary>
+    [Test, Explicit("Fails on build sever due to local path.")]
     public void WhenOnSolutionPathProvidedWithValidPath_ThenCreateSolutionContainer()
     {
         // Arrange
@@ -96,4 +98,6 @@ public class SolutionLoaderTests
         _slnProvider.DidNotReceive().NewSolution(Arg.Any<SolutionContainer>());
         _statusTracker.Received(1).FinishOperation(DarwingOperation.LoadSolution, false);
     }
+
+    //TODO: see if I can add tests for the file/ syntax tree discovery section
 }

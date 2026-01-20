@@ -3,11 +3,9 @@ using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
 using Models.Enums;
-using Models.Events;
 using Models.SharedInterfaces;
 using NSubstitute;
 using System.Diagnostics;
-using System.Net.NetworkInformation;
 
 namespace CoreTests;
 

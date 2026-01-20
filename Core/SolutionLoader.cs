@@ -15,7 +15,10 @@ namespace Core;
 /// This includes:
 ///     - Locating the solution, and initializing the solution container
 ///     - Checking for a solution profile
-///     - Performing an initial build
+///     - Finding source code files in each project and adding them to the project containers
+///     - TODO : Finding test projects
+///     - Triggering an initial build of the solution
+///     
 /// </summary>
 public class SolutionLoader : ISolutionLoader
 {
@@ -75,8 +78,8 @@ public class SolutionLoader : ISolutionLoader
             _slnProfileDeserializer.LoadSlnProfileIfPresent(solutionPath);
             solutionContainer.FindTestProjects(_mutationSettings);
             DiscoverSourceCodeFiles(solutionContainer);
-            _statusTracker.FinishOperation(DarwingOperation.LoadSolution, true);
             _solutionProvider.NewSolution(solutionContainer);
+            _statusTracker.FinishOperation(DarwingOperation.LoadSolution, true);
             _solutionBuilder.InitialBuild();
         }
         else

@@ -2,7 +2,6 @@
 using Core.Interfaces;
 using Models;
 using Models.Enums;
-using Models.Events;
 using Models.SharedInterfaces;
 using Serilog;
 using System.Diagnostics;
@@ -44,6 +43,7 @@ public class SolutionBuilder : ISolutionBuilder
         }
         if (!_solutionProvider.IsAvailable || _solutionProvider.SolutionContainer is null)
         {
+            // Should be impossible to reach this point, but just in case.
             _statusTracker.FinishOperation(DarwingOperation.BuildSolution, false);
             return;
         }

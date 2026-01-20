@@ -22,7 +22,7 @@ public abstract class DependencyRegistrar : IDisposable
     }
 
     public IServiceProvider Build()
-    { 
+    {
         if (_serviceProvider != null)
         {
             throw new InvalidOperationException("Service provider has already been built.");
@@ -34,18 +34,11 @@ public abstract class DependencyRegistrar : IDisposable
 
         //Get the logger configuration to ensure it's created at startup, thus logging is available immediately.
         _serviceProvider.GetService<EstablishLoggerConfiguration>();
-        
+
         StartUpProcesses();
 
         return _serviceProvider;
     }
-
-    public void Dispose()
-    {
-        _serviceProvider?.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
 
     protected virtual void RegisterLocalDependencies()
     {
@@ -96,5 +89,27 @@ public abstract class DependencyRegistrar : IDisposable
         {
             process.StartUp();
         }
+    }
+
+    private bool _disposed = false;
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            _serviceProvider?.Dispose();
+        }
+
+        _disposed = true;
     }
 }

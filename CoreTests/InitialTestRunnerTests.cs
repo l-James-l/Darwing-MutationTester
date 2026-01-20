@@ -112,6 +112,4 @@ public class InitialTestRunnerTests
         _mutationDiscoveryManager.DidNotReceiveWithAnyArgs().PerformMutationDiscovery();
         _statusTracker.Received(1).FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
     }
-
-    //TODO: see if I can add tests for the file/ syntax tree discovery section
 }

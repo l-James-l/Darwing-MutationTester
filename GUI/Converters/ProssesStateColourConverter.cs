@@ -1,7 +1,10 @@
 ﻿using Models.Enums;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows.Data;
 using System.Windows.Media;
+
+[assembly: InternalsVisibleTo("GuiTests")]
 
 namespace GUI.Converters;
 

@@ -29,7 +29,7 @@ public class EstablishLoggerConfigurationTests
         }
         catch
         {
-            // ignore cleanup errors
+            // ignore clean up errors
         }
     }
 

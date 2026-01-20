@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="GUI.Views.Elements.StatusBarView"
+﻿
+    <UserControl x:Class="GUI.Views.Elements.StatusBarView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -22,7 +23,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Fixed stage geometry -->
+        <!-- Columns for each of the 6 viewable stages -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
@@ -50,7 +51,7 @@
             </Style>
         </Grid.Resources>
 
-        <!-- LINE LAYER (center-to-center) -->
+        <!-- Progress bar layer -->
         <Grid Grid.Row="0"
             Grid.Column="0"
             Grid.ColumnSpan="6"
@@ -115,7 +116,7 @@
                 MaxWidth="120"
                 TextWrapping="Wrap"/>
 
-        <!-- STAGE 3 -->
+        <!-- STAGE 3 - initial unmutated test -->
         <Border Grid.Row="0"
             Grid.Column="2"
             Style="{StaticResource StageCircleStyle}"
@@ -130,7 +131,7 @@
                 MaxWidth="120"
                 TextWrapping="Wrap"/>
 
-        <!-- STAGE 4 -->
+        <!-- STAGE 4 - mutant discovery -->
         <Border Grid.Row="0"
             Grid.Column="3"
             Style="{StaticResource StageCircleStyle}"
@@ -145,7 +146,7 @@
                 MaxWidth="120"
                 TextWrapping="Wrap"/>
 
-        <!-- STAGE 5 -->
+        <!-- STAGE 5 - mutated sln building -->
         <Border Grid.Row="0"
             Grid.Column="4"
             Style="{StaticResource StageCircleStyle}"
@@ -160,7 +161,7 @@
                 MaxWidth="140"
                 TextWrapping="Wrap"/>
 
-        <!-- STAGE 6 -->
+        <!-- STAGE 6 - testing mutants -->
         <Border Grid.Row="0"
             Grid.Column="5"
             Style="{StaticResource StageCircleStyle}"

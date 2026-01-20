@@ -65,7 +65,13 @@ public class ProcessWrapper : Process, IProcessWrapper
             .GetResult();
     }
 
-
+    /// <summary>
+    /// We use an async method here to be able to use WaitForExitAsync with a cancellation token, 
+    /// and allow for better timeout handling.
+    /// Note: still not flawless. Still getting hanging testhosts - see CR
+    /// </summary>
+    /// <param name="timeout"></param>
+    /// <returns></returns>
     private async Task<bool> StartAndAwaitAsync(TimeSpan timeout)
     {
         using CancellationTokenSource cts = new (timeout);
@@ -74,11 +80,12 @@ public class ProcessWrapper : Process, IProcessWrapper
 
         Start();
 
+        // Begin reading output and error streams if redirected.
+        // Otherwise we can fill up the buffers and cause a deadlock.
         if (StartInfo.RedirectStandardOutput)
         {
             BeginOutputReadLine();
         }
-
         if (StartInfo.RedirectStandardError)
         {
             BeginErrorReadLine();
@@ -94,6 +101,7 @@ public class ProcessWrapper : Process, IProcessWrapper
             
         }
 
+        // Try and kill the process if it is still running after timeout
         if (!HasExited)
         {
             Kill(entireProcessTree: true);

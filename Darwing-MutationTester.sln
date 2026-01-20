@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuiTests", "GuiTests\GuiTests.csproj", "{221E96C2-67D9-4074-BCCE-240CABEC08F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{7F1E2176-97F9-4ADD-AE3D-F68220A3F6F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F1E2176-97F9-4ADD-AE3D-F68220A3F6F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F1E2176-97F9-4ADD-AE3D-F68220A3F6F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{221E96C2-67D9-4074-BCCE-240CABEC08F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{221E96C2-67D9-4074-BCCE-240CABEC08F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{221E96C2-67D9-4074-BCCE-240CABEC08F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{221E96C2-67D9-4074-BCCE-240CABEC08F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +81,7 @@ Global
 		{D3CB8735-864C-4110-9931-CDEF99FC45C9} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
 		{BFB52E80-7B1E-44DE-AFD5-B366AB2342C3} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
 		{2BEB7754-8586-490B-9581-93C93BC858D2} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
+		{221E96C2-67D9-4074-BCCE-240CABEC08F4} = {B8199AA8-20F0-48C0-A2DB-25742CD864E4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4998069E-100D-48FB-BC54-DBF5BC1358F3}
