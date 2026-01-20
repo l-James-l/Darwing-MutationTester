@@ -4,6 +4,7 @@ using Core.Interfaces;
 using Core.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
+using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
 using NSubstitute;
@@ -29,19 +30,21 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         registrar.Build();
 
         //Assert
-        AssertRegisterManySingleton<SolutionPathProvidedAwaiter>([typeof(IStartUpProcess), typeof(ISolutionProvider)]);
+        AssertBasicRegistartion<ISolutionLoader, SolutionLoader>();
+        AssertBasicRegistartion<ISolutionProvider, SolutionProvider>();
         AssertBasicRegistartion<EstablishLoggerConfiguration>();
         AssertBasicRegistartion<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         AssertBasicRegistartion<IEventAggregator, EventAggregator>();
+        AssertBasicRegistartion<IStatusTracker, StatusTracker>();
         AssertBasicRegistartion<IMutationSettings, MutationSettings>();
         AssertBasicRegistartion<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        AssertRegisterManySingleton<ProjectBuilder>([typeof(IStartUpProcess), typeof(IWasBuildSuccessfull)]);
+        AssertBasicRegistartion<ISolutionBuilder, SolutionBuilder>();
         AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
-        AssertBasicRegistartion<IStartUpProcess, InitialTestRunnner>();
-        AssertBasicRegistartion<IStartUpProcess, MutatedSolutionTester>();
+        AssertBasicRegistartion<IMutationRunInitiator, InitialTestRunner>();
+        AssertRegisterManySingleton<MutatedSolutionTester>([typeof(IStartUpProcess), typeof(IMutatedSolutionTester)]);
 
-        AssertRegisterManySingleton<MutationDiscoveryManager>([typeof(IMutationRunInitiator), typeof(IMutationDiscoveryManager)]);
+        AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
         AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();
         AssertBasicRegistartion<IStartUpProcess, MutatedProjectBuilder>();
 

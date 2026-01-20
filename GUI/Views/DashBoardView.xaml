@@ -4,13 +4,15 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GUI.Views"
-             xmlns:vm="clr-namespace:GUI.ViewModels.ElementViewModels"
+             xmlns:evm="clr-namespace:GUI.ViewModels.ElementViewModels"
+             xmlns:vm="clr-namespace:GUI.ViewModels"
              xmlns:views="clr-namespace:GUI.Views.Elements"
              mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:DashBoardViewModel}" 
              d:DesignHeight="450" d:DesignWidth="800">
     
     <UserControl.Resources>
-        <DataTemplate DataType="{x:Type vm:StatusBarViewModel}">
+        <DataTemplate DataType="{x:Type evm:StatusBarViewModel}">
             <views:StatusBarView/>
         </DataTemplate>
     </UserControl.Resources>

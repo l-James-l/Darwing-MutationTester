@@ -1,12 +1,12 @@
 ﻿using Serilog;
 using Serilog.Events;
 
-namespace CoreTests.Startup;
+namespace Core.Startup;
 
 /// <summary>
 /// Class to establish the logger.
 /// Log messages are written to both console and a file in Logs directory.
-/// Log dirrectories are located in the current working directory, e.g., the CLI or GUI bin folder.
+/// Log directories are located in the current working directory, e.g., the CLI or GUI bin folder.
 /// </summary>
 public class EstablishLoggerConfiguration
 {

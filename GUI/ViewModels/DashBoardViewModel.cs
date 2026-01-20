@@ -11,8 +11,8 @@ public class DashBoardViewModel : ViewModelBase, IDashBoardViewModel
 {
     public StatusBarViewModel StatusBarViewModel { get; set; }
 
-    public DashBoardViewModel()
+    public DashBoardViewModel(StatusBarViewModel statusBarViewModel)
     {
-        StatusBarViewModel = new StatusBarViewModel();
+        StatusBarViewModel = statusBarViewModel;
     }
 }

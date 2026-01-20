@@ -3,49 +3,70 @@ using Core.Interfaces;
 using Models;
 using Models.Enums;
 using Models.Events;
+using Models.SharedInterfaces;
+using Mutator;
 using Mutator.MutationImplementations;
 using Serilog;
 using System.Diagnostics;
 
-namespace Mutator;
+namespace Core;
 
-public class MutatedSolutionTester : IStartUpProcess
+public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
 {
     private readonly IEventAggregator _eventAggregator;
     private readonly IMutationDiscoveryManager _mutationDiscoveryManager;
     private readonly IProcessWrapperFactory _processFactory;
     private readonly IMutationSettings _mutationSettings;
-
+    private readonly IStatusTracker _statusTracker;
     private InitialTestRunInfo? _initialTestRunInfo;
     
     public MutatedSolutionTester(IEventAggregator eventAggregator, IMutationDiscoveryManager mutationDiscoveryManager, IProcessWrapperFactory processFactory, 
-        IMutationSettings mutationSettings)
+        IMutationSettings mutationSettings, IStatusTracker statusTracker)
     {
         ArgumentNullException.ThrowIfNull(eventAggregator);
         ArgumentNullException.ThrowIfNull(mutationDiscoveryManager);
         ArgumentNullException.ThrowIfNull(processFactory);
         ArgumentNullException.ThrowIfNull(mutationSettings);
+        ArgumentNullException.ThrowIfNull(statusTracker);
 
         _eventAggregator = eventAggregator;
         _mutationDiscoveryManager = mutationDiscoveryManager;
         _processFactory = processFactory;
         _mutationSettings = mutationSettings;
+        _statusTracker = statusTracker;
     }
 
     public void StartUp()
     {
-        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Subscribe(x => _initialTestRunInfo = x, ThreadOption.BackgroundThread, true);
-        _eventAggregator.GetEvent<TestMutatedSolutionEvent>().Subscribe(RunTestsOnMutatedSolution, ThreadOption.BackgroundThread, true);
+        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Subscribe(x => _initialTestRunInfo = x, ThreadOption.BackgroundThread);
     }
 
-    private void RunTestsOnMutatedSolution()
+    public void RunTestsOnMutatedSolution()
     {
-        if (_initialTestRunInfo == null)
+        if (!_statusTracker.TryStartOperation(DarwingOperation.TestMutants))
         {
-            Log.Error("Initial test run info was never recieved. Cannot do mutation testing based on coverage or execution time. " +
-                "All test will now be run for each mutation which may result in slower execution.");
+            return;
         }
 
+        if (_initialTestRunInfo == null)
+        {
+            Log.Error("Initial test run info was never received. Cannot do mutation testing based on coverage or execution time. " +
+                "All test will now be run for each mutation which may result in slower execution.");
+        }
+        try
+        {
+            TestAllMutants();
+            _statusTracker.FinishOperation(DarwingOperation.TestMutants, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while testing mutants.");
+            _statusTracker.FinishOperation(DarwingOperation.TestMutants, false);
+        }
+    }
+
+    private void TestAllMutants()
+    {
         if (DoInitialTestWithNoActiveMutants())
         {
             IEnumerable<DiscoveredMutation> availableMutants = _mutationDiscoveryManager.DiscoveredMutations.Where(x => x.Status is MutantStatus.Available);
@@ -62,11 +83,16 @@ public class MutatedSolutionTester : IStartUpProcess
 
             Log.Information("Mutation testing complete. {survived} mutants survived out of {total} tested.", survivedMutants, testedMutantCount);
         }
-
     }
 
     private bool DoInitialTestWithNoActiveMutants()
     {
+        if (_mutationSettings.SkipTestingNoActiveMutants)
+        {
+            Log.Warning("Skipping preliminary test run with no active mutants as per configuration.");
+            return true;
+        }
+
         Log.Information("Performing a preliminary test run on the mutated solution, with no active mutants to ensure all tests still pass.");
 
         ProcessStartInfo startInfo = new()
@@ -106,7 +132,7 @@ public class MutatedSolutionTester : IStartUpProcess
         bool processSuccess;
         if (_initialTestRunInfo is not null)
         {
-            //use the origional test run plus 15%. TODO make this configurable
+            //use the original test run plus 15%. TODO make this configurable
             processSuccess = testRun.StartAndAwait(_initialTestRunInfo.InitialRunDuration * 1.15);
         }
         else

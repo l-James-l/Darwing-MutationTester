@@ -10,4 +10,7 @@ public class MutationSettings : IMutationSettings
 
     /// <inheritdoc/>
     public List<string> TestProjectNames { get; set; } = [];
+
+    /// <inheritdoc/>
+    public bool SkipTestingNoActiveMutants { get; set; } = false;
 }

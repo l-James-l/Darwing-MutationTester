@@ -1,3 +1,5 @@
+using Core.Startup;
+
 namespace CoreTests.Startup;
 
 public class EstablishLoggerConfigurationTests
@@ -27,7 +29,7 @@ public class EstablishLoggerConfigurationTests
         }
         catch
         {
-            // ignore cleanup errors
+            // ignore clean up errors
         }
     }
 

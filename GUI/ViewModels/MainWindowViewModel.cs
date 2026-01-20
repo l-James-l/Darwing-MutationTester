@@ -1,6 +1,7 @@
-﻿using GUI.Services;
+﻿using Core.Interfaces;
+using GUI.Services;
 using Models;
-using Models.Events;
+using Mutator;
 
 namespace GUI.ViewModels;
 
@@ -9,30 +10,41 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IDashBoardViewModel _dashBoardViewModel;
     private readonly ISolutionExplorerViewModel _solutionExplorerViewModel;
     private readonly ISettingsViewModel _settingsViewModel;
-
+    private readonly ISolutionBuilder _solutionBuilder;
+    private readonly IMutationRunInitiator _mutationRunInitiator;
     private readonly IFileSelectorService _fileSelectorService;
-    private readonly IEventAggregator _eventAggregator;
+    private readonly ISolutionLoader _solutionLoader;
     private readonly IMutationSettings _mutationSettings;
 
     /// <summary>
-    /// The mainwindow will contain the main structure for the UI.
-    /// Is responsible for managing naviagation between individual sub windows (namley the dashboard, solution explorer and settings page)
+    /// The main window will contain the main structure for the UI.
+    /// Is responsible for managing navigation between individual sub windows (namely the dashboard, solution explorer and settings page)
     /// </summary>
-    public MainWindowViewModel(IFileSelectorService fileSelectorService, IEventAggregator eventAggregator,
+    public MainWindowViewModel(IFileSelectorService fileSelectorService, ISolutionLoader solutionLoader,
         IMutationSettings mutationSettings, IDashBoardViewModel dashBoard, ISolutionExplorerViewModel slnExplorer,
-        ISettingsViewModel settings)
+        ISettingsViewModel settings, ISolutionBuilder solutionBuilder, IMutationRunInitiator mutationRunInitiator)
     {
-        // TODO DI these
+        ArgumentNullException.ThrowIfNull(fileSelectorService);
+        ArgumentNullException.ThrowIfNull(solutionLoader);
+        ArgumentNullException.ThrowIfNull(mutationSettings);
+        ArgumentNullException.ThrowIfNull(dashBoard);
+        ArgumentNullException.ThrowIfNull(slnExplorer);
+        ArgumentNullException.ThrowIfNull(settings);
+        ArgumentNullException.ThrowIfNull(solutionBuilder);
+        ArgumentNullException.ThrowIfNull(mutationRunInitiator);
+
         _dashBoardViewModel = dashBoard;
         _solutionExplorerViewModel = slnExplorer;
         _settingsViewModel = settings;
-        
-        _currentViewModel = default!; //Make the compilar happy. Setting the tab index will set this.
+
+        _currentViewModel = default!; //Make the compiler happy. Setting the tab index will set this.
         SelectedTabIndex = 0;
 
         _fileSelectorService = fileSelectorService;
-        _eventAggregator = eventAggregator;
+        _solutionLoader = solutionLoader;
         _mutationSettings = mutationSettings;
+        _solutionBuilder = solutionBuilder;
+        _mutationRunInitiator = mutationRunInitiator;
 
         SolutionPathSelection = new DelegateCommand(SelectSolutionPath);
         ReloadCurrentSolution = new DelegateCommand(ReloadCurrentSolutionCommand);
@@ -42,7 +54,7 @@ public class MainWindowViewModel : ViewModelBase
 
     /// <summary>
     /// Set by the tab control in the view.
-    /// Since the tab control bar, and content area are seperated in the layout, 
+    /// Since the tab control bar, and content area are separated in the layout, 
     /// we need to manually update the content area when a new tab is selected
     /// </summary>
     public int SelectedTabIndex
@@ -81,33 +93,36 @@ public class MainWindowViewModel : ViewModelBase
             _ => _dashBoardViewModel
         };
     }
-    
+
+    // Important: The following commands are async void on purpose.
+    // They are triggered by UI interactions and need to run asynchronously without blocking the UI thread.
+    // Note we don't do any validation or error handling here - that is handled in the services called.
 
     public DelegateCommand SolutionPathSelection { get; }
-    private void SelectSolutionPath()
+    private async void SelectSolutionPath()
     {
         string? path = _fileSelectorService.OpenFileDialog("Solution Files (*.sln)|*.sln");
         if (!string.IsNullOrEmpty(path))
         {
-            _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(path));
+            await Task.Run(() => _solutionLoader.Load(path));
         }
     }
 
     public DelegateCommand ReloadCurrentSolution { get; }
-    private void ReloadCurrentSolutionCommand()
+    private async void ReloadCurrentSolutionCommand()
     {
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Publish(new SolutionPathProvidedPayload(_mutationSettings.SolutionPath));
+        await Task.Run(() => _solutionLoader.Load(_mutationSettings.SolutionPath));
     }
 
     public DelegateCommand RebuildCurrentSolution { get; }
-    private void RebuildCurrentSolutionCommand()
+    private async void RebuildCurrentSolutionCommand()
     {
-        _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Publish();
+        await Task.Run(_solutionBuilder.InitialBuild);
     }
 
     public DelegateCommand TestSolution { get; }
-    private void TestSolutionCommand()
+    private async void TestSolutionCommand()
     {
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Publish();
+        await Task.Run(_mutationRunInitiator.Run);
     }
 }

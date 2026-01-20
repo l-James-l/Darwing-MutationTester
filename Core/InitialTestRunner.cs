@@ -1,52 +1,69 @@
 ﻿using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
+using Models.Enums;
 using Models.Events;
+using Models.SharedInterfaces;
 using Mutator;
 using Serilog;
 using System.Diagnostics;
 
 namespace Core;
 
-public class InitialTestRunnner : IStartUpProcess
+public class InitialTestRunner : IMutationRunInitiator
 {
     private readonly IEventAggregator _eventAggregator;
     private readonly IMutationSettings _mutationSettings;
-    private readonly IWasBuildSuccessfull _wasBuildSuccessfull;
+    private readonly IStatusTracker _statusTracker;
     private readonly IProcessWrapperFactory _processFactory;
-    private IMutationRunInitiator _mutationRunManager;
+    private IMutationDiscoveryManager _mutationDiscoveryManager;
 
-    public InitialTestRunnner(IEventAggregator eventAggregator, IMutationSettings mutationSettings, IWasBuildSuccessfull wasBuildSuccessfull,
-        IProcessWrapperFactory processFactory, IMutationRunInitiator mutationRunManager)
+    public InitialTestRunner(IEventAggregator eventAggregator, IMutationSettings mutationSettings, IStatusTracker statusTracker,
+        IProcessWrapperFactory processFactory, IMutationDiscoveryManager mutationDiscoveryManager)
     {
+        ArgumentNullException.ThrowIfNull(eventAggregator);
+        ArgumentNullException.ThrowIfNull(mutationSettings);
+        ArgumentNullException.ThrowIfNull(statusTracker);
+        ArgumentNullException.ThrowIfNull(processFactory);
+        ArgumentNullException.ThrowIfNull(mutationDiscoveryManager);
+
         _eventAggregator = eventAggregator;
         _mutationSettings = mutationSettings;
-        _wasBuildSuccessfull = wasBuildSuccessfull;
+        _statusTracker = statusTracker;
         _processFactory = processFactory;
-        _mutationRunManager = mutationRunManager;
-    }
-
-    public void StartUp()
-    {
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Subscribe(InitialTestRun, ThreadOption.BackgroundThread, keepSubscriberReferenceAlive: true);
+        _mutationDiscoveryManager = mutationDiscoveryManager;
     }
     
     /// <summary>
-    /// When a mutaiotn test run is started, the first step is running all unit test to ensure they all pass
+    /// When a mutation test run is started, the first step is running all unit test to ensure they all pass
     /// </summary>
-    private void InitialTestRun()
+    public void Run()
     {
-        InitialTestRunInfo testRunInfo = new InitialTestRunInfo();
-
-        //By checking we have a succesful build, we implicitly know that there is a solution loaded.
-        if (!_wasBuildSuccessfull.WasLastBuildSuccessful)
+        if (!_statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution))
         {
-            Log.Error("Attempted to start a mutation run without a successful build");
             return;
         }
-        
+
         Log.Information("Starting initial test run before mutation begins.");
 
+        InitialTestRunInfo testRunInfo = new();
+        try
+        {
+            PerformTestRun(testRunInfo);
+        }
+        finally
+        {
+            _statusTracker.FinishOperation(DarwingOperation.TestUnmutatedSolution, testRunInfo.WasSuccesful);
+            _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Publish(testRunInfo);
+            if (testRunInfo.WasSuccesful)
+            {
+                _mutationDiscoveryManager.PerformMutationDiscovery();
+            }
+        }
+    }
+
+    private void PerformTestRun(InitialTestRunInfo testRunInfo)
+    {
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
@@ -74,8 +91,6 @@ public class InitialTestRunnner : IStartUpProcess
             Log.Information("Initial test run successful, starting mutant discovery.");
             testRunInfo.WasSuccesful = true;
             testRunInfo.InitialRunDuration = testRun.Duration;
-            _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Publish(testRunInfo);
-            _mutationRunManager.Run(testRunInfo);
         }
     }
 }

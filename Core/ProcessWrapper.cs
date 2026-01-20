@@ -54,20 +54,63 @@ public class ProcessWrapper : Process, IProcessWrapper
             return StartAndAwait(TimeSpan.FromSeconds(timeout.Value));
         }
 
-        // Caller didnt specify a timeout, so use a reasonably high one
+        // Caller didn't specify a timeout, so use a reasonably high one
         return StartAndAwait(TimeSpan.FromHours(1));
     }
 
     public bool StartAndAwait(TimeSpan timeout)
     {
+        return StartAndAwaitAsync(timeout)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>
+    /// We use an async method here to be able to use WaitForExitAsync with a cancellation token, 
+    /// and allow for better timeout handling.
+    /// Note: still not flawless. Still getting hanging testhosts - see CR
+    /// </summary>
+    /// <param name="timeout"></param>
+    /// <returns></returns>
+    private async Task<bool> StartAndAwaitAsync(TimeSpan timeout)
+    {
+        using CancellationTokenSource cts = new (timeout);
+
+        Stopwatch stopwatch = Stopwatch.StartNew();
+
         Start();
 
-        _processCompleted = WaitForExit(timeout);
-
-        if (_processCompleted)
+        // Begin reading output and error streams if redirected.
+        // Otherwise we can fill up the buffers and cause a deadlock.
+        if (StartInfo.RedirectStandardOutput)
         {
-            Duration = ExitTime - StartTime;
+            BeginOutputReadLine();
         }
-        return _processCompleted;
+        if (StartInfo.RedirectStandardError)
+        {
+            BeginErrorReadLine();
+        }
+
+        try
+        {
+            await WaitForExitAsync(cts.Token);
+            _processCompleted = true;
+        }
+        catch (OperationCanceledException)
+        {
+            
+        }
+
+        // Try and kill the process if it is still running after timeout
+        if (!HasExited)
+        {
+            Kill(entireProcessTree: true);
+        }
+
+        stopwatch.Stop();
+        Duration = stopwatch.Elapsed;
+        
+        return ExitCode == 0;
     }
+
 }

@@ -4,5 +4,9 @@ namespace Mutator;
 
 public interface IMutationRunInitiator
 {
-    void Run(InitialTestRunInfo testRunInfo);
+    /// <summary>
+    /// Starts the mutation testing process.
+    /// The first step is an unmutated test run to establish a baseline.
+    /// </summary>
+    void Run();
 }

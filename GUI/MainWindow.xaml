@@ -9,7 +9,7 @@
     xmlns:vm="clr-namespace:GUI.ViewModels"
     xmlns:views="clr-namespace:GUI.Views"
     Title="Darwing" Height="450" Width="800"
-    DataContext="{x:Type vm:MainWindowViewModel}" 
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}" 
     WindowState="Maximized">
 
     <!-- View - ViewModel mapping -->
@@ -64,7 +64,7 @@
                         VerticalAlignment="Center"
                         Margin="0,0,8,0"
                         Panel.ZIndex="1">
-                <Menu>
+                <Menu Name="SolutionActionDropdownMenu">
                     <MenuItem Header="Solution">
                         <MenuItem Command="{Binding SolutionPathSelection}">
                             <MenuItem.Header>

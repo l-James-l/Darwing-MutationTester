@@ -1,6 +1,9 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Data;
+
+[assembly: InternalsVisibleTo("GuiTests")]
 
 namespace GUI.Converters;
 

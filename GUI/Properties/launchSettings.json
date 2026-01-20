@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "GUI": {
+      "commandName": "Project",
+      "commandLineArgs": "--console"
+    }
+  }
+}

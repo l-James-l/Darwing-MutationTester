@@ -2,7 +2,9 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
-using Models.Events;
+using Models.Enums;
+using Models.SharedInterfaces;
+using Mutator;
 using NSubstitute;
 
 namespace CLITests;
@@ -11,49 +13,40 @@ public class CLIAppTests
 {
     private CLIApp _app; //SUT
 
-    private IEventAggregator _eventAggregator;
     private IMutationSettings _mutationSettings;
-    private ISolutionProvider _solutionProvider;
     private ICancelationTokenFactory _cancelationTokenFactory;
-    private IWasBuildSuccessfull _buildSuccess;
+    private IStatusTracker _statusTracker;
+    private ISolutionLoader _solutionLoader;
+    private IMutationRunInitiator _mutationRunInitiator;
+    private ISolutionBuilder _solutionBuilder;
 
     private TextReader _originalIn;
-    private ICancellationTokenWrapper _cancelationtoken;
-    private SolutionPathProvidedEvent _solutionPathProvided;
-    private RequestSolutionBuildEvent _requestSolutionBuildEvent;
-    private InitiateTestRunEvent _initiateTestRunEvent;
+    private ICancellationTokenWrapper _cancelationToken;
 
     [SetUp]
     public void SetUp()
     {
         _originalIn = Console.In;
-        _eventAggregator = Substitute.For<IEventAggregator>();
+
         _mutationSettings = Substitute.For<IMutationSettings>();
-        _solutionProvider = Substitute.For<ISolutionProvider>();
         _cancelationTokenFactory = Substitute.For<ICancelationTokenFactory>();
-        _buildSuccess = Substitute.For<IWasBuildSuccessfull>();
+        _solutionLoader = Substitute.For<ISolutionLoader>();
+        _statusTracker = Substitute.For<IStatusTracker>();
+        _mutationRunInitiator = Substitute.For<IMutationRunInitiator>();
+        _solutionBuilder = Substitute.For<ISolutionBuilder>();
 
-        _solutionPathProvided = Substitute.For<SolutionPathProvidedEvent>();
-        _requestSolutionBuildEvent = Substitute.For<RequestSolutionBuildEvent>();
-        _initiateTestRunEvent = Substitute.For<InitiateTestRunEvent>();
+        _cancelationToken = Substitute.For<ICancellationTokenWrapper>();
 
-        _cancelationtoken = Substitute.For<ICancellationTokenWrapper>();
+        _cancelationTokenFactory.Generate().Returns(_cancelationToken);
 
-        _solutionProvider.IsAvailable.Returns(false);
-        _cancelationTokenFactory.Generate().Returns(_cancelationtoken);
-
-        _eventAggregator.GetEvent<SolutionPathProvidedEvent>().Returns(_solutionPathProvided);
-        _eventAggregator.GetEvent<RequestSolutionBuildEvent>().Returns(_requestSolutionBuildEvent);
-        _eventAggregator.GetEvent<InitiateTestRunEvent>().Returns(_initiateTestRunEvent);
-
-        _app = new CLIApp(_eventAggregator, _mutationSettings, _solutionProvider, _cancelationTokenFactory, _buildSuccess);
+        _app = new CLIApp(_mutationSettings, _statusTracker, _cancelationTokenFactory, _solutionLoader, _solutionBuilder, _mutationRunInitiator);
 
         //Limit testing to a single run through.
         Queue<bool> ensureSingleRunQueue = new();
         ensureSingleRunQueue.Enqueue(false);
         ensureSingleRunQueue.Enqueue(true);
 
-        _cancelationtoken.IsCancelled().Returns(_ => ensureSingleRunQueue.Dequeue());
+        _cancelationToken.IsCancelled().Returns(_ => ensureSingleRunQueue.Dequeue());
     }
 
     [TearDown]
@@ -73,7 +66,7 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _solutionPathProvided.Received(1).Publish(Arg.Is<SolutionPathProvidedPayload>(x => x.SolutionPath == providedPath));
+        _solutionLoader.Received(1).Load(Arg.Is<string>(x => x == providedPath));
     }
 
     [Test]
@@ -86,7 +79,7 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _solutionPathProvided.Received(0).Publish(Arg.Any<SolutionPathProvidedPayload>());
+        _solutionLoader.DidNotReceive().Load(Arg.Any<string>());
     }
 
     [Test]
@@ -101,29 +94,29 @@ public class CLIAppTests
         _app.Run(args);
         
         // Assert
-        _solutionPathProvided.Received(1).Publish(Arg.Is<SolutionPathProvidedPayload>(x => x.SolutionPath == argPath));
+        _solutionLoader.Received(1).Load(Arg.Is<string>(x => x == argPath));
     }
 
     [Test]
     public void GivenRunningMainLoop_AndNoSolutionLoaded_WhenGiveBuildCommand_ThenDoesntPublish()
     {
         // Arrange
-        _solutionProvider.IsAvailable.Returns(false);
-        
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Failed);
+
         Console.SetIn(new StringReader("--build" + Environment.NewLine));
 
         // Act
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _requestSolutionBuildEvent.Received(0).Publish();
+        _solutionBuilder.DidNotReceive().InitialBuild();
     }
 
     [Test]
     public void GivenRunningMainLoop_AndSolutionLoaded_WhenGiveBuildCommand_ThenPublishCommand()
     {
         // Arrange
-        _solutionProvider.IsAvailable.Returns(true);
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
 
         Console.SetIn(new StringReader("--build" + Environment.NewLine));
 
@@ -131,15 +124,31 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _requestSolutionBuildEvent.Received(1).Publish();
+        _solutionBuilder.Received(1).InitialBuild();
+    }
+
+    [Test]
+    public void GivenRunningMainLoop_AndSolutionAlreadyBuilt_WhenGiveBuildCommand_ThenPublishCommand()
+    {
+        // Arrange
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
+        _statusTracker.CheckStatus(DarwingOperation.BuildSolution).Returns(OperationStates.Succeeded);
+
+        Console.SetIn(new StringReader("--build" + Environment.NewLine));
+
+        // Act
+        _app.Run(Array.Empty<string>());
+
+        // Assert
+        _solutionBuilder.Received(1).InitialBuild();
     }
 
     [Test]
     public void GivenRunningMainLoop_AndSolutionLoaded_AndBuildSuccess_WhenGiveTestCommand_ThenPublishCommand()
     {
         // Arrange
-        _solutionProvider.IsAvailable.Returns(true);
-        _buildSuccess.WasLastBuildSuccessful.Returns(true);
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
+        _statusTracker.CheckStatus(DarwingOperation.BuildSolution).Returns(OperationStates.Succeeded);
 
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
@@ -147,15 +156,14 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _initiateTestRunEvent.Received(1).Publish();
+        _mutationRunInitiator.Received(1).Run();
     }
 
     [Test]
     public void GivenRunningMainLoop_AndSolutionNotLoaded_WhenGiveTestCommand_ThenDontPublishCommand()
     {
         // Arrange
-        _solutionProvider.IsAvailable.Returns(false);
-        _buildSuccess.WasLastBuildSuccessful.Returns(true);
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Failed);
 
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
@@ -163,15 +171,15 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _initiateTestRunEvent.Received(0).Publish();
+        _mutationRunInitiator.DidNotReceive().Run();
     }
 
     [Test]
     public void GivenRunningMainLoop_AndSolutionLoaded_AndBuildFailed_WhenGiveTestCommand_ThenDontPublishCommand()
     {
         // Arrange
-        _solutionProvider.IsAvailable.Returns(true);
-        _buildSuccess.WasLastBuildSuccessful.Returns(false);
+        _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
+        _statusTracker.CheckStatus(DarwingOperation.BuildSolution).Returns(OperationStates.Failed);
 
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
@@ -179,7 +187,7 @@ public class CLIAppTests
         _app.Run(Array.Empty<string>());
 
         // Assert
-        _initiateTestRunEvent.Received(0).Publish();
+        _mutationRunInitiator.DidNotReceive().Run();
     }
 
 }

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using GUI.ViewModels;
 using GUI.Services;
+using GUI.ViewModels.ElementViewModels;
 
 namespace GUI;
 
@@ -28,5 +29,6 @@ public class GuiDependecyRegistrar : DependencyRegistrar
         Services.AddSingleton<IDashBoardViewModel, DashBoardViewModel>();
         Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
         Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
+        Services.AddSingleton<StatusBarViewModel>();
     }
 }

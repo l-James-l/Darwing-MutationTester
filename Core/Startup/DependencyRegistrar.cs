@@ -1,15 +1,15 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
-using CoreTests.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.Exceptions;
+using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
 
 namespace Core.Startup;
 
-public abstract class DependencyRegistrar
+public abstract class DependencyRegistrar : IDisposable
 {
     protected readonly IServiceCollection Services;
     private ServiceProvider? _serviceProvider;
@@ -22,7 +22,7 @@ public abstract class DependencyRegistrar
     }
 
     public IServiceProvider Build()
-    { 
+    {
         if (_serviceProvider != null)
         {
             throw new InvalidOperationException("Service provider has already been built.");
@@ -34,6 +34,7 @@ public abstract class DependencyRegistrar
 
         //Get the logger configuration to ensure it's created at startup, thus logging is available immediately.
         _serviceProvider.GetService<EstablishLoggerConfiguration>();
+
         StartUpProcesses();
 
         return _serviceProvider;
@@ -51,11 +52,13 @@ public abstract class DependencyRegistrar
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
         Services.AddSingleton<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        Services.RegisterManySingleton<ProjectBuilder>(); //IStartupProcess && IWasBuildSuccessful
+        Services.AddSingleton<ISolutionBuilder, SolutionBuilder>(); 
         Services.AddSingleton<ICancelationTokenFactory, CancelationTokenFactory>();
-        Services.RegisterManySingleton<SolutionPathProvidedAwaiter>(); //IStartupProcess and ISolutionProvider.
-        Services.AddSingleton<IStartUpProcess, InitialTestRunnner>();
+        Services.AddSingleton<ISolutionLoader, SolutionLoader>();
+        Services.AddSingleton<ISolutionProvider, SolutionProvider>();
+        Services.AddSingleton<IMutationRunInitiator, InitialTestRunner>();
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
+        Services.AddSingleton<IStatusTracker, StatusTracker>();
 
         RegisterMutators();
 
@@ -64,10 +67,10 @@ public abstract class DependencyRegistrar
 
     private void RegisterMutators()
     {
-        Services.RegisterManySingleton<MutationDiscoveryManager>(); //IMutationRunInitiator and IMutationDiscoveryManager
+        Services.AddSingleton<IMutationDiscoveryManager, MutationDiscoveryManager>(); 
         Services.AddSingleton<IMutationImplementationProvider, MutationImplementationProvider>();
         Services.AddSingleton<IStartUpProcess, MutatedProjectBuilder>();
-        Services.AddSingleton<IStartUpProcess, MutatedSolutionTester>();
+        Services.RegisterManySingleton<MutatedSolutionTester>();
 
         //Specific implementations:
         Services.AddSingleton<IMutationImplementation, SubtractToAddMutator>();
@@ -86,5 +89,27 @@ public abstract class DependencyRegistrar
         {
             process.StartUp();
         }
+    }
+
+    private bool _disposed = false;
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            _serviceProvider?.Dispose();
+        }
+
+        _disposed = true;
     }
 }
