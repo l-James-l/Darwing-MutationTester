@@ -1,6 +1,7 @@
 ﻿using Buildalyzer;
 using Buildalyzer.Workspaces;
 using Microsoft.CodeAnalysis;
+using Serilog;
 
 namespace Models;
 
@@ -16,29 +17,36 @@ public class SolutionContainer: ISolutionContainer
 
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
 
-    public SolutionContainer(IAnalyzerManager analyzerManager)
+    public SolutionContainer(IAnalyzerManager analyzerManager, IMutationSettings settings)
     {
         Workspace = analyzerManager.GetWorkspace();
-
-        DiscoverProjects();
+        
+        DiscoverProjects(analyzerManager);
+        FindTestProjects(settings);
     }
 
-    private void DiscoverProjects()
+    private void DiscoverProjects(IAnalyzerManager analyzerManager)
     {
         foreach (Project project in Solution.Projects)
         {
-            AllProjects.Add(new ProjectContainer(project));
+            if (project.FilePath is null)
+            {
+                Log.Warning("Project: {proj}, has no file path and will be ignored.");
+                continue;
+            }
+            IProjectAnalyzer projectAnalyzer = analyzerManager.GetProject(project.FilePath);
+            AllProjects.Add(new ProjectContainer(project, projectAnalyzer));
         }
     }
 
-    public void FindTestProjects(IMutationSettings settings)
+    private void FindTestProjects(IMutationSettings settings)
     {
-        //TODO: In future, should find a way to establish test projects without them needing to be specified.
-
         TestProjects = AllProjects.Where(x => 
-            settings.TestProjectNames.Contains(x.Name) || settings.TestProjectNames.Contains(x.AssemblyName)).ToList();
+            x.IsTestProject || 
+            settings.TestProjectNames.Contains(x.Name) ||
+            settings.TestProjectNames.Contains(x.AssemblyName)).ToList();
 
-        // If a project isnt a test project, it is project we can mutate.
+        // If a project isn't a test project, it is project we can mutate.
         SolutionProjects = AllProjects.Except(TestProjects).ToList();
     }
 

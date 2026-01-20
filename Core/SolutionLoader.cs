@@ -76,7 +76,6 @@ public class SolutionLoader : ISolutionLoader
             //Do this outside the try catch so that errors caught are only for loading the solution.
             //Deserializer shall handle its own exceptions.
             _slnProfileDeserializer.LoadSlnProfileIfPresent(solutionPath);
-            solutionContainer.FindTestProjects(_mutationSettings);
             DiscoverSourceCodeFiles(solutionContainer);
             _solutionProvider.NewSolution(solutionContainer);
             _statusTracker.FinishOperation(DarwingOperation.LoadSolution, true);
@@ -94,7 +93,7 @@ public class SolutionLoader : ISolutionLoader
         {
             Log.Information("Creating analyzer for solution.");
             IAnalyzerManager analyzerManager = _analyzerManagerFactory.CreateAnalyzerManager(path);
-            return new SolutionContainer(analyzerManager);
+            return new SolutionContainer(analyzerManager, _mutationSettings);
         }
         catch (Exception ex)
         {

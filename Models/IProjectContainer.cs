@@ -14,6 +14,8 @@ public interface IProjectContainer
 
     string DllFilePath { get; }
 
+    bool IsTestProject { get; }
+
     Dictionary<DocumentId, SyntaxTree> UnMutatedSyntaxTrees { get; }
 
     Dictionary<string, DocumentId> DocumentsByPath { get; }
