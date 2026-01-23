@@ -15,10 +15,20 @@
         <DataTemplate DataType="{x:Type evm:StatusBarViewModel}">
             <views:StatusBarView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type evm:MutationScoreByProjectViewModel}">
+            <views:MutationScoreByProjectView/>
+        </DataTemplate>
     </UserControl.Resources>
 
     <Grid>
-        <TextBlock FontWeight="SemiBold" FontSize="26">DashBoard</TextBlock>
-        <ContentControl Content="{Binding StatusBarViewModel}" Margin="0,37,0,322" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" FontWeight="SemiBold" FontSize="26">DashBoard</TextBlock>
+        <ContentControl Grid.Row="1" Content="{Binding StatusBarViewModel}" Margin="0,25,0,25" />
+        <ContentControl Grid.Row="2" Content="{Binding MutationScoreByProjectViewModel}" Margin="0,25,0,25" />
     </Grid>
 </UserControl>

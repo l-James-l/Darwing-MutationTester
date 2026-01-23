@@ -3,8 +3,8 @@
 public enum MutantStatus
 {
     /// <summary>
-    /// Mutation has been applied, but we dont know where it is because we either havent rediscovered it yet,
-    /// or werent able to rediscover it.
+    /// Mutation has been applied, but we dont know where it is because we either haven't rediscovered it yet,
+    /// or weren't able to rediscover it.
     /// </summary>
     Discovered,
 
@@ -20,7 +20,7 @@ public enum MutantStatus
     CausedBuildError,
 
     /// <summary>
-    /// Mutant is currenlty active and a test run is ongoing.
+    /// Mutant is currently active and a test run is ongoing.
     /// </summary>
     TestOngoing,
 

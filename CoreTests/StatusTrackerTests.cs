@@ -39,7 +39,7 @@ public class StatusTrackerTests
         Assert.That(status, Is.EqualTo(OperationStates.Ongoing));
         status = _statusTracker.CheckStatus(DarwingOperation.Idle);
         Assert.That(status, Is.EqualTo(OperationStates.NotStarted));
-        _statusUpdateEvent.Received(1).Publish();
+        _statusUpdateEvent.Received(1).Publish(DarwingOperation.LoadSolution);
     }
 
     [Test]
@@ -50,7 +50,7 @@ public class StatusTrackerTests
         Assert.That(result, Is.False);
         OperationStates status = _statusTracker.CheckStatus(DarwingOperation.BuildingMutatedSolution);
         Assert.That(status, Is.EqualTo(OperationStates.NotStarted));
-        _statusUpdateEvent.DidNotReceive().Publish();
+        _statusUpdateEvent.DidNotReceiveWithAnyArgs().Publish(default);
     }
 
     [Test]
@@ -80,10 +80,10 @@ public class StatusTrackerTests
         bool result = _statusTracker.TryStartOperation(DarwingOperation.LoadSolution);
         Assert.That(result, Is.True);
         Assert.That(_statusTracker.CheckStatus(DarwingOperation.LoadSolution), Is.EqualTo(OperationStates.Ongoing));
-        _statusUpdateEvent.Received(1).Publish();
+        _statusUpdateEvent.Received(1).Publish(DarwingOperation.LoadSolution);
         _statusTracker.FinishOperation(DarwingOperation.LoadSolution, true);
         Assert.That(_statusTracker.CheckStatus(DarwingOperation.LoadSolution), Is.EqualTo(OperationStates.Succeeded));
-        _statusUpdateEvent.Received(2).Publish();
+        _statusUpdateEvent.Received(2).Publish(DarwingOperation.LoadSolution);
     }
 
     [Test]
@@ -91,10 +91,10 @@ public class StatusTrackerTests
     {
         _statusTracker.TryStartOperation(DarwingOperation.LoadSolution);
         Assert.That(_statusTracker.CheckStatus(DarwingOperation.LoadSolution), Is.EqualTo(OperationStates.Ongoing));
-        _statusUpdateEvent.Received(1).Publish();
+        _statusUpdateEvent.Received(1).Publish(DarwingOperation.LoadSolution);
         _statusTracker.FinishOperation(DarwingOperation.LoadSolution, false);
         Assert.That(_statusTracker.CheckStatus(DarwingOperation.LoadSolution), Is.EqualTo(OperationStates.Failed));
-        _statusUpdateEvent.Received(2).Publish();
+        _statusUpdateEvent.Received(2).Publish(DarwingOperation.LoadSolution);
     }
 
     [Test]
@@ -124,10 +124,10 @@ public class StatusTrackerTests
             bool started = _statusTracker.TryStartOperation(operation);
             Assert.That(started, Is.True);
             Assert.That(_statusTracker.CheckStatus(operation), Is.EqualTo(OperationStates.Ongoing));
-            _statusUpdateEvent.Received().Publish();
+            _statusUpdateEvent.Received(1).Publish(operation);
             _statusTracker.FinishOperation(operation, true);
             Assert.That(_statusTracker.CheckStatus(operation), Is.EqualTo(OperationStates.Succeeded));
-            _statusUpdateEvent.Received().Publish();
+            _statusUpdateEvent.Received(2).Publish(operation);
         }
     }
 }

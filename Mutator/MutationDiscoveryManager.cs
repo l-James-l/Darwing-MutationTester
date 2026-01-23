@@ -178,7 +178,7 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
             {
                 (SyntaxNode mutatedNode, SyntaxAnnotation id) = mutator.Mutate(node);
 
-                mutations.Add(new DiscoveredMutation(id, node, mutatedNode));
+                mutations.Add(new DiscoveredMutation(id, node, mutatedNode, _eventAggregator));
 
                 Log.Debug($"Successfully discovered {mutator.Mutation} mutation.");
                 return mutatedNode;

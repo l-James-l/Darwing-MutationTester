@@ -28,6 +28,8 @@ public class ProjectContainer : IProjectContainer
         DllFilePath = project.OutputFilePath ?? throw new Exception($"Could not establish the output file path for {Name}");
     }
 
+    public ProjectId ID => _project.Id;
+
     public string CsprojFilePath { get; }
 
     public string DirectoryPath { get; }

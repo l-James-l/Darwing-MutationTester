@@ -12,7 +12,7 @@ public class StatusBarViewModel : ViewModelBase
     {
         _statusTracker = statusTracker;
 
-        eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(OnOperationStatesChanged, ThreadOption.UIThread);
+        eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => OnOperationStatesChanged(), ThreadOption.UIThread);
     }
 
     private void OnOperationStatesChanged()

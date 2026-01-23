@@ -4,6 +4,8 @@ namespace Models;
 
 public interface IProjectContainer
 {
+    ProjectId ID { get; }
+
     string Name { get; }
 
     string CsprojFilePath { get; }

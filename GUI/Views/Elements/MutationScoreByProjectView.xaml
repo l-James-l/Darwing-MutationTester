@@ -1,0 +1,71 @@
+﻿<UserControl x:Class="GUI.Views.Elements.MutationScoreByProjectView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GUI.Views.Elements"
+             mc:Ignorable="d" 
+             xmlns:cv="clr-namespace:GUI.Converters"
+             xmlns:vm="clr-namespace:GUI.ViewModels.ElementViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:MutationScoreByProjectViewModel}">
+
+
+    <UserControl.Resources>
+        <cv:MutationScoreToColourConverter x:Key="MutationScoreToColourConverter"/>
+    </UserControl.Resources>
+
+    <DataGrid ItemsSource="{Binding Projects}"
+        AutoGenerateColumns="False"
+        HeadersVisibility="Column"
+        CanUserAddRows="False"
+        IsReadOnly="True"
+        GridLinesVisibility="None"
+        RowHeight="60">
+
+        <DataGrid.Columns>
+
+            <!-- Module name -->
+            <DataGridTextColumn Header="Module"
+                        Binding="{Binding Name}"
+                        Width="2*" />
+
+            <!-- Progress + counts -->
+            <DataGridTemplateColumn Header="Mutation Score" Width="4*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Vertical" Margin="4">
+
+                            <!-- Progress bar -->
+                            <ProgressBar Minimum="0"
+                                         Value="{Binding MutationScore}"
+                                         Foreground="{Binding MutationScore, Converter={StaticResource MutationScoreToColourConverter}}">
+                                    
+                            </ProgressBar>
+
+                            <!-- Killed / Survived / Total line -->
+                            <StackPanel Orientation="Horizontal"
+                                Margin="0,6,0,0"
+                                HorizontalAlignment="Stretch">
+
+                                <TextBlock Text="{Binding KilledMutations, StringFormat={}{0} killed}" />
+                                <TextBlock Text="   •   " />
+                                <TextBlock Text="{Binding SurvivedMutations, StringFormat={}{0} survived}" />
+                                <TextBlock Text="   •   " />
+                                <TextBlock Text="{Binding TotalMutations, StringFormat={}{0} total}" />
+
+                            </StackPanel>
+
+                        </StackPanel>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Percentage -->
+            <DataGridTextColumn Header="Score"
+                        Binding="{Binding MutationScore, StringFormat={}{0:0}%}"
+                        Width="*" />
+
+        </DataGrid.Columns>
+    </DataGrid>
+
+</UserControl>

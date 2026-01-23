@@ -39,6 +39,9 @@ public class SolutionProfileData
 
 public class SolutionProfileGeneralSettings
 {
+    /// <summary>
+    /// TODO: make this do something.
+    /// </summary>
     [DefaultValue(true)]
     public bool SingleMutantPerLine { get; set; } = true;
 

@@ -154,7 +154,7 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build",
+            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore   ",
             RedirectStandardError = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -174,7 +174,6 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
             Log.Information(output);
         }
 
-        //TODO improve reporting so we get more than just a count of killed/survived
         if (!processSuccess)
         {
             mutant.Status = MutantStatus.Killed;

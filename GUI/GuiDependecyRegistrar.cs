@@ -30,5 +30,6 @@ public class GuiDependecyRegistrar : DependencyRegistrar
         Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
         Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
         Services.AddSingleton<StatusBarViewModel>();
+        Services.AddSingleton<MutationScoreByProjectViewModel>();
     }
 }

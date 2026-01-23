@@ -45,7 +45,7 @@ public class StatusTracker : IStatusTracker
             _operations[DarwingOperation.Idle] = OperationStates.NotStarted;
             _operations[operation] = OperationStates.Ongoing;
             ResetStatesIfRegressing(operation);
-            _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Publish();
+            _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Publish(operation);
             return true;
         }
 
@@ -104,7 +104,7 @@ public class StatusTracker : IStatusTracker
             _operations[operation] = OperationStates.Failed;
         }
         _operations[DarwingOperation.Idle] = OperationStates.Ongoing;
-        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Publish();
+        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Publish(operation);
     }
 
     private bool ValidOperation(DarwingOperation operation)
