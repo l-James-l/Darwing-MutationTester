@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:GUI.Views.Elements"
              mc:Ignorable="d" 
              xmlns:cv="clr-namespace:GUI.Converters"
-             xmlns:vm="clr-namespace:GUI.ViewModels.ElementViewModels"
+             xmlns:vm="clr-namespace:GUI.ViewModels.DashBoardElements"
              d:DataContext="{d:DesignInstance Type=vm:MutationScoreByProjectViewModel}">
 
 

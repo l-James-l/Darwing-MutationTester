@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GUI.Views"
-             xmlns:evm="clr-namespace:GUI.ViewModels.ElementViewModels"
+             xmlns:evm="clr-namespace:GUI.ViewModels.DashBoardElements"
              xmlns:vm="clr-namespace:GUI.ViewModels"
              xmlns:views="clr-namespace:GUI.Views.Elements"
              mc:Ignorable="d" 

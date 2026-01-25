@@ -1,4 +1,4 @@
-﻿using GUI.ViewModels.ElementViewModels;
+﻿using GUI.ViewModels.DashBoardElements;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Models;

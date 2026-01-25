@@ -7,7 +7,7 @@ using Mutator;
 using Serilog;
 using System.Collections.ObjectModel;
 
-namespace GUI.ViewModels.ElementViewModels;
+namespace GUI.ViewModels.DashBoardElements;
 
 /// <summary>
 /// ViewModel for the project summaries section on the dashboard.

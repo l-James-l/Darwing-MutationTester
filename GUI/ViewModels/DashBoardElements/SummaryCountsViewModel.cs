@@ -4,7 +4,7 @@ using Models.Events;
 using Mutator;
 using System.Windows.Media;
 
-namespace GUI.ViewModels.ElementViewModels;
+namespace GUI.ViewModels.DashBoardElements;
 
 /// <summary>
 /// View model for the row of overall stat cards on the dashboard

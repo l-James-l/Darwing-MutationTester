@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using GUI.ViewModels;
 using GUI.Services;
-using GUI.ViewModels.ElementViewModels;
+using GUI.ViewModels.DashBoardElements;
 
 namespace GUI;
 

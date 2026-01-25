@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Models;
 
-namespace GUI.ViewModels.ElementViewModels;
+namespace GUI.ViewModels.DashBoardElements;
 
 /// <summary>
 /// This class is used to represent an individual row on the dashboard UI, in the project summary section.

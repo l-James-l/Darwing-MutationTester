@@ -1,4 +1,4 @@
-﻿using GUI.ViewModels.ElementViewModels;
+﻿using GUI.ViewModels.DashBoardElements;
 using Models.Enums;
 using Models.Events;
 using Models.SharedInterfaces;

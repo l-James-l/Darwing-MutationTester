@@ -2,7 +2,7 @@
 using Models.Events;
 using Models.SharedInterfaces;
 
-namespace GUI.ViewModels.ElementViewModels;
+namespace GUI.ViewModels.DashBoardElements;
 
 public class StatusBarViewModel : ViewModelBase
 {

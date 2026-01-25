@@ -1,7 +1,7 @@
 ﻿using Models.Enums;
 using Models.Events;
 using Mutator;
-using GUI.ViewModels.ElementViewModels;
+using GUI.ViewModels.DashBoardElements;
 using NSubstitute;
 using Microsoft.CodeAnalysis;
 using Models;
@@ -14,7 +14,7 @@ public class SummaryCountsViewModelTests
     private IEventAggregator _eventAggregator;
     private IMutationDiscoveryManager _mutationDiscoveryManager;
     private MutationUpdated _mutationUpdatedEvent;
-    private Action<SyntaxAnnotation> _updateCallback;
+    private Action<SyntaxAnnotation> _updateCallback = null;
 
     [SetUp]
     public void SetUp()

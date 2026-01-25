@@ -1,6 +1,6 @@
 ﻿using System.Windows.Media;
 
-namespace GUI.ViewModels.ElementViewModels;
+namespace GUI.ViewModels.DashBoardElements;
 
 public class MutationStatCardViewModel : ViewModelBase
 {
