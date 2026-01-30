@@ -6,10 +6,9 @@
              xmlns:local="clr-namespace:GUI.Views"
              xmlns:evm="clr-namespace:GUI.ViewModels.DashBoardElements"
              xmlns:vm="clr-namespace:GUI.ViewModels"
-             xmlns:views="clr-namespace:GUI.Views.Elements"
+             xmlns:views="clr-namespace:GUI.Views.DashBoardElements"
              mc:Ignorable="d" 
-             d:DataContext="{d:DesignInstance Type=vm:DashBoardViewModel}" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DataContext="{d:DesignInstance Type=vm:DashBoardViewModel}">
     
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type evm:StatusBarViewModel}">

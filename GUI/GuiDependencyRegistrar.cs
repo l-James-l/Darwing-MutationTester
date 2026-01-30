@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using GUI.ViewModels;
 using GUI.Services;
 using GUI.ViewModels.DashBoardElements;
+using GUI.ViewModels.SolutionExplorerElements;
 
 namespace GUI;
 
@@ -32,5 +33,6 @@ public class GuiDependencyRegistrar : DependencyRegistrar
         Services.AddSingleton<StatusBarViewModel>();
         Services.AddSingleton<MutationScoreByProjectViewModel>();
         Services.AddSingleton<SummaryCountsViewModel>();
+        Services.AddSingleton<FileExplorerViewModel>();
     }
 }

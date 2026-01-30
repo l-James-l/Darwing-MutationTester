@@ -1,6 +1,7 @@
 ﻿using System.Windows.Controls;
 
-namespace GUI.Views.Elements;
+namespace GUI.Views.DashBoardElements;
+
 /// <summary>
 /// Interaction logic for MutationScoreByProjectView.xaml
 /// </summary>

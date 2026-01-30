@@ -7,14 +7,19 @@ namespace Models;
 
 public class SolutionContainer: ISolutionContainer
 {
+    /// <inheritdoc/>
     public AdhocWorkspace Workspace { get; init; }
 
+    /// <inheritdoc/>
     public Solution Solution => Workspace.CurrentSolution;
 
+    /// <inheritdoc/>
     public List<IProjectContainer> TestProjects { get; private set; } = new List<IProjectContainer>();
 
+    /// <inheritdoc/>
     public List<IProjectContainer> SolutionProjects { get; private set; } = new List<IProjectContainer>();
 
+    /// <inheritdoc/>
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
 
     public SolutionContainer(IAnalyzerManager analyzerManager, IMutationSettings settings)
@@ -50,6 +55,7 @@ public class SolutionContainer: ISolutionContainer
         SolutionProjects = AllProjects.Except(TestProjects).ToList();
     }
 
+    /// <inheritdoc/>
     public void RestoreProjects()
     {
         foreach (Project proj in Solution.Projects)
