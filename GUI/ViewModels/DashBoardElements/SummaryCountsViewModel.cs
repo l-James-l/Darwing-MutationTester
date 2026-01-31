@@ -67,48 +67,28 @@ public class SummaryCountsViewModel : ViewModelBase
 
 
     public MutationStatCardViewModel TotalMutationCount
-    { 
-        get { return _totalMutationCount; }
-        set
-        {
-            _totalMutationCount = value;
-            OnPropertyChanged();
-        }
-    }
-    private MutationStatCardViewModel _totalMutationCount = default!; // Make compiler happy, is set from ctor
+    {
+        get; 
+        set => SetProperty(ref field, value);
+    } = default!; // Set default to make compiler happy. Is initialized in constructor.
 
     public MutationStatCardViewModel MutationScore
     {
-        get { return _mutationScore; }
-        set
-        {
-            _mutationScore = value;
-            OnPropertyChanged();
-        }
-    }
-    private MutationStatCardViewModel _mutationScore = default!; // Make compiler happy, is set from ctor
+        get; 
+        set => SetProperty(ref field, value);
+    } = default!; // Set default to make compiler happy. Is initialized in constructor.
 
     public MutationStatCardViewModel KilledMutationCount
     {
-        get { return _killedMutationCount; }
-        set
-        {
-            _killedMutationCount = value;
-            OnPropertyChanged();
-        }
-    }
-    private MutationStatCardViewModel _killedMutationCount = new(); // Make compiler happy, is set from ctor
+        get; 
+        set => SetProperty(ref field, value);
+    } = default!; // Set default to make compiler happy. Is initialized in constructor.
 
     public MutationStatCardViewModel SurvivedMutationCount
     {
-        get { return _survivedMutationCount; }
-        set
-        {
-            _survivedMutationCount = value;
-            OnPropertyChanged();
-        }
-    }
-    private MutationStatCardViewModel _survivedMutationCount = new(); // Make compiler happy, is set from ctor
+        get; 
+        set => SetProperty(ref field, value);
+    } = default!; // Set default to make compiler happy. Is initialized in constructor.
 
     private void OnMutationUpdated()
     {

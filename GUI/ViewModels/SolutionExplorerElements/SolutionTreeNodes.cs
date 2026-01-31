@@ -38,10 +38,10 @@ public sealed class FileNode : SolutionTreeNode
     /// </summary>
     public bool IsSelected
     {
-        get => _isSelected;
+        get => field;
         set
         {
-            _isSelected = value;
+            field = value;
             if (value)
             {
                 //Notify the owning vm
@@ -49,7 +49,6 @@ public sealed class FileNode : SolutionTreeNode
             }
         }
     }
-    private bool _isSelected = false;
 
     private readonly FileExplorerViewModel _vm;
 

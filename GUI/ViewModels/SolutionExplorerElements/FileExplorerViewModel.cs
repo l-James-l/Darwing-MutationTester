@@ -30,14 +30,9 @@ public class FileExplorerViewModel : ViewModelBase
     /// </summary>
     public string? SelectFilePath 
     { 
-        get => _selectedFilePath; 
-        set 
-        {
-            _selectedFilePath = value;
-            OnPropertyChanged();
-        } 
+        get;
+        set => SetProperty(ref field, value); 
     }
-    private string? _selectedFilePath = null;
 
     /// <summary>
     /// The tree that contains all the different folders, projects, and .cs files

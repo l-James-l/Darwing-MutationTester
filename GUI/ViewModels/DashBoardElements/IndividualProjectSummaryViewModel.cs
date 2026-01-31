@@ -12,7 +12,7 @@ public class IndividualProjectSummaryViewModel : ViewModelBase
 
     public IndividualProjectSummaryViewModel(IProjectContainer proj)
     {
-        _name = proj.Name;
+        Name = proj.Name;
         ID = proj.ID;
     }
 
@@ -23,64 +23,45 @@ public class IndividualProjectSummaryViewModel : ViewModelBase
 
     public string Name
     {
-        get => _name;
-        set
-        {
-            _name = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private string _name;
 
     public int TotalMutations
     {
-        get => _totalMutations;
+        get;
         set
         {
-            _totalMutations = value;
-            OnPropertyChanged();
-            if (_totalMutations > 0)
+            SetProperty(ref field, value);
+            if (TotalMutations > 0)
             {
-                MutationScore = _killedMutations*100 / _totalMutations;
+                MutationScore = KilledMutations*100 / TotalMutations;
             }
         }
     }
-    private int _totalMutations = 0;
 
     public int KilledMutations
     {
-        get => _killedMutations;
+        get;
         set
         {
-            _killedMutations = value;
-            OnPropertyChanged();
-            if (_totalMutations > 0)
+            SetProperty(ref field, value);
+            if (TotalMutations > 0)
             {
-                MutationScore = _killedMutations*100 / _totalMutations;
+                MutationScore = KilledMutations*100 / TotalMutations;
             }
         }
     }
-    private int _killedMutations = 0;
 
     public int SurvivedMutations
     {
-        get => _survivedMutations;
-        set
-        {
-            _survivedMutations = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private int _survivedMutations = 0;
 
     public int MutationScore
     {
-        get => _mutationScore;
-        set
-        {
-            _mutationScore = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private int _mutationScore = 0;
 }

@@ -9,96 +9,70 @@ public class MutationStatCardViewModel : ViewModelBase
     /// </summary>
     public string Title
     {
-        get { return _title; }
-        set
-        {
-            _title = value;
-            OnPropertyChanged();
-        }
-    }
-    private string _title = "";
+        get; 
+        set => SetProperty(ref field, value);
+    } = "";
 
     /// <summary>
     /// Binding property for how the value is displayed
     /// </summary>
     public string ValueString
     {
-        get => _valueString;
-        set
-        {
-            _valueString = value;
-            OnPropertyChanged();
-        }
-    }
-    private string _valueString = "";
+        get;
+        set => SetProperty(ref field, value);
+    } = "";
+
 
     /// <summary>
     /// The actual value
     /// </summary>
     public int Value
     {
-        get => _value;
+        get;
         set
         {
-            _value = value;
-            ValueString = $"{_value}{ValueSuffix}";
+            SetProperty(ref field, value);
+            ValueString = $"{value}{ValueSuffix}";
         }
     }
-    private int _value = 0;
 
     /// <summary>
     /// Suffix to be applied to the value to result in the <see cref="ValueString"/>
     /// </summary>
     public string ValueSuffix
     {
-        get => _valueSuffix;
+        get;
         set
         {
-            _valueSuffix = value;
-            ValueString = $"{_value}{ValueSuffix}";
+            SetProperty(ref field, value);
+            ValueString = $"{Value}{value}";
         }
-    }
-    private string _valueSuffix = "";
+    } = "";
 
     /// <summary>
     /// Substile displayed on the card
     /// </summary>
     public string Subtitle
     {
-        get => _subtitle;
-        set
-        {
-            _subtitle = value;
-            OnPropertyChanged();
-        }
-    }
-    private string _subtitle = "";
+        get; 
+        set => SetProperty(ref field, value);
+    } = "";
 
     /// <summary>
     /// Icon displayed on the card
     /// </summary>
     public string Icon
     {
-        get => _icon;
-        set
-        {
-            _icon = value;
-            OnPropertyChanged();
-        }
-    }
-    private string _icon = "";
+        get; 
+        set => SetProperty(ref field, value);
+    } = "";
 
     /// <summary>
     /// Colour of the icon
     /// </summary>
     public Brush IconBrush
     {
-        get => _iconBrush;
-        set
-        {
-            _iconBrush = value;
-            OnPropertyChanged();
-        }
-    }
-    private Brush _iconBrush = Brushes.Blue;
+        get; 
+        set => SetProperty(ref field, value);
+    } = Brushes.Blue;
 }

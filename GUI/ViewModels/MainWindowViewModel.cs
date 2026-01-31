@@ -37,8 +37,8 @@ public class MainWindowViewModel : ViewModelBase
         _solutionExplorerViewModel = slnExplorer;
         _settingsViewModel = settings;
 
-        _currentViewModel = default!; //Make the compiler happy. Setting the tab index will set this.
         SelectedTabIndex = 0;
+        CurrentViewModel = _dashBoardViewModel;
 
         _fileSelectorService = fileSelectorService;
         _solutionLoader = solutionLoader;
@@ -59,15 +59,13 @@ public class MainWindowViewModel : ViewModelBase
     /// </summary>
     public int SelectedTabIndex
     {
-        get => _selectedTabIndex;
+        get;
         set
         {
-            _selectedTabIndex = value;
-            OnPropertyChanged();
+            SetProperty(ref field, value);
             UpdateCurrentView();
         }
     }
-    private int _selectedTabIndex;
 
     /// <summary>
     /// This is the view model actually displayed in the tab control content area.
@@ -75,14 +73,9 @@ public class MainWindowViewModel : ViewModelBase
     /// </summary>
     public object CurrentViewModel
     {
-        get => _currentViewModel;
-        private set
-        {
-            _currentViewModel = value;
-            OnPropertyChanged();
-        }
+        get; 
+        private set => SetProperty(ref field, value);
     }
-    private object _currentViewModel;
 
     private void UpdateCurrentView()
     {

@@ -28,14 +28,9 @@ public class StatusBarViewModel : ViewModelBase
 
     public float ProgressBarPercentage
     {
-        get => _progressBarPercentage;
-        set
-        {
-            _progressBarPercentage = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private float _progressBarPercentage;
 
     private void UpdateCompletionPercentage()
     {
@@ -75,69 +70,39 @@ public class StatusBarViewModel : ViewModelBase
 
     public OperationStates LoadSolutionState
     {
-        get => _loadSolutionState;
-        set
-        {
-            _loadSolutionState = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _loadSolutionState;
 
-    public OperationStates BuildOperationState 
+    public OperationStates BuildOperationState
     {
-        get => _buildOperationState; 
-        set
-        {
-            _buildOperationState = value;
-            OnPropertyChanged();
-        } 
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _buildOperationState;
 
-    public OperationStates InitialTestRunState 
+    public OperationStates InitialTestRunState
     {
-        get => _initialTestRunState;
-        set
-        {
-            _initialTestRunState = value;
-            OnPropertyChanged();
-        } 
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _initialTestRunState;
 
     public OperationStates MutantDiscoveryState
     {
-        get => _mutantDiscoveryState;
-        set
-        {
-            _mutantDiscoveryState = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _mutantDiscoveryState;
 
 
     public OperationStates BuildingMutatedSolutionState
     {
-        get => _buildingMutatedSolutionState;
-        set
-        {
-            _buildingMutatedSolutionState = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _buildingMutatedSolutionState;
 
 
     public OperationStates TestingMutantsState
     {
-        get => _testingMutantsState;
-        set
-        {
-            _testingMutantsState = value;
-            OnPropertyChanged();
-        }
+        get; 
+        set => SetProperty(ref field, value);
     }
-    private OperationStates _testingMutantsState;
 }
