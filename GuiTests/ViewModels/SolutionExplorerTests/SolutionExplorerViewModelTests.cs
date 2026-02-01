@@ -2,6 +2,7 @@
 using GUI.ViewModels.SolutionExplorerElements;
 using Models;
 using Models.Events;
+using Mutator;
 using NSubstitute;
 
 namespace GuiTests.ViewModels.SolutionExplorerTests;
@@ -13,6 +14,7 @@ public class SolutionExplorerViewModelTests
 
     private ISolutionProvider _solutionProvider;
     private IEventAggregator _eventAggregator;
+    private IMutationDiscoveryManager _mutationDiscoveryManager;
 
     private const string TestFilePath = "ViewModels\\SolutionExplorerTests\\TestData\\TestContentCodeFile.txt";
 
@@ -21,10 +23,12 @@ public class SolutionExplorerViewModelTests
     {
         _eventAggregator = Substitute.For<IEventAggregator>();
         _solutionProvider = Substitute.For<ISolutionProvider>();
+        _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
 
         _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Returns(Substitute.For<DarwingOperationStatesChangedEvent>());
+        _eventAggregator.GetEvent<MutationUpdated>().Returns(Substitute.For<MutationUpdated>());
 
-        _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator);
+        _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager);
         
         _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel);
     }
@@ -39,7 +43,7 @@ public class SolutionExplorerViewModelTests
     public void GivenFileSelected_WhenFileExplorerCallBackInvoked_ThenFileDetailsLoaded()
     {
         //Act
-        _fileExplorerViewModel.SelectFilePath = TestFilePath;
+        _fileExplorerViewModel.SelectFile = new FileNode(TestFilePath, _fileExplorerViewModel);
 
         //Assert
         Assert.That(_solutionExplorer.FileDetails, Is.Not.Null.Or.Empty);

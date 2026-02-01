@@ -32,55 +32,8 @@ public class FileExplorerViewModel : ViewModelBase
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(OnMutationUpdated, ThreadOption.UIThread);
     }
 
-    private void OnMutationUpdated(SyntaxAnnotation mutationID)
-    {
-        if (_mutationDiscoveryManager.DiscoveredMutations.FirstOrDefault(x => x.ID == mutationID) is not { } mutation)
-        {
-            Log.Warning("Received update for unknown mutation {MutationID}", mutationID);
-            return;
-        }
-        if (_solutionProvider.SolutionContainer.Solution.GetDocument(mutation.Document) is not { FilePath: not null } doc)
-        {
-            Log.Warning("Couldn't get the document for mutation {mutationID}", mutation.ID);
-            return;
-        }
-
-        FileNode? matchingFileNode = FindFileNode(doc.FilePath, SolutionTree);
-        
-        if (matchingFileNode is null)
-        {
-            Log.Warning("No file node found for a reported mutation.");
-            return;
-        }
-
-        if (!matchingFileNode.MutationInFile.Contains(mutation) && mutation.Status is not MutantStatus.CausedBuildError)
-        {
-            matchingFileNode.MutationCount++;
-            matchingFileNode.MutationInFile.Add(mutation);
-        }
-        matchingFileNode.KilledMutationCount = matchingFileNode.MutationInFile.Count(x => x.Status is MutantStatus.Killed);
-        OnPropertyChanged(nameof(SolutionTree));
-    }
-
-    private FileNode? FindFileNode(string filePath, IEnumerable<SolutionTreeNode> nodes)
-    {
-        foreach (SolutionTreeNode node in nodes)
-        {
-            if (node is FileNode file && filePath == node.FullPath)
-            {
-                return file;
-            }
-            if (node is FolderNode folder && filePath.StartsWith(folder.FullPath))
-            {
-                return FindFileNode(filePath, folder.Children);
-            }
-        }
-
-        return null;
-    }
-
     /// <summary>
-    /// The full path of the currently selected file.
+    /// The file node for the currently selected file.
     /// Null if no file has been selected yet
     /// </summary>
     public FileNode? SelectFile
@@ -112,6 +65,53 @@ public class FileExplorerViewModel : ViewModelBase
     /// TODO make a separate tree to allow showing the test projects separately.
     /// </summary>
     public ObservableCollection<SolutionTreeNode> SolutionTree { get; private set; } = [];
+
+    private void OnMutationUpdated(SyntaxAnnotation mutationID)
+    {
+        if (_mutationDiscoveryManager.DiscoveredMutations.FirstOrDefault(x => x.ID == mutationID) is not { } mutation)
+        {
+            Log.Warning("Received update for unknown mutation {MutationID}", mutationID);
+            return;
+        }
+        if (_solutionProvider.SolutionContainer.Solution.GetDocument(mutation.Document) is not { FilePath: not null } doc)
+        {
+            Log.Warning("Couldn't get the document for mutation {mutationID}", mutation.ID);
+            return;
+        }
+
+        FileNode? matchingFileNode = FindFileNode(doc.FilePath, SolutionTree);
+        
+        if (matchingFileNode is null)
+        {
+            Log.Warning("No file node found for a reported mutation.");
+            return;
+        }
+
+        if (!matchingFileNode.MutationInFile.Contains(mutation))
+        {
+            matchingFileNode.MutationInFile.Add(mutation);
+        }
+        matchingFileNode.MutationCount = matchingFileNode.MutationInFile.Count(x => x.Status is not MutantStatus.CausedBuildError);
+        matchingFileNode.KilledMutationCount = matchingFileNode.MutationInFile.Count(x => x.Status is MutantStatus.Killed);
+        OnPropertyChanged(nameof(SolutionTree));
+    }
+
+    private FileNode? FindFileNode(string filePath, IEnumerable<SolutionTreeNode> nodes)
+    {
+        foreach (SolutionTreeNode node in nodes)
+        {
+            if (node is FileNode file && filePath == node.FullPath)
+            {
+                return file;
+            }
+            if (node is FolderNode folder && filePath.StartsWith(folder.FullPath))
+            {
+                return FindFileNode(filePath, folder.Children);
+            }
+        }
+
+        return null;
+    }
 
     private void OnSolutionLoaded()
     {

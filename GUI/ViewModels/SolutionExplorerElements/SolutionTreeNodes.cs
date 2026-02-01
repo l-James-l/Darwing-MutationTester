@@ -94,6 +94,9 @@ public sealed class FileNode : SolutionTreeNode
         }
     }
 
+    /// <summary>
+    /// Gets the list of mutations that were discovered in the file.
+    /// </summary>
     public List<DiscoveredMutation> MutationInFile { get; } = [];
 
     private readonly FileExplorerViewModel _vm;

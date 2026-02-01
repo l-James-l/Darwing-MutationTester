@@ -26,6 +26,9 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
     /// </summary>
     public FileExplorerViewModel FileExplorerViewModel { get; }
 
+    /// <summary>
+    /// Binding property for the name of the selected file.
+    /// </summary>
     public string SelectedFileName 
     { 
         get; 
