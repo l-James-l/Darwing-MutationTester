@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 using Models;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace GuiTests.ViewModels.ElementViewModels;
+namespace GuiTests.ViewModels.DashBoardElements;
 
 public class SummaryCountsViewModelTests
 {

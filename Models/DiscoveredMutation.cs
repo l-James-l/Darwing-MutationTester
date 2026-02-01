@@ -16,17 +16,25 @@ public class DiscoveredMutation
     /// </summary>
     private readonly IEventAggregator _eventAggregator;
 
-
     public DiscoveredMutation(SyntaxAnnotation id, SyntaxNode original, SyntaxNode mutated, IEventAggregator eventAggregator)
     {
         ID = id;
         OriginalNode = original;
-        _mutatedNode = mutated;
-        _status = MutantStatus.Discovered; // Default for new mutations
+        MutatedNode = mutated;
+        Status = MutantStatus.Discovered; // Default for new mutations
         _lineSpan = null; // On creation, we dont know
         _document = null; // On creation, we dont know
 
         _eventAggregator = eventAggregator;
+    }
+
+    private void NotifyMutationUpdated()
+    {
+        if (_document is null || _lineSpan is null)
+        {
+            // We dont notify until we have enough information to be useful
+            return;
+        }
         _eventAggregator.GetEvent<MutationUpdated>().Publish(ID);
     }
 
@@ -47,14 +55,13 @@ public class DiscoveredMutation
     /// </summary>
     public SyntaxNode MutatedNode 
     { 
-        get => _mutatedNode; 
+        get; 
         set  
         {
-            _mutatedNode = value;
-            _eventAggregator.GetEvent<MutationUpdated>().Publish(ID);
+            field = value;
+            NotifyMutationUpdated();
         }
     }
-    private SyntaxNode _mutatedNode;
 
     /// <summary>
     /// The ID of the document the mutation occurred in.
@@ -65,7 +72,7 @@ public class DiscoveredMutation
         set
         {
             _document = value;
-            _eventAggregator.GetEvent<MutationUpdated>().Publish(ID);
+            NotifyMutationUpdated();
         }
     }
     private DocumentId? _document;
@@ -79,7 +86,7 @@ public class DiscoveredMutation
         set
         {
             _lineSpan = value;
-            _eventAggregator.GetEvent<MutationUpdated>().Publish(ID);
+            NotifyMutationUpdated();
         }
     }
     private FileLinePositionSpan? _lineSpan;
@@ -89,12 +96,11 @@ public class DiscoveredMutation
     /// </summary>
     public MutantStatus Status 
     { 
-        get => _status; 
+        get; 
         set
         {
-            _status = value;
-            _eventAggregator.GetEvent<MutationUpdated>().Publish(ID);
+            field = value;
+            NotifyMutationUpdated();
         }
     }
-    private MutantStatus _status;
 }

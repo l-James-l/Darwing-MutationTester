@@ -17,6 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+  	<None Update="ViewModels\SolutionExplorerTests\TestData\TestContentCodeFile.txt">
+  		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  	</None>
+  </ItemGroup>
+	
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />

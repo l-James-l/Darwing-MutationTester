@@ -25,8 +25,8 @@
         </DataTemplate>
     </Window.Resources>
 
-
-    <Grid>
+    <!--TODO Background="#1f2939"-->
+    <Grid >
         <Grid.RowDefinitions>
             <!-- Title -->
             <RowDefinition Height="Auto"/>

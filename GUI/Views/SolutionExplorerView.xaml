@@ -8,13 +8,19 @@
              xmlns:vm="clr-namespace:GUI.ViewModels"
              xmlns:evm="clr-namespace:GUI.ViewModels.SolutionExplorerElements"
              xmlns:views="clr-namespace:GUI.Views.SolutionExplorerElements"
-             d:DataContext="{d:DesignInstance Type=vm:SolutionExplorerViewModel}"
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DataContext="{d:DesignInstance Type=vm:SolutionExplorerViewModel}">
 
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type evm:FileExplorerViewModel}">
             <views:FileExplorerView/>
         </DataTemplate>
+
+        <Style TargetType="TextBlock" x:Key="HeaderStyle">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Padding" Value="10,10,0,10"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -26,26 +32,101 @@
         <TextBlock Grid.Row="0" FontWeight="SemiBold" FontSize="26" Text="Solution Explorer"/>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250" MinWidth="150"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="250" MinWidth="150"/> <!--File Tree-->
+                <ColumnDefinition Width="2"/> <!--Splitter-->
+                <ColumnDefinition Width="*" MinWidth="300"/> <!--File contents-->
             </Grid.ColumnDefinitions>
 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"/> <!--Header row-->
+                <RowDefinition Height="*"/> <!--Content-->
+            </Grid.RowDefinitions>
+
             <!-- File Explorer on the left -->
-            <ContentControl Grid.Column="0" Content="{Binding FileExplorerViewModel}" />
+            <TextBlock Text="Solution Structure" Style="{DynamicResource HeaderStyle}"/>
+            <ContentControl Grid.Column="0" Grid.Row="1" Content="{Binding FileExplorerViewModel}" />
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="1"
                           Width="5"
+                          Grid.RowSpan="2"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Stretch"
                           ResizeBehavior="PreviousAndNext"
                           ResizeDirection="Columns"
                           ShowsPreview="True"/>
 
-            <!-- Right panel -->
-            <Border Grid.Column="2" Background="#333">
-                <TextBlock Text="{Binding FileExplorerViewModel.SelectFilePath}"/>
+            <!-- File Content Panel -->
+            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding SelectedFileName}" Style="{DynamicResource HeaderStyle}"/>
+
+            <Border Grid.Column="2" Grid.Row="1" Background="#333">
+                <DataGrid ItemsSource="{Binding FileDetails}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          HeadersVisibility="None"
+                          GridLinesVisibility="None"
+                          Background="#0F172A"
+                          Foreground="#E2E8F0"
+                          BorderThickness="0"
+                          SelectionUnit="FullRow"
+                          SelectionMode="Single"
+                          ScrollViewer.CanContentScroll="True"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+
+                    <DataGrid.Resources>
+
+                        <!-- Row style -->
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="MinHeight" Value="20"/>
+
+                            <!-- selection highlight -->
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#1E293B"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#172554"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+
+                        <!-- Selected row style -->
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Style>
+
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+
+                        <!-- Line number -->
+                        <DataGridTextColumn Binding="{Binding LineNumber}" Width="55">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Cascadia Mono"/>
+                                    <Setter Property="Foreground" Value="#64748B"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                    <Setter Property="Margin" Value="0,0,10,0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Code -->
+                        <DataGridTextColumn Binding="{Binding SourceCode}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontFamily" Value="Cascadia Mono"/>
+                                    <Setter Property="Foreground" Value="#E2E8F0"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                    </DataGrid.Columns>
+                </DataGrid>
+
             </Border>
         </Grid>
     </Grid>

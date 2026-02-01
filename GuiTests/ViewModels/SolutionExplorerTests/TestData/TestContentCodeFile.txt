@@ -1,0 +1,62 @@
+﻿namespace GuiTests.ViewModels.SolutionExplorerTests.TestData;
+
+/// <summary>
+/// This class is used as a placeholder to represent a code file in the test data for solution explorer tests.
+/// </summary>
+public class TestContentCodeFile
+{
+    public int FindMaxPartialSum(int[] array)
+    {
+        // Find the maximum partial sum from i to j, where 0 <= i <= j < n
+        // Divide into two halves, find the maximum partial sum in the left half, right half, and crossing the middle
+        // Complexity: O(n log n)
+
+        if (array.Length == 1)
+        {
+            return array[0];
+        }
+
+        int center = array.Length / 2;
+        int lmps = FindLeftMaxPartialSum(array, center);
+        int rmps = FindRightMaxPartialSum(array, center);
+
+        int crossingSum = lmps + rmps - array[center];
+        int leftMax = FindMaxPartialSum(array[..center]);
+        int rightMax = FindMaxPartialSum(array[center..]);
+
+        return Math.Max(Math.Max(leftMax, rightMax), crossingSum);
+    }
+
+    private int FindLeftMaxPartialSum(int[] array, int startIndex)
+    {
+        // Finds the maximum partial sum from startIndex, to the end of the array
+        int maxSum = int.MinValue;
+        int currentSum = 0;
+
+        for (int i = startIndex; i < array.Length; i++)
+        {
+            currentSum += array[i];
+            if (currentSum > maxSum)
+            {
+                maxSum = currentSum;
+            }
+        }
+        return maxSum;
+    }
+
+    private int FindRightMaxPartialSum(int[] array, int endIndex)
+    {
+        // Finds the maximum partial sum from the start of the array to endIndex
+        int maxSum = int.MinValue;
+        int currentSum = 0;
+        for (int i = endIndex; i >= 0; i--)
+        {
+            currentSum += array[i];
+            if (currentSum > maxSum)
+            {
+                maxSum = currentSum;
+            }
+        }
+        return maxSum;
+    }
+}

@@ -4,7 +4,7 @@ using Models.Events;
 using Models.SharedInterfaces;
 using NSubstitute;
 
-namespace GuiTests.ViewModels.ElementViewModels;
+namespace GuiTests.ViewModels.DashBoardElements;
 
 public class StatusBarViewModelTests
 {

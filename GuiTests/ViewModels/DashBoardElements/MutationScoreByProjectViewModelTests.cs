@@ -10,7 +10,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.TestCorrelator;
 
-namespace GuiTests.ViewModels.ElementViewModels;
+namespace GuiTests.ViewModels.DashBoardElements;
 
 public class MutationScoreByProjectViewModelTests
 {

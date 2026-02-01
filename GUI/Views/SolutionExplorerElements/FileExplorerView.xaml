@@ -6,53 +6,150 @@
              xmlns:local="clr-namespace:GUI.Views.SolutionExplorerElements"
              xmlns:vm="clr-namespace:GUI.ViewModels.SolutionExplorerElements"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DataContext="{d:DesignInstance Type=vm:FileExplorerViewModel}">
 
-    <TreeView ItemsSource="{Binding SolutionTree}">
-        
+    <TreeView ItemsSource="{Binding SolutionTree}"
+          Background="Transparent"
+          BorderThickness="0"
+          Grid.IsSharedSizeScope="True" 
+          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+
+        <TreeView.Resources>
+            <Style x:Key="ExpandCollapseToggleStyle" TargetType="ToggleButton">
+                <Setter Property="Focusable" Value="False"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <!--Defines custom style for the expand/collapse button/indicator. (The triangle at the start of the row)-->
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Grid Width="16" Height="16" Background="Transparent">
+                                <Path x:Name="ExpandPath"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Data="M 0,0 L 0,8 L 5,4 Z"
+                                        Stroke="Gray"
+                                        StrokeThickness="1.5"
+                                        RenderTransformOrigin="0.5,0.5">
+                                </Path>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="ExpandPath" Property="RenderTransform">
+                                        <Setter.Value>
+                                            <RotateTransform Angle="90"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Setter TargetName="ExpandPath" Property="Fill" Value="Gray"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="NodeGridStyle" TargetType="Grid">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            </Style>
+
+            <HierarchicalDataTemplate DataType="{x:Type vm:ProjectNode}" ItemsSource="{Binding Children}">
+                <Grid Style="{StaticResource NodeGridStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="⚙️" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding Name}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
+                    </TextBlock>
+                </Grid>
+            </HierarchicalDataTemplate>
+
+            <HierarchicalDataTemplate DataType="{x:Type vm:FolderNode}" ItemsSource="{Binding Children}">
+                <Grid Style="{StaticResource NodeGridStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📁" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding Name}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
+                    </TextBlock>
+                </Grid>
+            </HierarchicalDataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:FileNode}">
+                <Grid Style="{StaticResource NodeGridStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="📄" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding Name}"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
+                    </TextBlock>
+                </Grid>
+            </DataTemplate>
+        </TreeView.Resources>
+
         <TreeView.ItemContainerStyle>
             <Style TargetType="TreeViewItem">
                 <!--Set the IsSelectedProerty of the leaf nodes when clicked-->
                 <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-
-                <!-- default colours -->
+                
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="Black"/>
+                <!-- Define custom template for the rows of the tree so that we can add the counts of the mutations on each side -->
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TreeViewItem">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                <Style.Triggers>
-                    <!-- hover -->
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="LightGray"/>
-                    </Trigger>
-                </Style.Triggers>
+                                <Border x:Name="Bd" Grid.ColumnSpan="2" 
+                                    Background="{TemplateBinding Background}" 
+                                    Padding="2,2,8,2"/>
+                                
+                                <ToggleButton x:Name="Expander"
+                                                Style="{StaticResource ExpandCollapseToggleStyle}"
+                                                ClickMode="Press"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                
+                                <!--The header/name for the file/project/folder-->
+                                <ContentPresenter Grid.Column="1" ContentSource="Header" HorizontalAlignment="Stretch"/>
+
+                                <!--The child elements presenter -->
+                                <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1"/>
+                            </Grid>
+                            
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsExpanded" Value="False">
+                                    <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="HasItems" Value="False">
+                                    <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </TreeView.ItemContainerStyle>
-        
-        <TreeView.Resources>
-            <!-- Project template -->
-            <HierarchicalDataTemplate DataType="{x:Type vm:ProjectNode}" ItemsSource="{Binding Children}" >
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="⚙️" Margin="0,0,4,0"/>
-                    <TextBlock Text="{Binding Name}"/>
-                </StackPanel>
-            </HierarchicalDataTemplate>
-
-            <!-- Folder template -->
-            <HierarchicalDataTemplate DataType="{x:Type vm:FolderNode}" ItemsSource="{Binding Children}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="📁" Margin="0,0,4,0"/>
-                    <TextBlock Text="{Binding Name}"/>
-                </StackPanel>
-            </HierarchicalDataTemplate>
-
-            <!-- File template -->
-            <DataTemplate DataType="{x:Type vm:FileNode}">
-                <StackPanel Style="{DynamicResource OnSelectedBehaviour}" Orientation="Horizontal">
-                    <TextBlock Text="📄" Margin="0,0,4,0"/>
-                    <TextBlock Text="{Binding Name}"/>
-                </StackPanel>
-            </DataTemplate>
-        </TreeView.Resources>
     </TreeView>
-
 </UserControl>

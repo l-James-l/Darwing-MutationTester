@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Models;
 using NSubstitute;
 
-namespace GuiTests.ViewModels.ElementViewModels;
+namespace GuiTests.ViewModels.DashBoardElements;
 
 public class IndividualProjectSummaryViewModelTests
 {
