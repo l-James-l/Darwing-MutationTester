@@ -1,7 +1,11 @@
 ﻿using GUI.Services;
 using GUI.ViewModels.SolutionExplorerElements;
+using Microsoft.CodeAnalysis;
+using Models;
+using Models.Events;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Input;
 
 namespace GUI.ViewModels;
 
@@ -13,12 +17,21 @@ public interface ISolutionExplorerViewModel
 public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewModel
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
+    private readonly IEventAggregator _eventAggregator;
 
-    public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel)
+    public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator)
     {
         FileExplorerViewModel = fileExplorerViewModel;
+        _eventAggregator = eventAggregator;
 
         fileExplorerViewModel.SelectedFileChangedCallBack += OnSelectedFileChanged;
+        SelectMutationCommand = new RelayCommand<DiscoveredMutation>(x =>
+        {
+            SelectedMutation = x;
+        });
+
+        _eventAggregator.GetEvent<MutationUpdated>().Subscribe(_ => OnPropertyChanged(nameof(FileDetails)), ThreadOption.UIThread, true, 
+            x => FileDetails.Any(line => line.MutationsOnLine.FirstOrDefault(m => x == m.ID) is not null));
     }
 
     /// <summary>
@@ -42,9 +55,21 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
     /// </summary>
     public ObservableCollection<LineDetails> FileDetails { get; } = [];
 
+    /// <summary>
+    /// Binding property for the currently selected mutation in the file.
+    /// </summary>
+    public DiscoveredMutation? SelectedMutation 
+    { 
+        get; 
+        set => SetProperty(ref field, value); 
+    } = null!;
+
+    public ICommand SelectMutationCommand { get; }
+
     private void OnSelectedFileChanged(FileNode selectedFile)
     {
         FileDetails.Clear();
+        SelectedMutation = null;
         string newFilePath = selectedFile.FullPath;
         if (File.Exists(newFilePath))
         {
@@ -53,7 +78,8 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
             List<LineDetails> lineDetails = [.. lines.Select((line, index) => new LineDetails
             {
                 SourceCode = line,
-                LineNumber = index + 1
+                LineNumber = index + 1,
+                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index)]
             })];
 
             FileDetails.AddRange(lineDetails);
@@ -73,4 +99,6 @@ public class LineDetails
     public string SourceCode { get; set; } = "";
 
     public int LineNumber { get; set; } = -1;
+
+    public ObservableCollection<DiscoveredMutation> MutationsOnLine { get; set; } = [];
 }
