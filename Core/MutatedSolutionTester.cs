@@ -55,8 +55,8 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         }
         try
         {
-            TestAllMutants();
-            _statusTracker.FinishOperation(DarwingOperation.TestMutants, true);
+            bool completed = TestAllMutants();
+            _statusTracker.FinishOperation(DarwingOperation.TestMutants, completed);
         }
         catch (Exception ex)
         {
@@ -65,7 +65,7 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         }
     }
 
-    private void TestAllMutants()
+    private bool TestAllMutants()
     {
         if (DoInitialTestWithNoActiveMutants())
         {
@@ -82,6 +82,11 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
             }
 
             Log.Information("Mutation testing complete. {survived} mutants survived out of {total} tested.", survivedMutants, testedMutantCount);
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 

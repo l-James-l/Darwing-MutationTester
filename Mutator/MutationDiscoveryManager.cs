@@ -113,10 +113,10 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
     /// </summary>
     public void RediscoverMutationsInTree(SyntaxNode syntaxNode)
     {
-        if (DiscoveredMutations.FirstOrDefault(x => syntaxNode.HasAnnotation(x.ID)) is { MutatedNode: not null } rediscoveredMutation)
+        if (DiscoveredMutations.FirstOrDefault(x => syntaxNode.HasAnnotation(x.ID)) is { MutationSwitcher: not null } rediscoveredMutation)
         {
             //Update the mutated node to the node in the actual mutated tree.
-            rediscoveredMutation.MutatedNode = syntaxNode;
+            rediscoveredMutation.MutationSwitcher = syntaxNode;
             //Only update the status to available if it was previously 'Discovered' to avoid making removed mutations show as available.
             if (rediscoveredMutation.Status == MutantStatus.Discovered)
             {
@@ -176,12 +176,12 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         {
             try
             {
-                (SyntaxNode mutatedNode, SyntaxAnnotation id) = mutator.Mutate(node);
+                (SyntaxNode mutationSwitcher, SyntaxAnnotation id, SyntaxNode mutatedNode) = mutator.Mutate(node);
 
-                mutations.Add(new DiscoveredMutation(id, node, mutatedNode, _eventAggregator));
+                mutations.Add(new DiscoveredMutation(id, node, mutationSwitcher, mutatedNode, _eventAggregator, mutator.Category, mutator.Mutation));
 
                 Log.Debug($"Successfully discovered {mutator.Mutation} mutation.");
-                return mutatedNode;
+                return mutationSwitcher;
             }
             catch (MutationException ex)
             {

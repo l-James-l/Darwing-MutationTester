@@ -14,5 +14,5 @@ public interface IMutationImplementation
 
     Type RequiredNodeType { get; }
 
-    (SyntaxNode mutatedNode, SyntaxAnnotation identififer) Mutate(SyntaxNode node);   
+    (SyntaxNode mutationSwitcher, SyntaxAnnotation identififer, SyntaxNode mutatedNode) Mutate(SyntaxNode node);   
 }

@@ -9,7 +9,7 @@ public abstract class BaseMutationImplementation : IMutationImplementation
 {
     private const string NodeIdKey = "DarwingMutatedNodeIdentifier";
     
-    public static string ActiveMutationIndex = "DarwingActiveMutaitonIndex";
+    public static string ActiveMutationIndex = "DarwingActiveMutationIndex";
     public static SyntaxAnnotation DontMutateAnnotation = new ("DarwingDoNotMutate");
 
     public abstract SpecifcMutation Mutation { get; }
@@ -23,11 +23,11 @@ public abstract class BaseMutationImplementation : IMutationImplementation
     /// <summary>
     /// Will return a mutated syntax node with a mutation switcher applied to it.
     /// </summary>
-    public (SyntaxNode mutatedNode, SyntaxAnnotation identififer) Mutate(SyntaxNode node)
+    public (SyntaxNode mutationSwitcher, SyntaxAnnotation identififer, SyntaxNode mutatedNode) Mutate(SyntaxNode node)
     {
         SyntaxNode mutatedNode = SpecificMutationImplementation(node);
-        (mutatedNode, SyntaxAnnotation identififer) = GenerateIdAnnotation(mutatedNode);
-
+        (mutatedNode, SyntaxAnnotation identifier) = GenerateIdAnnotation(mutatedNode);
+        mutatedNode = mutatedNode.NormalizeWhitespace();
         if (mutatedNode is not ExpressionSyntax mutatedExpression)
         {
             throw new MutationException($"Mutation implementation {Mutation} produced a non ExpressionSyntax node.");
@@ -37,8 +37,8 @@ public abstract class BaseMutationImplementation : IMutationImplementation
             throw new MutationException($"Mutation implementation {Mutation} received a non ExpressionSyntax node.");
         }
 
-        SyntaxNode mutationSwitcher = BuildMutationSwitcher(originalExpression, mutatedExpression, identififer.Data ?? throw new MutationException("Mutation identifier had no ID."));
-        return (mutationSwitcher, identififer);
+        SyntaxNode mutationSwitcher = BuildMutationSwitcher(originalExpression, mutatedExpression, identifier.Data ?? throw new MutationException("Mutation identifier had no ID."));
+        return (mutationSwitcher, identifier, mutatedNode);
     }
 
     /// <summary>
@@ -53,9 +53,9 @@ public abstract class BaseMutationImplementation : IMutationImplementation
         return (node.WithAdditionalAnnotations(idAnnotation).WithAdditionalAnnotations(DontMutateAnnotation), idAnnotation);
     }
 
-    private SyntaxNode BuildMutationSwitcher(ExpressionSyntax origionalNode, ExpressionSyntax mutatedNode, string id)
+    private SyntaxNode BuildMutationSwitcher(ExpressionSyntax originalNode, ExpressionSyntax mutatedNode, string id)
     {
-        //Should be equivalent to: Environment.GetEnvironmentVariable("DarwingActiveMutaitonIndex")
+        //Should be equivalent to: Environment.GetEnvironmentVariable("DarwingActiveMutationIndex")
         InvocationExpressionSyntax activeMutation = SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
                 SyntaxKind.SimpleMemberAccessExpression,
@@ -74,7 +74,7 @@ public abstract class BaseMutationImplementation : IMutationImplementation
             )
         );
 
-        //Should be equivalent to: Environment.GetEnvironmentVariable("DarwingActiveMutaitonIndex") == id
+        //Should be equivalent to: Environment.GetEnvironmentVariable("DarwingActiveMutationIndex") == id
         BinaryExpressionSyntax condition = 
             SyntaxFactory.BinaryExpression(
                 SyntaxKind.EqualsExpression, 
@@ -87,13 +87,13 @@ public abstract class BaseMutationImplementation : IMutationImplementation
 
         condition = ApplyDontMutateAnnotation(condition) as BinaryExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
         mutatedNode = ApplyDontMutateAnnotation(mutatedNode) as ExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
-        origionalNode = origionalNode.WithAdditionalAnnotations(DontMutateAnnotation); // origional node only needs the top level dont mutate annotation.
+        originalNode = originalNode.WithAdditionalAnnotations(DontMutateAnnotation); // original node only needs the top level dont mutate annotation.
 
-        // should be equivalent to: (Environment.GetEnvironmentVariable("DarwingActiveMutaitonIndex") == id ? mutatedNode : origionalNode)
-        ConditionalExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, origionalNode).WithAdditionalAnnotations(DontMutateAnnotation);
-        ParenthesizedExpressionSyntax parenthesizedSwticher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(DontMutateAnnotation);
+        // should be equivalent to: (Environment.GetEnvironmentVariable("DarwingActiveMutationIndex") == id ? mutatedNode : originalNode)
+        ConditionalExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, originalNode).WithAdditionalAnnotations(DontMutateAnnotation);
+        ParenthesizedExpressionSyntax parenthesizedSwitcher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(DontMutateAnnotation);
         
-        return parenthesizedSwticher.NormalizeWhitespace();
+        return parenthesizedSwitcher.NormalizeWhitespace();
     }
 
     /// <summary>

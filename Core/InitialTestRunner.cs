@@ -85,6 +85,7 @@ public class InitialTestRunner : IMutationRunInitiator
         if (!processSuccess || !testRun.Success)
         {
             Log.Error("Initial test run without mutations has failures. Cannot perform mutation testing.");
+            testRun.Errors.ForEach(Log.Error);
         }
         else
         {

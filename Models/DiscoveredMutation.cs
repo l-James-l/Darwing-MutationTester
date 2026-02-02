@@ -16,11 +16,16 @@ public class DiscoveredMutation
     /// </summary>
     private readonly IEventAggregator _eventAggregator;
 
-    public DiscoveredMutation(SyntaxAnnotation id, SyntaxNode original, SyntaxNode mutated, IEventAggregator eventAggregator)
+    public DiscoveredMutation(SyntaxAnnotation id, SyntaxNode original, SyntaxNode mutationSwitcher, SyntaxNode mutatedNode,
+        IEventAggregator eventAggregator, MutationCategory category, SpecifcMutation type)
     {
         ID = id;
         OriginalNode = original;
-        MutatedNode = mutated;
+        MutationSwitcher = mutationSwitcher;
+        MutatedNode = mutatedNode;
+        Category = category;
+        SpecificType = type;
+
         Status = MutantStatus.Discovered; // Default for new mutations
         _lineSpan = null; // On creation, we dont know
         _document = null; // On creation, we dont know
@@ -51,17 +56,25 @@ public class DiscoveredMutation
     public SyntaxNode OriginalNode { get; set; }
 
     /// <summary>
+    /// The actual node that will be embedded in the syntax tree, that contains the original node, and the mutated node,
+    /// inside a ternary statement
+    /// </summary>
+    public SyntaxNode MutationSwitcher {get; set; }
+
+    /// <summary>
     /// What the original node was mutated into
     /// </summary>
-    public SyntaxNode MutatedNode 
-    { 
-        get; 
-        set  
-        {
-            field = value;
-            NotifyMutationUpdated();
-        }
-    }
+    public SyntaxNode MutatedNode { get; set; }
+
+    /// <summary>
+    /// Gets the category of the mutation represented by this instance.
+    /// </summary>
+    public MutationCategory Category { get; }
+
+    /// <summary>
+    /// Gets the specific mutation type associated with this instance.
+    /// </summary>
+    public SpecifcMutation SpecificType { get; }
 
     /// <summary>
     /// The ID of the document the mutation occurred in.

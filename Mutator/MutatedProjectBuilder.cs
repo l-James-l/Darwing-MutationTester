@@ -235,7 +235,7 @@ public class MutatedProjectBuilder : IStartUpProcess
 
             mutant.Status = MutantStatus.CausedBuildError;
 
-            SyntaxNode newRoot = mutant.MutatedNode.SyntaxTree.GetRoot().ReplaceNode(mutant.MutatedNode, mutant.OriginalNode);
+            SyntaxNode newRoot = mutant.MutationSwitcher.SyntaxTree.GetRoot().ReplaceNode(mutant.MutationSwitcher, mutant.OriginalNode);
             
             slnWithMutantsRemoved = slnWithMutantsRemoved.WithDocumentSyntaxRoot(mutant.Document, newRoot);
 

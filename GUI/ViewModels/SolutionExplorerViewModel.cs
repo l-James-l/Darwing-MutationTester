@@ -62,7 +62,7 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
     { 
         get; 
         set => SetProperty(ref field, value); 
-    } = null!;
+    } = null;
 
     public ICommand SelectMutationCommand { get; }
 
