@@ -231,6 +231,9 @@
                                 <TextBlock Text="Mutation Type" FontWeight="Light" Foreground="Gray" Margin="0, 10"/>
                                 <TextBlock Text="{Binding SelectedMutation.SpecificType}" Foreground="White"/>
 
+                                <TextBlock Text="Line Number" FontWeight="Light" Foreground="Gray" Margin="0, 10"/>
+                                <TextBlock Text="{Binding SelectedMutation.LineSpan.StartLinePosition.Line}" Foreground="White"/>
+
                                 <TextBlock Text="Origional Code" FontWeight="Light" Foreground="Gray" Margin="0, 10"/>
                                 <TextBlock Text="{Binding SelectedMutation.OriginalNode}" Foreground="White"/>
 
