@@ -26,7 +26,7 @@
     </Window.Resources>
 
     <!--TODO Background="#1f2939"-->
-    <Grid >
+    <Grid Background="#1f2939">
         <Grid.RowDefinitions>
             <!-- Title -->
             <RowDefinition Height="Auto"/>
@@ -38,12 +38,12 @@
 
         <!-- Title Area -->
         <StackPanel Grid.Row="0" Margin="25,16,20,8">
-            <TextBlock Text="Darwing"
+            <TextBlock Text="Darwing - C# Mutation Testing"
                    FontSize="18"
                    FontWeight="SemiBold"
-                   Foreground="Black"/>
+                   Foreground="White"/>
 
-            <TextBlock Text="Software Mutation Testing"
+            <TextBlock Text="Software Validation Through Darwinian Survial of the Fitest"
                    FontSize="12"
                    Foreground="#94A3B8"
                    Margin="0,2,0,0"/>
@@ -53,7 +53,49 @@
 
             <!-- Tab headers only (doesnt include content panel)-->
             <TabControl Padding="0,0,160,0" BorderThickness="0" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                <TabItem Header="Dashboard"/>
+                <TabControl.Resources>
+                    
+                    <!--Styling for the buttons-->
+                    <Style TargetType="{x:Type TabItem}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type TabItem}">
+                                    <Grid Margin="2,0">
+                                        <Border x:Name="Border" 
+                                                Background="Transparent" 
+                                                BorderBrush="#1E293B" 
+                                                BorderThickness="0,0,0,2"
+                                                Padding="12,14"/>
+
+                                        <ContentPresenter x:Name="ContentSite"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Center"
+                                                          ContentSource="Header"
+                                                          Margin="10,2"/>
+                                    </Grid>
+
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="#172554"/>
+                                        </Trigger>
+
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                            <Setter TargetName="Border" Property="Background" Value="#1E293B"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+
+                                        <Trigger Property="IsSelected" Value="False">
+                                            <Setter Property="Foreground" Value="#64748B"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                    <TabItem Header="Dashboard"/>
                 <TabItem Header="Solution Explorer"/>
                 <TabItem Header="Settings"/>
             </TabControl>
@@ -65,7 +107,45 @@
                         Margin="0,0,8,0"
                         Panel.ZIndex="1">
                 <Menu Name="SolutionActionDropdownMenu">
-                    <MenuItem Header="Solution">
+
+                    <Menu.Template>
+                        <ControlTemplate TargetType="Menu">
+                            <Border CornerRadius="5"
+                                    Background="Blue"
+                                    Padding="5, 4">
+                                <StackPanel>
+                                    <ItemsPresenter />
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Menu.Template>
+
+                    <MenuItem Header="📁  Solution">
+                        <MenuItem.Template>
+                            <ControlTemplate TargetType="MenuItem">
+                                <Border CornerRadius="5"
+                                        Background="Transparent"
+                                        Padding="5, 4">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="{TemplateBinding Header}" 
+                                                   Foreground="White"
+                                                   FontWeight="SemiBold" 
+                                                   HorizontalAlignment="Center" 
+                                                   VerticalAlignment="Center"
+                                                   Margin="5,0"/>
+                                        <Path Data="M 0 0 L 5 7 L 10 0"
+                                              Width="10"
+                                              Height="7"
+                                              HorizontalAlignment="Right"
+                                              VerticalAlignment="Center" 
+                                              Stroke="White"
+                                              StrokeThickness="1.5"
+                                              Margin="5, 0"/>
+                                    </StackPanel>
+                                </Border>
+                            </ControlTemplate>
+                        </MenuItem.Template>
+
                         <MenuItem Command="{Binding SolutionPathSelection}">
                             <MenuItem.Header>
                                 <StackPanel>
@@ -95,13 +175,39 @@
                     </MenuItem>
                 </Menu>
 
-                <Button Content="Run Tests" Command="{Binding TestSolution}" Margin="8,0,0,0"/>
+
+                <Button Command="{Binding TestSolution}" Margin="8,0,0,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border CornerRadius="5"
+                                    Background="ForestGreen"
+                                    Padding="5, 4">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path Data="M 0 0 L 10 5 L 0 10 Z"
+                                          Width="10"
+                                          Height="10"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center" 
+                                          Stroke="White"
+                                          StrokeThickness="1.5"
+                                          Margin="5, 0"/>
+                                    <TextBlock Text="Run Tests" 
+                                               Foreground="White"
+                                               FontWeight="SemiBold" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"
+                                               Margin="5,0"/>
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </StackPanel>
         </Grid>
 
         <ContentControl Grid.Row="2"
-                Content="{Binding CurrentViewModel}"
-                Margin="25,0,25,0"/>
+                        Content="{Binding CurrentViewModel}"
+                        Margin="25,0,25,0"/>
     </Grid>
 
 </Window>
