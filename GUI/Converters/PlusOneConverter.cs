@@ -3,6 +3,9 @@ using System.Windows.Data;
 
 namespace GUI.Converters;
 
+/// <summary>
+/// When given an integer, adds one to it. Used for displaying 1-based indices in the UI when the underlying data is 0-based.
+/// </summary>
 public class PlusOneConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

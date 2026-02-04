@@ -18,6 +18,8 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
     private readonly IEventAggregator _eventAggregator;
+    
+    private FileNode? _selectedFileNode = null;
 
     public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator)
     {
@@ -44,8 +46,6 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
         set => SetProperty(ref field, value); 
     } = _defaultFileDisplayHeader;
 
-    private FileNode? _selectedFileNode = null;
-
     /// <summary>
     /// Binding property for the contents of the selected file.
     /// We use a collection rather than just the string containing all the file content so that we can control the
@@ -61,20 +61,20 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
     
     private void OnSelectedFileChanged(FileNode selectedFile)
     {
+        //If the same file is selected, try to keep the same line selected. Any expanded mutations will be lost, but that's acceptable.
         int selectedLineNumber = -1;
         if (selectedFile == _selectedFileNode && SelectedLine is not null)
         {
             selectedLineNumber = SelectedLine.LineNumber;
         }
+
         SelectedLine = null;
-        FileDetails.Clear();
-        string newFilePath = selectedFile.FullPath;
-        
-        if (File.Exists(newFilePath))
+        FileDetails.Clear();        
+        if (File.Exists(selectedFile.FullPath))
         {
             SelectedFileHeader = selectedFile.Name;
             _selectedFileNode = selectedFile;
-            IEnumerable<string> lines = File.ReadLines(newFilePath);
+            IEnumerable<string> lines = File.ReadLines(selectedFile.FullPath);
             List<LineDetails> lineDetails = [.. lines.Select((line, index) => new LineDetails
             {
                 SourceCode = line,
