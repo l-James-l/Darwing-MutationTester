@@ -22,17 +22,34 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="25,0,25,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="DashBoard" FontWeight="SemiBold" FontSize="26" Foreground="White"/>
+            <TextBlock Text="Overview of testing" FontWeight="Light" FontSize="12" Foreground="LightGray"/>
+        </StackPanel>
         
-        <TextBlock Grid.Row="0" FontWeight="SemiBold" FontSize="26">DashBoard</TextBlock>
-        <ContentControl Grid.Row="1" Content="{Binding StatusBarViewModel}" Margin="0,25,0,25" />
+        <Border Grid.Row="1" Background="#1f2939" CornerRadius="8" BorderBrush="LightGray" BorderThickness="0.5" Margin="5, 20, 5, 0">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="Progesssion" Foreground="White" FontWeight="SemiBold" FontSize="15" Margin="80, 25, 0,0 "/>
+                <ContentControl Content="{Binding StatusBarViewModel}" Margin="0,15,0,25" />
+            </StackPanel>
+        </Border>
+        
         <ContentControl Grid.Row="2" Content="{Binding SummaryCountsViewModel}" Margin="0,25,0,25" />
-        <ContentControl Grid.Row="3" Content="{Binding MutationScoreByProjectViewModel}" Margin="0,25,0,25" />
+
+        <Border Grid.Row="3" Background="#1f2939" CornerRadius="8" BorderBrush="LightGray" BorderThickness="0.5" Margin="5, 5, 5, 0" Padding="5">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="Mutation Score by Project" Foreground="White" FontWeight="SemiBold" FontSize="15" Margin="10, 10, 0,0 "/>
+                <ContentControl Grid.Row="3" Content="{Binding MutationScoreByProjectViewModel}" Margin="0,0,0,0" />
+            </StackPanel>
+        </Border>
+
     </Grid>
 </UserControl>

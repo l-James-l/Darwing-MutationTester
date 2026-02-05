@@ -26,11 +26,15 @@
     </Window.Resources>
 
     <!--TODO Background="#1f2939"-->
-    <Grid >
+    <Grid Background="#1f2939">
         <Grid.RowDefinitions>
             <!-- Title -->
             <RowDefinition Height="Auto"/>
+            <!--Top Border-->
+            <RowDefinition Height="Auto"/>
             <!-- Tabs + buttons -->
+            <RowDefinition Height="Auto"/>
+            <!--Bottom Border-->
             <RowDefinition Height="Auto"/>
             <!-- Content -->
             <RowDefinition Height="*"/>
@@ -38,24 +42,90 @@
 
         <!-- Title Area -->
         <StackPanel Grid.Row="0" Margin="25,16,20,8">
-            <TextBlock Text="Darwing"
+            <TextBlock Text="Darwing - C# Mutation Testing"
                    FontSize="18"
                    FontWeight="SemiBold"
-                   Foreground="Black"/>
+                   Foreground="White"/>
 
-            <TextBlock Text="Software Mutation Testing"
+            <TextBlock Text="Software Validation Through Darwinian Survial of the Fitest"
                    FontSize="12"
                    Foreground="#94A3B8"
                    Margin="0,2,0,0"/>
         </StackPanel>
 
-        <Grid Grid.Row="1" Margin="25,0,25,0">
+        <Border Grid.Row="1" Height="1"  Background="Gray" Margin="0, 10, 0, 2"/>
+
+        <Grid Grid.Row="2" Margin="25,0,25,0">
 
             <!-- Tab headers only (doesnt include content panel)-->
             <TabControl Padding="0,0,160,0" BorderThickness="0" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
-                <TabItem Header="Dashboard"/>
-                <TabItem Header="Solution Explorer"/>
-                <TabItem Header="Settings"/>
+                <TabControl.Resources>
+                    
+                    <!--Styling for the buttons-->
+                    <Style TargetType="{x:Type TabItem}">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type TabItem}">
+                                    <Grid Margin="2,0" VerticalAlignment="Center">
+                                        <Border x:Name="Border" 
+                                                Background="Transparent" 
+                                                BorderBrush="#1E293B" 
+                                                BorderThickness="0,0,0,2"
+                                                Padding="0,0"/>
+
+                                        <ContentPresenter x:Name="ContentSite"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Center"
+                                                          ContentSource="Header"
+                                                          Margin="10,0"
+                                                          Height="25"/>
+                                    </Grid>
+
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="#172554"/>
+                                        </Trigger>
+
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6"/>
+                                            <Setter TargetName="Border" Property="Background" Value="#1E293B"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </Trigger>
+
+                                        <Trigger Property="IsSelected" Value="False">
+                                            <Setter Property="Foreground" Value="#64748B"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </TabControl.Resources>
+
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEC26;" Style="{StaticResource FluentIcon}" Margin="0,0,6,6"/>
+                            <TextBlock Text="Dashboard"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xEC25;" Style="{StaticResource FluentIcon}" Margin="0,0,6,6"/>
+                            <TextBlock Text="Solution Explorer"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE713;" Style="{StaticResource FluentIcon}" Margin="0,0,6,6"/>
+                            <TextBlock Text="Settings"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                </TabItem>
             </TabControl>
 
             <!-- Buttons -->
@@ -64,44 +134,182 @@
                         VerticalAlignment="Center"
                         Margin="0,0,8,0"
                         Panel.ZIndex="1">
-                <Menu Name="SolutionActionDropdownMenu">
+                
+                <!--Solution actions dropdown menu-->
+                <Menu Name="SolutionActionDropdownMenu" Background="Transparent">
+                    <!--By default, the menu asset would have a icons column, we dont want that because it formats weirdly so define our own template-->
+                    <Menu.Resources>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Border x:Name="templateRoot" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                SnapsToDevicePixels="True">
+                                            <Grid VerticalAlignment="Center">
+                                                <ContentPresenter ContentSource="Header" 
+                                                                  Margin="10,0" 
+                                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="templateRoot" Property="Background" Value="#334155"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Menu.Resources>
+
+                    <!--Template for the main button that will open the dropdown-->
+                    <Menu.Template>
+                        <ControlTemplate TargetType="Menu">
+                            <Border CornerRadius="5" Background="#3B82F6" Padding="15, 5">
+                                <ItemsPresenter />
+                            </Border>
+                        </ControlTemplate>
+                    </Menu.Template>
+
                     <MenuItem Header="Solution">
+                        <!--Template for each dropdown item-->
+                        <MenuItem.Template>
+                            <ControlTemplate TargetType="MenuItem">
+                                <Grid>
+                                    <Border Background="Transparent" HorizontalAlignment="Left" Width="89">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="📂" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <ContentPresenter ContentSource="Header" Margin="0,0,10,0" VerticalAlignment="Center">
+                                                <ContentPresenter.Resources>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </Style>
+                                                </ContentPresenter.Resources>
+                                            </ContentPresenter>
+                                            <Path x:Name="Chevron" 
+                                                  Data="M 0 0 L 4 4 L 8 0" 
+                                                  Stroke="White" 
+                                                  StrokeThickness="2" 
+                                                  VerticalAlignment="Center" 
+                                                  RenderTransformOrigin="0.5,0.5">
+                                            </Path>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Popup AllowsTransparency="True" 
+                                           IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                                           Placement="Bottom" 
+                                           PopupAnimation="Scroll">
+                                        <Border Background="#1E293B" 
+                                                CornerRadius="8" 
+                                                BorderBrush="#334155" 
+                                                BorderThickness="1" 
+                                                Margin="0,5,0,0" 
+                                                Padding="0,4">
+                                            <StackPanel IsItemsHost="True" />
+                                        </Border>
+                                    </Popup>
+                                </Grid>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsHighlighted" Value="True">
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </MenuItem.Template>
+
                         <MenuItem Command="{Binding SolutionPathSelection}">
                             <MenuItem.Header>
-                                <StackPanel>
-                                    <TextBlock Text="Load Solution" FontSize="13" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Open a New Solution File" FontSize="11" Foreground="Gray"/>
-                                </StackPanel>
+                                <Grid Margin="5,5,15,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="📂" FontSize="16" Foreground="#60A5FA"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Load Solution" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Open a new solution file" FontSize="11" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
                             </MenuItem.Header>
                         </MenuItem>
 
                         <MenuItem Command="{Binding ReloadCurrentSolution}">
                             <MenuItem.Header>
-                                <StackPanel>
-                                    <TextBlock Text="Reload Solution" FontSize="13" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Refresh the Current Solution" FontSize="11" Foreground="Gray"/>
-                                </StackPanel>
+                                <Grid Margin="5,5,15,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="↻" FontSize="18" Foreground="#60A5FA" VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Reload Solution" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Refresh current solution" FontSize="11" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
                             </MenuItem.Header>
                         </MenuItem>
 
+                        <Separator Background="#334155" Margin="5,2"/>
+
                         <MenuItem Command="{Binding RebuildCurrentSolution}">
                             <MenuItem.Header>
-                                <StackPanel>
-                                    <TextBlock Text="Rebuild Solution" FontSize="13" FontWeight="SemiBold"/>
-                                    <TextBlock Text="Rebuild the Current Solution" FontSize="11" Foreground="Gray"/>
-                                </StackPanel>
+                                <Grid Margin="5,5,15,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="🔨" FontSize="16" Foreground="#60A5FA"/>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Rebuild Solution" FontSize="13" FontWeight="SemiBold" Foreground="White"/>
+                                        <TextBlock Text="Rebuild all projects" FontSize="11" Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
                             </MenuItem.Header>
                         </MenuItem>
                     </MenuItem>
                 </Menu>
 
-                <Button Content="Run Tests" Command="{Binding TestSolution}" Margin="8,0,0,0"/>
+                <Border Width="1" Background="Gray" Margin="10, 0 "/>
+
+                <Button Command="{Binding TestSolution}" Margin="0,0,0,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border CornerRadius="5"
+                                    Background="ForestGreen"
+                                    Padding="5, 5">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Path Data="M 0 0 L 10 5 L 0 10 Z"
+                                          Width="10"
+                                          Height="10"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center" 
+                                          Stroke="White"
+                                          StrokeThickness="1.5"
+                                          Margin="5, 0"/>
+                                    <TextBlock Text="Run Tests" 
+                                               Foreground="White"
+                                               FontWeight="SemiBold" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"
+                                               Margin="5,0"/>
+                                </StackPanel>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
             </StackPanel>
         </Grid>
+        <Border Grid.Row="3" Height="1"  Background="Gray" Margin="0, 2, 0, 0"/>
 
-        <ContentControl Grid.Row="2"
-                Content="{Binding CurrentViewModel}"
-                Margin="25,0,25,0"/>
+        <Border Grid.Row="4" Background="#0F172A" Padding="0,15,0,0">
+            <ContentControl Content="{Binding CurrentViewModel}"
+                Background="#0F172A"/>
+        </Border>
     </Grid>
 
 </Window>

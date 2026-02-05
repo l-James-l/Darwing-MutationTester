@@ -60,7 +60,7 @@ public class SummaryCountsViewModel : ViewModelBase
             Value = 0,
             ValueSuffix = "%",
             Icon = "🏆",
-            IconBrush = Brushes.Blue
+            IconBrush = Brushes.LightBlue
         };
 
     }

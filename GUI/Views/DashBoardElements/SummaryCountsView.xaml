@@ -13,7 +13,8 @@
         <DataTemplate x:Name="StatCard" DataType="{x:Type vm:MutationStatCardViewModel}">
             <Border Padding="16"
                     CornerRadius="8"
-                    BorderBrush="Black"
+                    BorderBrush="Gray"
+                    Background="#1f2939"
                     BorderThickness="1"
                     Margin="6">
 
@@ -36,7 +37,8 @@
                                    Text="{Binding Title}"
                                    FontSize="12"
                                    Opacity="0.7"
-                                   VerticalAlignment="Top"/>
+                                   VerticalAlignment="Top"
+                                   Foreground="White"/>
 
                         <!-- Icon (top right) -->
                         <TextBlock Grid.Column="1"
@@ -52,11 +54,13 @@
                                Text="{Binding ValueString}"
                                FontSize="28"
                                FontWeight="SemiBold"
-                               Margin="0,8,0,0"/>
+                               Margin="0,8,0,0"
+                               Foreground="White"/>
 
                     <!-- Subtitle -->
                     <TextBlock Grid.Row="2"
                                Text="{Binding Subtitle}"
+                               Foreground="LightGray"
                                Margin="0,6,0,0"
                                Opacity="0.7"/>  
                 </Grid>

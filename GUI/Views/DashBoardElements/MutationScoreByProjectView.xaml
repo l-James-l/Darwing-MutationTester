@@ -15,56 +15,102 @@
     </UserControl.Resources>
 
     <DataGrid ItemsSource="{Binding Projects}"
-        AutoGenerateColumns="False"
-        HeadersVisibility="Column"
-        CanUserAddRows="False"
-        IsReadOnly="True"
-        GridLinesVisibility="None"
-        RowHeight="60">
+              AutoGenerateColumns="False"
+              CanUserAddRows="False"
+              IsReadOnly="True"
+              GridLinesVisibility="None"
+              BorderThickness="0"
+              BorderBrush="Transparent"
+              HeadersVisibility="None"
+              IsHitTestVisible="False"
+              Foreground="White"
+              Background="Transparent"
+              RowBackground="Transparent"
+              Padding="5">
 
         <DataGrid.Columns>
-
-            <!-- Module name -->
-            <DataGridTextColumn Header="Module"
-                        Binding="{Binding Name}"
-                        Width="2*" />
-
-            <!-- Progress + counts -->
-            <DataGridTemplateColumn Header="Mutation Score" Width="4*">
+            <DataGridTemplateColumn Width="*">
                 <DataGridTemplateColumn.CellTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Vertical" Margin="4">
+                        <Border Background="#1f2939" BorderBrush="LightGray" BorderThickness="1" CornerRadius="10" Margin="0,5">
+                            <Grid Margin="10" Background="Transparent">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Progress bar -->
-                            <ProgressBar Minimum="0"
-                                         Value="{Binding MutationScore}"
-                                         Foreground="{Binding MutationScore, Converter={StaticResource MutationScoreToColourConverter}}">
-                                    
-                            </ProgressBar>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                            <!-- Killed / Survived / Total line -->
-                            <StackPanel Orientation="Horizontal"
-                                Margin="0,6,0,0"
-                                HorizontalAlignment="Stretch">
+                                <TextBlock Grid.Row="0" Grid.Column="0" 
+                                           Text="{Binding Name}"
+                                           TextAlignment="Left"
+                                           FontWeight="SemiBold"/>
 
-                                <TextBlock Text="{Binding KilledMutations, StringFormat={}{0} killed}" />
-                                <TextBlock Text="   •   " />
-                                <TextBlock Text="{Binding SurvivedMutations, StringFormat={}{0} survived}" />
-                                <TextBlock Text="   •   " />
-                                <TextBlock Text="{Binding TotalMutations, StringFormat={}{0} total}" />
+                                <TextBlock Grid.Row="0" Grid.Column="4"
+                                           Text="{Binding MutationScore, StringFormat={}{0}%}"
+                                           Foreground="{Binding MutationScore, Converter={StaticResource MutationScoreToColourConverter}}"
+                                           FontSize="17"
+                                           FontWeight="SemiBold"
+                                           TextAlignment="Right"
+                                           Background="Transparent"/>
 
-                            </StackPanel>
+                                <ProgressBar Grid.Row="1" Grid.ColumnSpan="5"
+                                             Minimum="0"
+                                             Margin="0,5"
+                                             Height="4"
+                                             BorderThickness="0"
+                                             
+                                             Background="SlateGray"
+                                             Value="{Binding MutationScore}"
+                                             Foreground="{Binding MutationScore, Converter={StaticResource MutationScoreToColourConverter}}"/>
 
-                        </StackPanel>
+                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                           Text="{Binding KilledMutations, StringFormat={}{0} Killed}"
+                                           TextAlignment="Left"
+                                           FontWeight="Light"
+                                           FontSize="10"
+                                           Foreground="LightGray"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                           Text="*"
+                                           TextAlignment="Center"
+                                           FontWeight="Light"
+                                           FontSize="10"
+                                           Foreground="LightGray"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="2"
+                                           Text="{Binding SurvivedMutations, StringFormat={}{0} Survived}"
+                                           TextAlignment="Center"
+                                           FontWeight="Light"
+                                           FontSize="10"
+                                           Foreground="LightGray"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="3"
+                                           Text="*"
+                                           TextAlignment="Center"
+                                           FontWeight="Light"
+                                           FontSize="10"
+                                           Foreground="LightGray"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="4"
+                                           Text="{Binding TotalMutations, StringFormat={}{0} Total}"
+                                           TextAlignment="Right"
+                                           FontWeight="Light"
+                                           FontSize="10"
+                                           Foreground="LightGray"/>
+                            </Grid>
+                        </Border>
+
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
-
-            <!-- Percentage -->
-            <DataGridTextColumn Header="Score"
-                        Binding="{Binding MutationScore, StringFormat={}{0:0}%}"
-                        Width="*" />
-
         </DataGrid.Columns>
     </DataGrid>
 

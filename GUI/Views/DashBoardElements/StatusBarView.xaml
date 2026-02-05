@@ -13,6 +13,7 @@
         <cv:HalfColumnMarginConverter x:Key="HalfColumnMarginConverter"/>
         <cv:ProssesStateColourConverter x:Key="ProssesStateColourConverter"/>
         <cv:CompletionPercentageToWidthConverter x:Key="CompletionPercentageToWidthConverter"/>
+        <cv:StatusCircleTagConverter x:Key="StatusCircleTagConverter"/>
     </UserControl.Resources>
 
     <Grid>
@@ -32,44 +33,62 @@
         </Grid.ColumnDefinitions>
 
         <Grid.Resources>
+            
             <!-- Stage Circle -->
             <Style x:Key="StageCircleStyle" TargetType="Border">
-                <Setter Property="Width" Value="18"/>
-                <Setter Property="Height" Value="18"/>
-                <Setter Property="CornerRadius" Value="9"/>
+                <Setter Property="Width" Value="25"/>
+                <Setter Property="Height" Value="25"/>
+                <Setter Property="CornerRadius" Value="12"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Background">
                     <Setter.Value>
-                        <Binding Path="Tag"
-                                 Converter="{StaticResource ProssesStateColourConverter}"
-                                 RelativeSource="{RelativeSource self}"/>
+                        <Binding Converter="{StaticResource ProssesStateColourConverter}" />
                     </Setter.Value>
                 </Setter>
+            </Style>
+            <Style x:Key="StageCircleText" TargetType="TextBlock">
+                <Setter Property="Text">
+                    <Setter.Value>
+                        <MultiBinding Converter="{StaticResource StatusCircleTagConverter}">
+                            <Binding Path="Tag" RelativeSource="{RelativeSource self}"/>
+                            <Binding/>
+                        </MultiBinding>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            
+            <Style x:Key="StageLabel" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="TextAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="MaxWidth" Value="120"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Foreground" Value="White"/>
             </Style>
         </Grid.Resources>
 
         <!-- Progress bar layer -->
         <Grid Grid.Row="0"
-            Grid.Column="0"
-            Grid.ColumnSpan="6"
-            ClipToBounds="True">
+              Grid.Column="0"
+              Grid.ColumnSpan="6"
+              ClipToBounds="True">
 
             <!-- Gray baseline -->
             <Border Name="GrayBaseline"
-                Height="2"
-                Background="#9CA3AF"
-                VerticalAlignment="Center"
-                Margin="{Binding ActualWidth,
+                    Height="2"
+                    Background="SlateGray"
+                    VerticalAlignment="Center"
+                    Margin="{Binding ActualWidth,
                             RelativeSource={RelativeSource AncestorType=Grid},
                             Converter={StaticResource HalfColumnMarginConverter}}"/>
 
             <!-- Green progress -->
             <Border Height="2"
-                Background="#22C55E"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Left"
-                Margin="{Binding ActualWidth,
+                    Background="#22C55E"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    Margin="{Binding ActualWidth,
                             RelativeSource={RelativeSource AncestorType=Grid},
                             Converter={StaticResource HalfColumnMarginConverter}}">
                 <Border.Width>
@@ -86,93 +105,81 @@
 
         <!-- STAGE 1: Load sln-->
         <Border Grid.Row="0"
-            Grid.Column="0"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding LoadSolutionState}"/>
+                Grid.Column="0"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding LoadSolutionState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="1" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-                Grid.Column="0"
-                Text="Solution loaded"
-                FontSize="11"
-                TextAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="120"
-                TextWrapping="Wrap"/>
+                   Grid.Column="0"
+                   Text="Solution loaded"
+                   Style="{DynamicResource StageLabel}"/>
 
         <!-- STAGE 2 - build sln-->
         <Border Grid.Row="0"
-            Grid.Column="1"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding BuildOperationState}"/>
+                Grid.Column="1"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding BuildOperationState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="2" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-                Grid.Column="1"
-                Text="Solution built"
-                FontSize="11"
-                TextAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="120"
-                TextWrapping="Wrap"/>
+                   Grid.Column="1"
+                   Text="Solution built"
+                   Style="{DynamicResource StageLabel}"/>
 
         <!-- STAGE 3 - initial unmutated test -->
         <Border Grid.Row="0"
-            Grid.Column="2"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding InitialTestRunState}"/>
+                Grid.Column="2"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding InitialTestRunState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-                Grid.Column="2"
-                Text="Unmutated Testing"
-                FontSize="11"
-                TextAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="120"
-                TextWrapping="Wrap"/>
+                   Grid.Column="2"
+                   Text="Unmutated Testing"
+                   Style="{DynamicResource StageLabel}"/>
 
         <!-- STAGE 4 - mutant discovery -->
         <Border Grid.Row="0"
-            Grid.Column="3"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding MutantDiscoveryState}"/>
+                Grid.Column="3"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding MutantDiscoveryState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="4" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-                Grid.Column="3"
-                Text="Discovering Mutants"
-                FontSize="11"
-                TextAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="120"
-                TextWrapping="Wrap"/>
+                   Grid.Column="3"
+                   Text="Discovering Mutants"
+                   Style="{DynamicResource StageLabel}"/>
 
         <!-- STAGE 5 - mutated sln building -->
         <Border Grid.Row="0"
-            Grid.Column="4"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding BuildingMutatedSolutionState}"/>
+                Grid.Column="4"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding BuildingMutatedSolutionState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="5" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-                Grid.Column="4"
-                Text="Building Mutated Solution"
-                FontSize="11"
-                TextAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="140"
-                TextWrapping="Wrap"/>
+                   Grid.Column="4"
+                   Text="Building Mutated Solution"
+                   Style="{DynamicResource StageLabel}"/>
 
         <!-- STAGE 6 - testing mutants -->
         <Border Grid.Row="0"
-            Grid.Column="5"
-            Style="{StaticResource StageCircleStyle}"
-            Tag="{Binding TestingMutantsState}"/>
+                Grid.Column="5"
+                Style="{StaticResource StageCircleStyle}"
+                DataContext="{Binding TestingMutantsState}">
+            <TextBlock Style="{StaticResource StageCircleText}" Tag="6" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        </Border>
 
         <TextBlock Grid.Row="1"
-        Grid.Column="5"
-        Text="Testing Mutants"
-        FontSize="11"
-        TextAlignment="Center"
-        HorizontalAlignment="Center"
-        MaxWidth="120"
-        TextWrapping="Wrap"/>
+                   Grid.Column="5"
+                   Text="Testing Mutants"
+                   Style="{DynamicResource StageLabel}"/>
 
     </Grid>
 </UserControl>
