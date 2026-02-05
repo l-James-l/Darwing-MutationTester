@@ -9,10 +9,11 @@
              d:DataContext="{d:DesignInstance Type=vm:FileExplorerViewModel}">
 
     <TreeView ItemsSource="{Binding SolutionTree}"
-          Background="Transparent"
-          BorderThickness="0"
-          Grid.IsSharedSizeScope="True" 
-          ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              Background="Transparent"
+              BorderThickness="0"
+              Grid.IsSharedSizeScope="True" 
+              Foreground="White"
+              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 
         <TreeView.Resources>
             <Style x:Key="ExpandCollapseToggleStyle" TargetType="ToggleButton">
@@ -57,10 +58,10 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚙️" Margin="0,0,6,0"/>
-                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="⚙️" Margin="0,0,6,0" Foreground="LimeGreen"/>
+                        <TextBlock Text="{Binding Name}" Foreground="White"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right" Foreground="White">
                     <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
                     </TextBlock>
                 </Grid>
@@ -73,10 +74,10 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📁" Margin="0,0,6,0"/>
-                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="📁" Margin="0,0,6,0" Foreground="LightBlue"/>
+                        <TextBlock Text="{Binding Name}" Foreground="White"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right" Foreground="White">
                     <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
                     </TextBlock>
                 </Grid>
@@ -89,10 +90,10 @@
                         <ColumnDefinition Width="Auto" SharedSizeGroup="StatColumn" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📄" Margin="0,0,6,0"/>
-                        <TextBlock Text="{Binding Name}"/>
+                        <TextBlock Text="📄" Margin="0,0,6,0" Foreground="White"/>
+                        <TextBlock Text="{Binding Name}" Foreground="White"/>
                     </StackPanel>
-                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right">
+                    <TextBlock Grid.Column="1" Margin="20,0,5,0" Opacity="0.6" HorizontalAlignment="Right" Foreground="White">
                     <Run Text="{Binding KilledMutationCount, Mode=OneWay}"/><Run Text="/"/><Run Text="{Binding MutationCount, Mode=OneWay}"/>
                     </TextBlock>
                 </Grid>
@@ -110,7 +111,7 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="TreeViewItem">
-                            <Grid>
+                            <Grid Margin="0,5,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
@@ -122,14 +123,15 @@
 
                                 <Border x:Name="Bd" Grid.ColumnSpan="2" 
                                     Background="{TemplateBinding Background}" 
-                                    Padding="2,2,8,2"/>
+                                    Padding="2,5,8,2"/>
                                 
                                 <ToggleButton x:Name="Expander"
-                                                Style="{StaticResource ExpandCollapseToggleStyle}"
-                                                ClickMode="Press"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center"
-                                                IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                              Style="{StaticResource ExpandCollapseToggleStyle}"
+                                              ClickMode="Press"
+                                              Padding="0,5,0,0"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
                                 
                                 <!--The header/name for the file/project/folder-->
                                 <ContentPresenter Grid.Column="1" ContentSource="Header" HorizontalAlignment="Stretch"/>

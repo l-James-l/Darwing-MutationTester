@@ -54,7 +54,7 @@
                                            FontWeight="SemiBold"/>
 
                                 <TextBlock Grid.Row="0" Grid.Column="4"
-                                           Text="{Binding MutationScore, StringFormat={}{0:P1}}"
+                                           Text="{Binding MutationScore, StringFormat={}{0}%}"
                                            Foreground="{Binding MutationScore, Converter={StaticResource MutationScoreToColourConverter}}"
                                            FontSize="17"
                                            FontWeight="SemiBold"
