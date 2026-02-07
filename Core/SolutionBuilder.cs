@@ -16,8 +16,7 @@ public class SolutionBuilder : ISolutionBuilder
     private readonly IStatusTracker _statusTracker;
     private readonly IMutationSettings _mutationSettings;
 
-    private const int _defaultProcessTimeout = 5;
-    private TimeSpan _processTimeout = TimeSpan.FromSeconds(_defaultProcessTimeout);
+    private TimeSpan _processTimeout => TimeSpan.FromSeconds(_mutationSettings.BuildTimeout);
 
     private readonly Regex _errorOutPutRegex = new(@"error (\S)*: ", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
 
@@ -47,8 +46,6 @@ public class SolutionBuilder : ISolutionBuilder
             _statusTracker.FinishOperation(DarwingOperation.BuildSolution, false);
             return;
         }
-
-        _processTimeout = TimeSpan.FromSeconds(_mutationSettings.SolutionProfileData?.GeneralSettings.BuildTimeout ?? _defaultProcessTimeout);
 
         Log.Information("Performing initial build");
         List<IProjectContainer> failedBuilds = [];

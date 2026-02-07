@@ -66,20 +66,11 @@ public class SolutionProfileDeserializerTests
             Is.Not.Null);
 
         Assert.That(_mutationSettings.TestProjects, Does.Contain("Project1").And.Contain("Project2"));
-        Assert.That(_mutationSettings.SolutionProfileData, Is.Not.Null);
         
-        Assert.That(_mutationSettings.SolutionProfileData.IgnoreProjects, Does.Contain("MutateMe"));
+        Assert.That(_mutationSettings.IgnoreProjects, Does.Contain("MutateMe"));
         
-        Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations, Does.ContainKey(SpecifcMutation.SubtractToAdd));
-        Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations[SpecifcMutation.SubtractToAdd], Is.False);
-        Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations, Does.ContainKey(SpecifcMutation.AddToSubtract));
-        Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations[SpecifcMutation.AddToSubtract], Is.True);
+        Assert.That(_mutationSettings.DisabledMutationTypes, Does.Contain(SpecifcMutation.SubtractToAdd));
 
-        Assert.That(_mutationSettings.SolutionProfileData.MutationCategories, Does.ContainKey(MutationCategory.Arithmetic));
-        Assert.That(_mutationSettings.SolutionProfileData.MutationCategories[MutationCategory.Arithmetic], Is.True);
-        Assert.That(_mutationSettings.SolutionProfileData.MutationCategories, Does.ContainKey(MutationCategory.Logical));
-        Assert.That(_mutationSettings.SolutionProfileData.MutationCategories[MutationCategory.Logical], Is.True);
-
-        Assert.That(_mutationSettings.SolutionProfileData.GeneralSettings.SingleMutantPerLine, Is.False);
+        Assert.That(_mutationSettings.SingleMutantPerLine, Is.False);
     }
 }

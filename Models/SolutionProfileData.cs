@@ -29,13 +29,7 @@ public class SolutionProfileData
     /// <summary>
     /// Allows enabling or disabling specific mutation types.
     /// </summary>
-    public Dictionary<SpecifcMutation, bool> SpecificMutations { get; set; } = new Dictionary<SpecifcMutation, bool>();
-
-    /// <summary>
-    /// Allows enabling or disabling entire mutation categories.
-    /// Note that if a specific mutation type is enabled/disabled, that setting takes precedence over the category setting.
-    /// </summary>
-    public Dictionary<MutationCategory, bool> MutationCategories { get; set; } = new Dictionary<MutationCategory, bool>();
+    public List<SpecifcMutation> DisabledMutationTypes { get; set; } = [];
 
     /// <summary>
     /// Class containing more general settings.
@@ -56,17 +50,22 @@ public class SolutionProfileGeneralSettings
     /// It is possible for builds to get stuck, so after some time we need to assume its failed.
     /// But some projects may just need longer to build.
     /// Value is in seconds.
+    /// Default value is 30 seconds, which should be more than enough for most projects, but can be changed if needed.
     /// </summary>
-    public int? BuildTimeout { get; set; }
+    [DefaultValue(30)]
+    public int BuildTimeout { get; set; } = 30;
 
     /// <summary>
     /// Allows setting of a custom timeout for when a test run will be considered failed.
-    /// A generic timeout cannot be because it is impossoble to know how long a test run might take before it has been completed.
+    /// A generic timeout cannot be because it is impossible to know how long a test run might take before it has been completed.
+    /// Value is in seconds.
+    /// Default value an hour.
     /// </summary>
-    public int? TestRunTimeout { get; set; }
+    [DefaultValue(1200)]
+    public int TestRunTimeout { get; set; } = 1200;
 
     /// <summary>
     /// Will skip the stage after mutant discovery of running all tests with no mutant activated. Can save time but not recommended.
     /// </summary>
-    public bool SkipTestingNoActiveMutants = false;
+    public bool SkipTestingNoActiveMutants { get; set; } = false;
 }

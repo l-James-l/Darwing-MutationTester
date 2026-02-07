@@ -9,11 +9,13 @@ public interface ISettingsViewModel
 
 public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 {
-    public SettingsViewModel(ProjectTypeCollectionSettings projectTypeSettings)
+    public SettingsViewModel(ProjectTypeCollectionSettings projectTypeSettings, GeneralSettingsViewModel generalSettingsViewModel)
     {
         ProjectTypeSettings = projectTypeSettings;
+        GeneralSettingsViewModel = generalSettingsViewModel;
     }
 
     public ProjectTypeCollectionSettings ProjectTypeSettings { get; }
+    public GeneralSettingsViewModel GeneralSettingsViewModel { get; }
 }
 

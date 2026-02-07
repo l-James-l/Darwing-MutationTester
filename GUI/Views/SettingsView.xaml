@@ -25,6 +25,9 @@
         <DataTemplate DataType="{x:Type evm:ProjectTypeCollectionSettings}">
             <views:ProjectTypeSettingsView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type evm:GeneralSettingsViewModel}">
+            <views:GeneralSettingsView/>
+        </DataTemplate>
     </UserControl.Resources>
     
     <Grid>
@@ -76,6 +79,13 @@
                                    Foreground="White"
                                    TextAlignment="Center"/>
                     </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CatagoryContainer}" Margin="25,0,25,25" Padding="10">
+                <StackPanel Height="Auto">
+                    <TextBlock FontWeight="SemiBold" FontSize="15" Text="General Settings" Foreground="White"/>
+                    <ContentControl Content="{Binding GeneralSettingsViewModel}"/>
                 </StackPanel>
             </Border>
         </StackPanel>

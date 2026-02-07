@@ -74,8 +74,7 @@ public class InitialTestRunner : IMutationRunInitiator
         };
         IProcessWrapper testRun = _processFactory.Create(startInfo);
 
-        int? timeout = _mutationSettings.SolutionProfileData?.GeneralSettings.TestRunTimeout;
-        bool processSuccess = testRun.StartAndAwait(timeout);
+        bool processSuccess = testRun.StartAndAwait(_mutationSettings.TestRunTimeout);
 
         foreach (string output in testRun.Output)
         {

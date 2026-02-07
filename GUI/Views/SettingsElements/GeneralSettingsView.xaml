@@ -1,0 +1,223 @@
+﻿<UserControl x:Class="GUI.Views.SettingsElements.GeneralSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GUI.Views.SettingsElements"
+             xmlns:vm="clr-namespace:GUI.ViewModels.SettingsElements"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:GeneralSettingsViewModel}">
+
+    <UserControl.Resources>
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#1E293B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#475569"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Name="Border" 
+                                Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="2"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="#60A5FA"/>
+                            </Trigger>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                                <Setter Property="Background" Value="#0F172A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SwitchStyle" TargetType="CheckBox">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid x:Name="Root" Background="Transparent">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border x:Name="Track" 
+                                    Width="44" Height="22" 
+                                    CornerRadius="11" 
+                                    Background="#334155" 
+                                    VerticalAlignment="Center">
+                                <Border x:Name="Thumb" 
+                                        Width="16" Height="16" 
+                                        Margin="3,0" 
+                                        HorizontalAlignment="Left" 
+                                        Background="White" 
+                                        CornerRadius="8">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform X="0" />
+                                    </Border.RenderTransform>
+                                </Border>
+                            </Border>
+
+                            <ContentPresenter Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Track" Property="Background" Value="#3B82F6"/>
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Thumb"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                             To="22" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="Thumb"
+                                                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                                                             To="0" Duration="0:0:0.15">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuadraticEase EasingMode="EaseOut"/>
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                            </Trigger>
+
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Track" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBlock" x:Key="SettingHeader">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        
+        <Style TargetType="TextBlock" x:Key="SettingSubHeader">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#94A3B8"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <Style TargetType="Separator" >
+            <Setter Property="Background" Value="#334155"/>
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Margin" Value="0,0,0,25"/>
+        </Style>
+    </UserControl.Resources>
+    
+    <StackPanel Orientation="Vertical" Margin="20" MaxWidth="800" HorizontalAlignment="Left">
+
+        <!--TestTimeout-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Test Timeout (s)"
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="This is the timeout given to each individual test run, for each mutation activation." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1" 
+                     Text="{Binding TestTimeout, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource TextBoxStyle}"/>
+        </Grid>
+
+        <Separator/>
+
+        <!--Build Timeout-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Build Timeout (s)" 
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="This is the timeout given to building each project." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1" 
+                     Text="{Binding BuildTimeout, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource TextBoxStyle}"/>
+        </Grid>
+
+        <Separator/>
+
+        <!--Single Mutation per line-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Single Mutation per Line" 
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="Only a single mutation will be activated on each line of code to reduce equivalent mutants." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <CheckBox Grid.Column="1" 
+                      Style="{StaticResource SwitchStyle}"
+                      IsChecked="{Binding SingleMutationPerLine}"/>
+        </Grid>
+
+        <Separator/>
+
+        <!--Skip Testing no Active mutants-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Skip Testing No Active Mutants" 
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="Once mutations have been discovered and applied, an initial verification run is done to ensure introduction hasn't introduced failures. If true, this is skipped." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <CheckBox Grid.Column="1" 
+                      Style="{StaticResource SwitchStyle}"
+                      IsChecked="{Binding SkipTestingNoActiveMutants}"/>
+        </Grid>
+
+    </StackPanel>
+</UserControl>

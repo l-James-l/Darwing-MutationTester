@@ -1,12 +1,9 @@
-﻿namespace Models;
+﻿using Models.Enums;
+
+namespace Models;
 
 public interface IMutationSettings
 {
-    /// <summary>
-    /// Profile supplied with solution.
-    /// </summary>
-    public SolutionProfileData? SolutionProfileData { get; set; }
-
     /// <summary>
     /// Path to sln file being mutated.
     /// </summary>
@@ -29,10 +26,38 @@ public interface IMutationSettings
     public List<string> IgnoreProjects { get; set; }
 
     /// <summary>
+    /// Should mutation be restricted to a single one per line
+    /// </summary>
+    public bool SingleMutantPerLine { get; set; }
+
+    /// <summary>
+    /// time out for a test run process
+    /// </summary>
+    public int TestRunTimeout { get; set; }
+
+    /// <summary>
+    /// Time out for a build process
+    /// </summary>
+    public int BuildTimeout { get; set; }
+
+    /// <summary>
     /// After mutations have been applied to the solution, initial test run with no active mutants is performed
     /// to ensure that introducing mutations did not break the build or tests.
     /// This setting allows skipping that test run.
     /// Warning: Skipping this step may lead to misleading results if the mutated solution is not stable.
     /// </summary>
     public bool SkipTestingNoActiveMutants { get; set; }
+
+    /// <summary>
+    /// List of any disabled mutation types.
+    /// </summary>
+    public List<SpecifcMutation> DisabledMutationTypes { get; set; }
+
+
+    /// <summary>
+    /// Sets the profile which was loaded.
+    /// Once loaded and settings assigned, the profile will then only be used/changed if the user want to save the profile with the current settings,
+    /// which will then update the profile with the current settings and save it to a file.
+    /// </summary>
+    public void UpdateProfile(SolutionProfileData? solutionProfileData);
 }

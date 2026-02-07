@@ -42,5 +42,6 @@ public class GuiDependencyRegistrar : DependencyRegistrar
         //Settings
         Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
         Services.AddSingleton<ProjectTypeCollectionSettings>();
+        Services.AddSingleton<GeneralSettingsViewModel>();
     }
 }

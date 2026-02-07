@@ -142,8 +142,7 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         }
         else
         {
-            double? defaultTimeout = _mutationSettings.SolutionProfileData?.GeneralSettings.TestRunTimeout;
-            processSuccess = testRun.StartAndAwait(defaultTimeout);
+            processSuccess = testRun.StartAndAwait(_mutationSettings.TestRunTimeout);
         }
 
         return processSuccess;
