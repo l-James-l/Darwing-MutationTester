@@ -9,7 +9,13 @@ public class MutationSettings : IMutationSettings
     public string SolutionPath { get; set; } = "";
 
     /// <inheritdoc/>
-    public List<string> TestProjectNames { get; set; } = [];
+    public List<string> TestProjects { get; set; } = [];
+    
+    /// <inheritdoc/>
+    public List<string> IgnoreProjects { get; set; } = [];
+
+    /// <inheritdoc/>
+    public List<string> SourceCodeProjects { get; set; } = [];
 
     /// <inheritdoc/>
     public bool SkipTestingNoActiveMutants { get; set; } = false;

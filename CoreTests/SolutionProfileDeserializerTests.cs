@@ -65,10 +65,10 @@ public class SolutionProfileDeserializerTests
             x.MessageTemplate.Text == "Successfully loaded solution profile data." && x.Level == LogEventLevel.Information),
             Is.Not.Null);
 
-        Assert.That(_mutationSettings.TestProjectNames, Does.Contain("Project1").And.Contain("Project2"));
+        Assert.That(_mutationSettings.TestProjects, Does.Contain("Project1").And.Contain("Project2"));
         Assert.That(_mutationSettings.SolutionProfileData, Is.Not.Null);
         
-        Assert.That(_mutationSettings.SolutionProfileData.ProjectsToMutate, Does.Contain("MutateMe"));
+        Assert.That(_mutationSettings.SolutionProfileData.IgnoreProjects, Does.Contain("MutateMe"));
         
         Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations, Does.ContainKey(SpecifcMutation.SubtractToAdd));
         Assert.That(_mutationSettings.SolutionProfileData.SpecificMutations[SpecifcMutation.SubtractToAdd], Is.False);

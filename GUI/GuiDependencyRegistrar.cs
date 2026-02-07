@@ -4,6 +4,7 @@ using GUI.ViewModels;
 using GUI.Services;
 using GUI.ViewModels.DashBoardElements;
 using GUI.ViewModels.SolutionExplorerElements;
+using GUI.ViewModels.SettingsElements;
 
 namespace GUI;
 
@@ -27,12 +28,19 @@ public class GuiDependencyRegistrar : DependencyRegistrar
     private void RegisterViewModels()
     {
         Services.AddSingleton<MainWindowViewModel>();
+
+        //Dashboard
         Services.AddSingleton<IDashBoardViewModel, DashBoardViewModel>();
-        Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
-        Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
         Services.AddSingleton<StatusBarViewModel>();
         Services.AddSingleton<MutationScoreByProjectViewModel>();
         Services.AddSingleton<SummaryCountsViewModel>();
+
+        //Solution Explorer 
+        Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
         Services.AddSingleton<FileExplorerViewModel>();
+        
+        //Settings
+        Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
+        Services.AddSingleton<ProjectTypeCollectionSettings>();
     }
 }

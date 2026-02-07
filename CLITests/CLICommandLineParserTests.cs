@@ -1,4 +1,5 @@
-﻿using Models;
+﻿using CLI;
+using Models;
 
 namespace CLITests;
 
@@ -23,7 +24,7 @@ public class CLICommandLineParserTests
         
         // Assert
         Assert.That(_mutationSettings.SolutionPath, Is.Empty);
-        Assert.That(_mutationSettings.TestProjectNames, Is.Empty);
+        Assert.That(_mutationSettings.TestProjects, Is.Empty);
     }
 
     [Test]
@@ -50,7 +51,7 @@ public class CLICommandLineParserTests
         _mutationSettings.ParseCliArgs(args);
         
         // Assert
-        Assert.That(_mutationSettings.TestProjectNames, Is.EquivalentTo(expectedNames));
+        Assert.That(_mutationSettings.TestProjects, Is.EquivalentTo(expectedNames));
     }
 
     [Test]
@@ -75,6 +76,6 @@ public class CLICommandLineParserTests
         _mutationSettings.ParseCliArgs(args);
         
         // Assert
-        Assert.That(_mutationSettings.TestProjectNames, Is.Empty);
+        Assert.That(_mutationSettings.TestProjects, Is.Empty);
     }
 }

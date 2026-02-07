@@ -1,6 +1,7 @@
 ﻿using Buildalyzer;
 using Buildalyzer.Workspaces;
 using Microsoft.CodeAnalysis;
+using Models.Enums;
 using Serilog;
 
 namespace Models;
@@ -14,10 +15,10 @@ public class SolutionContainer: ISolutionContainer
     public Solution Solution => Workspace.CurrentSolution;
 
     /// <inheritdoc/>
-    public List<IProjectContainer> TestProjects { get; private set; } = new List<IProjectContainer>();
+    public List<IProjectContainer> TestProjects => AllProjects.Where(x => x.ProjectType is ProjectType.Test).ToList();
 
     /// <inheritdoc/>
-    public List<IProjectContainer> SolutionProjects { get; private set; } = new List<IProjectContainer>();
+    public List<IProjectContainer> SolutionProjects => AllProjects.Where(x => x.ProjectType is ProjectType.Source).ToList();
 
     /// <inheritdoc/>
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
@@ -26,11 +27,10 @@ public class SolutionContainer: ISolutionContainer
     {
         Workspace = analyzerManager.GetWorkspace();
         
-        DiscoverProjects(analyzerManager);
-        FindTestProjects(settings);
+        DiscoverProjects(analyzerManager, settings);
     }
 
-    private void DiscoverProjects(IAnalyzerManager analyzerManager)
+    private void DiscoverProjects(IAnalyzerManager analyzerManager, IMutationSettings settings)
     {
         foreach (Project project in Solution.Projects)
         {
@@ -40,19 +40,23 @@ public class SolutionContainer: ISolutionContainer
                 continue;
             }
             IProjectAnalyzer projectAnalyzer = analyzerManager.GetProject(project.FilePath);
-            AllProjects.Add(new ProjectContainer(project, projectAnalyzer));
+            ProjectContainer newProjContainer = new(project, projectAnalyzer);
+            AllProjects.Add(newProjContainer);
+            
+            //Override the determined project type value if the loaded settings specify its type.
+            if (settings.SourceCodeProjects.Contains(project.Name) || settings.SourceCodeProjects.Contains(project.AssemblyName))
+            {
+                newProjContainer.ProjectType = ProjectType.Source;
+            }
+            else if (settings.TestProjects.Contains(project.Name) || settings.TestProjects.Contains(project.AssemblyName))
+            {
+                newProjContainer.ProjectType = ProjectType.Test;
+            }
+            else if (settings.IgnoreProjects.Contains(project.Name) || settings.IgnoreProjects.Contains(project.AssemblyName))
+            {
+                newProjContainer.ProjectType = ProjectType.Ignore;
+            }
         }
-    }
-
-    private void FindTestProjects(IMutationSettings settings)
-    {
-        TestProjects = AllProjects.Where(x => 
-            x.IsTestProject || 
-            settings.TestProjectNames.Contains(x.Name) ||
-            settings.TestProjectNames.Contains(x.AssemblyName)).ToList();
-
-        // If a project isn't a test project, it is project we can mutate.
-        SolutionProjects = AllProjects.Except(TestProjects).ToList();
     }
 
     /// <inheritdoc/>

@@ -6,9 +6,79 @@
              xmlns:local="clr-namespace:GUI.Views"
              mc:Ignorable="d" 
              xmlns:vm="clr-namespace:GUI.ViewModels"
+             xmlns:evm="clr-namespace:GUI.ViewModels.SettingsElements"
+             xmlns:views="clr-namespace:GUI.Views.SettingsElements"
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
              d:DesignHeight="450" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <Style TargetType="Border" x:Key="CatagoryContainer">
+            <Setter Property="Background" Value="#1f2939"/>
+            <Setter Property="BorderBrush" Value="LightGray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Height" Value="Auto"/>
+            
+        </Style>
+
+        <DataTemplate DataType="{x:Type evm:ProjectTypeCollectionSettings}">
+            <views:ProjectTypeSettingsView/>
+        </DataTemplate>
+    </UserControl.Resources>
+    
     <Grid>
-        <TextBlock>Settiings View</TextBlock>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!--Header-->
+            <RowDefinition Height="*"/> <!--Content-->
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="25,0,25,10">
+            <TextBlock FontWeight="SemiBold" FontSize="26" Text="Settings" Foreground="White"/>
+            <TextBlock FontWeight="Light" FontSize="12" Text="Configure Testing Behaviour" Foreground="LightGray"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Orientation="Vertical">
+
+            <Border Style="{StaticResource CatagoryContainer}" Margin="25,0,25,25" Padding="10">
+                <StackPanel Height="Auto">
+                    <TextBlock FontWeight="SemiBold" FontSize="15" Text="Project Types" Foreground="White"/>
+
+                    <ContentControl Content="{Binding ProjectTypeSettings}" Margin="0,10,0,0" Height="Auto">
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ProjectTypeSettings.Projects.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ContentControl.Style>
+                    </ContentControl>
+
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Height="Auto">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ProjectTypeSettings.Projects.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+
+                        <TextBlock Text="Once a solution has been loaded, you will be able to configure the project types here."
+                                   TextWrapping="Wrap" 
+                                   FontSize="16" 
+                                   Opacity="0.5" 
+                                   Foreground="White"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
     </Grid>
 </UserControl>

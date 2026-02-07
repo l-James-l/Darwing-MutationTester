@@ -1,5 +1,6 @@
 ﻿using Buildalyzer;
 using Microsoft.CodeAnalysis;
+using Models.Enums;
 using Serilog;
 
 namespace Models;
@@ -22,7 +23,7 @@ public class ProjectContainer : IProjectContainer
         DirectoryPath = Path.GetDirectoryName(_project.FilePath) ??
             CsprojFilePath.Remove(CsprojFilePath.Count() - _project.Name.Count());
 
-        IsTestProject = DetermineIfTestProject(projectAnalyzer);
+        DetermineIfTestProject(projectAnalyzer);
         
         //TODO: maybe throwing here isnt the most robust solution.
         DllFilePath = project.OutputFilePath ?? throw new Exception($"Could not establish the output file path for {Name}");
@@ -44,7 +45,7 @@ public class ProjectContainer : IProjectContainer
 
     public Dictionary<string, DocumentId> DocumentsByPath { get; } = new();
 
-    public bool IsTestProject { get; }
+    public ProjectType ProjectType { get; set; }
 
     public Compilation? GetCompilation() => _project.GetCompilationAsync().GetAwaiter().GetResult();
 
@@ -60,7 +61,7 @@ public class ProjectContainer : IProjectContainer
         }
     }
 
-    private bool DetermineIfTestProject(IProjectAnalyzer project)
+    private void DetermineIfTestProject(IProjectAnalyzer project)
     {
         IAnalyzerResults results = project.Build();
         // I believe the possibility for multiple build results is for when a project targets multiple frameworks,
@@ -70,7 +71,7 @@ public class ProjectContainer : IProjectContainer
         if (result == null)
         {
             Log.Warning("Unable to analyse the project {proj}. Will assume its not a test project");
-            return false;
+            return;
         }
 
         // In almost all cases, this will be sufficient.
@@ -79,7 +80,8 @@ public class ProjectContainer : IProjectContainer
             parsed)
         {
             Log.Information("Determined {proj} is a test project.", Name);
-            return true;
+            ProjectType = ProjectType.Test;
+            return;
         }
 
         // If it doesn't have the test project property, but uses the test project sdk, assume its a test project.
@@ -97,10 +99,9 @@ public class ProjectContainer : IProjectContainer
                 p.Key.Equals(f, StringComparison.OrdinalIgnoreCase))))
         {
             Log.Information("Determined {proj} is a test project.", Name);
-            return true;
+            ProjectType = ProjectType.Test;
+            return;
         }
-
-        return false;
     }
 
 }

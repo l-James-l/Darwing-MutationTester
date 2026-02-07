@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Models.Enums;
 
 namespace Models;
 
@@ -16,7 +17,7 @@ public interface IProjectContainer
 
     string DllFilePath { get; }
 
-    bool IsTestProject { get; }
+    ProjectType ProjectType { get; set; }
 
     Dictionary<DocumentId, SyntaxTree> UnMutatedSyntaxTrees { get; }
 

@@ -1,5 +1,7 @@
 ﻿using Models;
 
+namespace CLI;
+
 public static class CLICommandLineParser
 {
     private const string slnPathFlag = "--sln";
@@ -20,7 +22,7 @@ public static class CLICommandLineParser
         // Check for solution path flag. --sln <path>
         if (argsList.IndexOf(slnPathFlag) is int slnFlagIndex && slnFlagIndex != -1)
         {
-            if (slnFlagIndex <  argsList.Count - 1)
+            if (slnFlagIndex < argsList.Count - 1)
             {
                 mutationSettings.SolutionPath = argsList[slnFlagIndex + 1];
             }
@@ -31,7 +33,7 @@ public static class CLICommandLineParser
         {
             while (testProjectIndex++ < argsList.Count - 1 && !argsList[testProjectIndex].StartsWith("--"))
             {
-                mutationSettings.TestProjectNames.Add(argsList[testProjectIndex]);
+                mutationSettings.TestProjects.Add(argsList[testProjectIndex]);
             }
         }
     }

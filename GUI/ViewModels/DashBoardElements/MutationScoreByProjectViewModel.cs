@@ -28,10 +28,11 @@ public class MutationScoreByProjectViewModel
         _slnProvider = slnProvider;
 
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(OnMutationUpdated, ThreadOption.UIThread);
-        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(OnSolutionLoaded, ThreadOption.UIThread, true, x => x is DarwingOperation.LoadSolution);
+        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => RefreshProjects(), ThreadOption.UIThread, true, x => x is DarwingOperation.LoadSolution);
+        _eventAggregator.GetEvent<SettingChanged>().Subscribe(_ => RefreshProjects(), ThreadOption.UIThread, true, x => x == nameof(IMutationSettings.SourceCodeProjects));
     }
 
-    private void OnSolutionLoaded(DarwingOperation operation)
+    private void RefreshProjects()
     {
         Projects.Clear();
         if (!_slnProvider.IsAvailable)

@@ -59,6 +59,10 @@ public class SolutionProfileDeserializer : ISolutionProfileDeserializer
         _mutationSettings.SolutionProfileData = profileData;
 
         //TODO: as more settings are introduced and used, will need to update them here.
-        _mutationSettings.TestProjectNames = profileData.TestProjects;
+        _mutationSettings.TestProjects = profileData.TestProjects;
+        _mutationSettings.IgnoreProjects = profileData.IgnoreProjects;
+        _mutationSettings.SourceCodeProjects = profileData.SourceCodeProjects;
+
+        _mutationSettings.SkipTestingNoActiveMutants = profileData.GeneralSettings.SkipTestingNoActiveMutants;
     }
 }

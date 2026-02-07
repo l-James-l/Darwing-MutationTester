@@ -26,9 +26,10 @@ public class FileExplorerViewModel : ViewModelBase
         _eventAggregator = eventAggregator;
         _mutationDiscoveryManager = mutationDiscoveryManager;
 
-        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => OnSolutionLoaded(),
+        _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => RefreshSolutionTree(),
             ThreadOption.UIThread, true, x => x == DarwingOperation.LoadSolution);
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(OnMutationUpdated, ThreadOption.UIThread);
+        _eventAggregator.GetEvent<SettingChanged>().Subscribe(_ => RefreshSolutionTree(), ThreadOption.UIThread, true, x => x == nameof(IMutationSettings.SourceCodeProjects));
     }
 
     /// <summary>
@@ -117,7 +118,7 @@ public class FileExplorerViewModel : ViewModelBase
         return null;
     }
 
-    private void OnSolutionLoaded()
+    private void RefreshSolutionTree()
     {
         SolutionTree.Clear();
         if (!_solutionProvider.IsAvailable || _solutionProvider.SolutionContainer.Solution.FilePath is null)
@@ -161,9 +162,9 @@ public class FileExplorerViewModel : ViewModelBase
             string wouldBeProjFile = Path.Combine(dir, $"{name}.csproj");
             if (File.Exists(wouldBeProjFile))
             {
-                if (_solutionProvider.SolutionContainer.TestProjects.Any(x => x.CsprojFilePath == wouldBeProjFile))
+                if (!_solutionProvider.SolutionContainer.SolutionProjects.Any(x => x.CsprojFilePath == wouldBeProjFile))
                 {
-                    // Dont want to show test projects in the main tree.
+                    // Dont want to show test or ignored projects in the main tree.
                     // Can show these separately later.
                     continue;
                 }
