@@ -6,6 +6,8 @@ using Models.Enums;
 using Models.Events;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 
 namespace GUI.ViewModels;
 
@@ -13,13 +15,15 @@ public class SolutionExplorerViewModel : ViewModelBase
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
     private readonly IEventAggregator _eventAggregator;
-    
+    private readonly ISolutionProvider _solutionProvider;
     private FileNode? _selectedFileNode = null;
 
-    public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator)
+    public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator, 
+        ISolutionProvider solutionProvider)
     {
         FileExplorerViewModel = fileExplorerViewModel;
         _eventAggregator = eventAggregator;
+        _solutionProvider = solutionProvider;
 
         fileExplorerViewModel.SelectedFileChangedCallBack += OnSelectedFileChanged;
 
@@ -65,19 +69,27 @@ public class SolutionExplorerViewModel : ViewModelBase
 
         SelectedLine = null;
         FileDetails.Clear();        
-        if (File.Exists(selectedFile.FullPath))
+        if (_solutionProvider.SolutionContainer.FindFile(selectedFile.FullPath, ProjectType.Source) is { } file)
         {
             SelectedFileHeader = selectedFile.Name;
             _selectedFileNode = selectedFile;
-            IEnumerable<string> lines = File.ReadLines(selectedFile.FullPath);
+            IEnumerable<string> lines = file.SyntaxTree.GetText().Lines.Select(x => x.ToString());
             List<LineDetails> lineDetails = [.. lines.Select((line, index) => new LineDetails
             {
                 SourceCode = line,
                 LineNumber = index + 1,
-                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport())]
+                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport())],
+                IsChecked = file.LinesToMutate.ContainsLine(index)
             })];
 
             FileDetails.AddRange(lineDetails);
+
+            //Set the callback after so that initialization doesn't mess with included lines.
+            foreach (LineDetails line in FileDetails)
+            {
+                line.ToggleLineInclusion = (int lineNo, bool include) => ToggleLineInclusion(lineNo, include, file.LinesToMutate);
+                
+            }
 
             if (selectedLineNumber > -1)
             {
@@ -87,6 +99,31 @@ public class SolutionExplorerViewModel : ViewModelBase
         else
         {
             SelectedFileHeader = _defaultFileDisplayHeader;
+        }
+    }
+
+    private void ToggleLineInclusion(int lineNo, bool include, FileLineCollection lineCollection)
+    {
+        if (include)
+        {
+            lineCollection.Add(lineNo);
+        }
+        else
+        {
+            lineCollection.Remove(lineNo);
+        }
+
+        if (_selectedFileNode is null)
+        {
+            return;
+        }
+        if (!_selectedFileNode.IsChecked && lineCollection.Any())
+        {
+            _selectedFileNode.NotifyCheckedFromLineInFile(true);
+        }
+        else if (_selectedFileNode.IsChecked && !lineCollection.Any())
+        {
+            _selectedFileNode.NotifyCheckedFromLineInFile(false);
         }
     }
 }
@@ -101,4 +138,16 @@ public class LineDetails
     public int LineNumber { get; set; } = -1;
 
     public ObservableCollection<DiscoveredMutation> MutationsOnLine { get; set; } = [];
+
+    public bool IsChecked 
+    { 
+        get; 
+        set 
+        {
+            field = value;
+            ToggleLineInclusion?.Invoke(LineNumber - 1, value);
+        } 
+    }
+
+    public Action<int, bool>? ToggleLineInclusion { private get; set; }
 }

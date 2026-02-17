@@ -19,6 +19,8 @@ public class CLIAppTests
     private ISolutionLoader _solutionLoader;
     private IMutationRunInitiator _mutationRunInitiator;
     private ISolutionBuilder _solutionBuilder;
+    private IMutationDiscoveryManager _mutationDiscoveryManager;
+    private ISolutionProvider _solutionProvider;
 
     private TextReader _originalIn;
     private ICancellationTokenWrapper _cancelationToken;
@@ -34,12 +36,14 @@ public class CLIAppTests
         _statusTracker = Substitute.For<IStatusTracker>();
         _mutationRunInitiator = Substitute.For<IMutationRunInitiator>();
         _solutionBuilder = Substitute.For<ISolutionBuilder>();
-
         _cancelationToken = Substitute.For<ICancellationTokenWrapper>();
+        _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
+        _solutionProvider = Substitute.For<ISolutionProvider>();
 
         _cancelationTokenFactory.Generate().Returns(_cancelationToken);
+        _mutationDiscoveryManager.DiscoveredMutations.Returns([]);
 
-        _app = new CLIApp(_mutationSettings, _statusTracker, _cancelationTokenFactory, _solutionLoader, _solutionBuilder, _mutationRunInitiator);
+        _app = new CLIApp(_mutationSettings, _statusTracker, _cancelationTokenFactory, _solutionLoader, _solutionBuilder, _mutationRunInitiator, _mutationDiscoveryManager, _solutionProvider);
 
         //Limit testing to a single run through.
         Queue<bool> ensureSingleRunQueue = new();

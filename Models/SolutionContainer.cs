@@ -26,6 +26,8 @@ public class SolutionContainer: ISolutionContainer
     /// <inheritdoc/>
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
 
+    public string DirectoryPath { get; private set; }
+
     public SolutionContainer(IAnalyzerManager analyzerManager, IMutationSettings settings)
     {
         Workspace = analyzerManager.GetWorkspace();
@@ -58,5 +60,31 @@ public class SolutionContainer: ISolutionContainer
         {
             AllProjects.FirstOrDefault(x => x.Name == proj.Name)?.UpdateFromMutatedProject(proj);
         }
+    }
+
+    /// <inheritdoc/>
+    public SourceCodeFileContainer? FindFile(string path, ProjectType? inType=null)
+    {
+        foreach (IProjectContainer proj in AllProjects.Where(x => inType is null || x.ProjectType == inType))
+        {
+            if (proj.FileCollection.TryGetValue(path, out SourceCodeFileContainer? file))
+            {
+                return file;
+            }
+        }
+        return null;
+    }
+    
+    /// <inheritdoc/>
+    public SourceCodeFileContainer? FindFile(DocumentId id, ProjectType? inType=null)
+    {
+        foreach (IProjectContainer proj in AllProjects.Where(x => inType is null || x.ProjectType == inType))
+        {
+            if (proj.FileCollection.TryGetValue(id, out SourceCodeFileContainer? file))
+            {
+                return file;
+            }
+        }
+        return null;
     }
 }

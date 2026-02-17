@@ -1,6 +1,9 @@
 ﻿using GUI.ViewModels;
 using GUI.ViewModels.SolutionExplorerElements;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Models;
+using Models.Enums;
 using Models.Events;
 using Mutator;
 using NSubstitute;
@@ -31,7 +34,7 @@ public class SolutionExplorerViewModelTests
 
         _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager);
         
-        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator);
+        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider);
     }
 
     [Test]
@@ -43,12 +46,16 @@ public class SolutionExplorerViewModelTests
     [Test]
     public void GivenFileSelected_WhenFileExplorerCallBackInvoked_ThenFileDetailsLoaded()
     {
+        //Arrange
+        SourceCodeFileContainer file = new(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText(File.ReadAllText(TestFilePath)));
+        _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), ProjectType.Source).Returns(file);
         //Act
-        _fileExplorerViewModel.SelectedFile = new FileNode(TestFilePath, _fileExplorerViewModel);
+        
+        _fileExplorerViewModel.SelectedFile = new FileNode(file, _fileExplorerViewModel);
 
         //Assert
         Assert.That(_solutionExplorer.FileDetails, Is.Not.Null.Or.Empty);
-        Assert.That(_solutionExplorer.FileDetails.Count, Is.EqualTo(62)); //File has 63 lines
+        Assert.That(_solutionExplorer.FileDetails.Count, Is.EqualTo(63)); //File has 63 lines
         int prevLineNumber = 0;
         foreach (LineDetails line in _solutionExplorer.FileDetails)
         {

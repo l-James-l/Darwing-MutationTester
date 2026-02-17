@@ -64,9 +64,7 @@ public class ProjectContainer : IProjectContainer
 
     public string DllFilePath { get; }
 
-    public Dictionary<DocumentId, SyntaxTree> UnMutatedSyntaxTrees { get; } = new();
-
-    public Dictionary<string, DocumentId> DocumentsByPath { get; } = new();
+    public SourceCodeFileCollection FileCollection { get; } = new();
 
     public ProjectType ProjectType { get; set; }
 
@@ -164,7 +162,5 @@ public class ProjectContainer : IProjectContainer
         {
             ProjectType = ProjectType.Test;
         }
-
     }
-
 }

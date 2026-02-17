@@ -41,9 +41,8 @@ public class FileExplorerViewModel : ViewModelBase
         get;
         set
         {
-            FileNode? prevValue = field;
             SetProperty(ref field, value);
-            if (prevValue != value && value is not null)
+            if (value is not null)
             {
                 SelectedFileChangedCallBack?.Invoke(value);
             }
@@ -73,13 +72,13 @@ public class FileExplorerViewModel : ViewModelBase
             Log.Warning("Received update for unknown mutation {MutationID}", mutationID);
             return;
         }
-        if (_solutionProvider.SolutionContainer.Solution.GetDocument(mutation.Document) is not { FilePath: not null } doc)
+        if (_solutionProvider.SolutionContainer.FindFile(mutation.Document, ProjectType.Source) is not { } doc)
         {
             Log.Warning("Couldn't get the document for mutation {mutationID}", mutation.ID);
             return;
         }
 
-        FileNode? matchingFileNode = FindFileNode(doc.FilePath, SolutionTree);
+        FileNode? matchingFileNode = FindFileNode(doc.Path, SolutionTree);
         
         if (matchingFileNode is null)
         {
@@ -126,8 +125,7 @@ public class FileExplorerViewModel : ViewModelBase
             return;
         }
 
-        string? solutionFolder = Path.GetDirectoryName(_solutionProvider.SolutionContainer.Solution.FilePath);
-        FolderNode dummyRoot = new (solutionFolder ?? "");
+        FolderNode dummyRoot = new (_solutionProvider.SolutionContainer.DirectoryPath);
         BuildSolutionTree(dummyRoot);
         SolutionTree.AddRange(dummyRoot.Children);
     }
@@ -141,7 +139,13 @@ public class FileExplorerViewModel : ViewModelBase
             {
                 continue;
             }
-            FileNode fileNode = new(filePath, this)
+            if (_solutionProvider.SolutionContainer.FindFile(filePath) is not { } file)
+            {
+                // File not found, ignore it
+                Log.Warning($"'{filePath}' encountered in solution tree construction but not in solution.");
+                continue;
+            }
+            FileNode fileNode = new(file, this)
             {
                 Parent = parentFolder
             };

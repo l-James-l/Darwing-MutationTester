@@ -132,13 +132,11 @@ public class SolutionLoader : ISolutionLoader
 
                 if (solutionContainer.Solution.GetDocumentId(syntaxTree) is { } documentId)
                 {
-                    project.UnMutatedSyntaxTrees.Add(documentId, syntaxTree);
-                    project.DocumentsByPath.Add(file, documentId);
+                    project.FileCollection.AddDocument(documentId, syntaxTree);
                 }
                 else if (solutionContainer.Solution.GetDocumentIdsWithFilePath(syntaxTree.FilePath) is { Length: 1 } documentIds)
                 {
-                    project.UnMutatedSyntaxTrees.Add(documentIds.First(), syntaxTree);
-                    project.DocumentsByPath.Add(file, documentIds.First());
+                    project.FileCollection.AddDocument(documentIds.First(), syntaxTree);
                 }
                 else
                 {
