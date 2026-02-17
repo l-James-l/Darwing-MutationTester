@@ -88,30 +88,32 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
     {
         foreach (IProjectContainer project in _solutionProvider.SolutionContainer.SolutionProjects)
         {
-            foreach ((DocumentId documentId, SyntaxTree tree) in project.UnMutatedSyntaxTrees)
+            foreach (SourceCodeFileContainer file in project.FileCollection)
             {
-                Log.Information($"Discovering mutations for {tree.FilePath}.");
+                Log.Information($"Discovering mutations for {file.Path}.");
 
                 List<DiscoveredMutation> discoveredMutationsInFile = new List<DiscoveredMutation>();
-                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(tree.GetRoot(), discoveredMutationsInFile);
-                Log.Information($"Discovered {discoveredMutationsInFile.Count} mutations for {tree.FilePath}.");
+                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(file.SyntaxTree.GetRoot(), file.LinesToMutate, discoveredMutationsInFile);
+                Log.Information($"Discovered {discoveredMutationsInFile.Count} mutations for {file.Path}.");
 
-                SyntaxTree mutatedTree = tree.WithRootAndOptions(mutatedRoot, tree.Options);
+                SyntaxTree mutatedTree = file.SyntaxTree.WithRootAndOptions(mutatedRoot, file.SyntaxTree.Options);
+                file.MutatedTree = mutatedTree;
 
                 // By applying the document ID here, we remove the need for the recursion to be aware of the document its traversing.
-                discoveredMutationsInFile.ForEach(mutation => mutation.Document = documentId);
+                discoveredMutationsInFile.ForEach(mutation => mutation.Document = file.DocumentId);
                 DiscoveredMutations.AddRange(discoveredMutationsInFile);
                 RediscoverMutationsInTree(mutatedRoot);
+
                 if (discoveredMutationsInFile.Any(x => x.Status is MutantStatus.Discovered))
                 {
-                    Log.Error($"Unable to rediscover a mutation(s) in {tree.FilePath}. It will not be tested and cannot be removed if it causes build errors.");
+                    Log.Error($"Unable to rediscover a mutation(s) in {file.Path}. It will not be tested and cannot be removed if it causes build errors.");
                 }
                 if (_settings.SingleMutantPerLine)
                 {
                     IgnoreMultipleMutationsOnSingleLine(discoveredMutationsInFile);
                 }
 
-                ApplyDiscoveredMutationsToDocument(documentId, mutatedRoot);
+                ApplyDiscoveredMutationsToDocument(file.DocumentId, mutatedRoot);
             }
         }
     }
@@ -175,15 +177,19 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         Log.Debug(mutatedRoot.ToFullString());
     }
 
-    private SyntaxNode TraverseSyntaxNodeForMutation(SyntaxNode node, List<DiscoveredMutation> mutations)
+    private SyntaxNode TraverseSyntaxNodeForMutation(SyntaxNode node, FileLineCollection linesToMutate, List<DiscoveredMutation> mutations)
     {
-        node = TryMutateNode(mutations, node);
+        // We can do this check here because while mutating will change line spans, it will never change the line numbers.
+        if (linesToMutate.IsNodeWithin(node))
+        {
+            node = TryMutateNode(mutations, node);
+        }
 
         //Iterate/ mutate children first to achieve depth first search.
         Dictionary<SyntaxNode, SyntaxNode> mutatedChildren = new();
         foreach (SyntaxNode child in node.ChildNodes())
         {
-            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(child, mutations);
+            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(child, linesToMutate, mutations);
             mutatedChildren.Add(child, childAfterTraversal);
         }
 

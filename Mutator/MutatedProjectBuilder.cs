@@ -181,12 +181,12 @@ public class MutatedProjectBuilder : IStartUpProcess
             }
 
             FileLinePositionSpan failureLocation = failure.Location.GetLineSpan();
-            if (project.DocumentsByPath.TryGetValue(failureLocation.Path, out DocumentId? document))
+            if (project.FileCollection.TryGetValue(failureLocation.Path, out SourceCodeFileContainer? file))
             {
                 Log.Information("Attempting to address a build failure in file: {path}", failureLocation.Path);
 
                 // Ignore mutants with the Discovered status, because that means we couldn't rediscover them, so dont know where they are, and wouldn't be able to remove them
-                IEnumerable<DiscoveredMutation> mutationsInFile = _mutationDiscovery.DiscoveredMutations.Where(x => x.Document == document && x.Status > MutantStatus.Discovered);
+                IEnumerable<DiscoveredMutation> mutationsInFile = _mutationDiscovery.DiscoveredMutations.Where(x => x.Document == file.DocumentId && x.Status > MutantStatus.Discovered);
 
                 //We want to find any mutation where the error occurs partially or entirely inside it
                 //We do this by finding all mutations which 'start' before the error ends,

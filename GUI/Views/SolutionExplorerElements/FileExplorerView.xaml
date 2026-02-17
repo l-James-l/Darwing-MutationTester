@@ -114,6 +114,7 @@
                             <Grid Margin="0,5,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
@@ -124,8 +125,11 @@
                                 <Border x:Name="Bd" Grid.ColumnSpan="2" 
                                     Background="{TemplateBinding Background}" 
                                     Padding="2,5,8,2"/>
-                                
+
+                                <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
                                 <ToggleButton x:Name="Expander"
+                                              Grid.Column="1"
                                               Style="{StaticResource ExpandCollapseToggleStyle}"
                                               ClickMode="Press"
                                               Padding="0,5,0,0"
@@ -134,10 +138,10 @@
                                               IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
                                 
                                 <!--The header/name for the file/project/folder-->
-                                <ContentPresenter Grid.Column="1" ContentSource="Header" HorizontalAlignment="Stretch"/>
+                                <ContentPresenter Grid.Column="2" ContentSource="Header" HorizontalAlignment="Stretch"/>
 
                                 <!--The child elements presenter -->
-                                <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1"/>
+                                <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="2"/>
                             </Grid>
                             
                             <ControlTemplate.Triggers>

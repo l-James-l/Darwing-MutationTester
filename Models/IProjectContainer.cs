@@ -19,9 +19,7 @@ public interface IProjectContainer
 
     ProjectType ProjectType { get; set; }
 
-    Dictionary<DocumentId, SyntaxTree> UnMutatedSyntaxTrees { get; }
-
-    Dictionary<string, DocumentId> DocumentsByPath { get; }
+    public SourceCodeFileCollection FileCollection { get; }
 
     Compilation? GetCompilation();
 
