@@ -17,9 +17,10 @@
         </DataTemplate>
 
         <cv:MutationStatusColourConverter x:Key="MutationStatusColourConverter"/>
-        <cv:WorstMutationToColourConverter x:Key="WorstMutationToColourConverter"/>
         <cv:MutationStateStringConverter x:Key="MutationStateStringConverter"/>
         <cv:PlusOneConverter x:Key="PlusOneConverter"/>
+        
+        <views:SelectedFilePanel x:Key="SelectedFileView"/>
 
         <Style TargetType="TextBlock" x:Key="HeaderStyle">
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -72,95 +73,8 @@
 
             <!-- File Content Panel -->
             <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding SelectedFileHeader}" Style="{DynamicResource HeaderStyle}"/>
+            <ContentControl Grid.Column="2" Grid.Row="1" Content="{StaticResource SelectedFileView}"/>
 
-            <Border Grid.Column="2" Grid.Row="1" Background="#333">
-                <DataGrid ItemsSource="{Binding FileDetails}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          HeadersVisibility="None"
-                          GridLinesVisibility="None"
-                          Background="#0F172A"
-                          Foreground="#E2E8F0"
-                          BorderThickness="0"
-                          SelectionUnit="FullRow"
-                          SelectionMode="Single"
-                          SelectedItem="{Binding SelectedLine, Mode=TwoWay}"
-                          ScrollViewer.CanContentScroll="True"
-                          ScrollViewer.PanningMode="Both"
-                          ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          ScrollViewer.HorizontalScrollBarVisibility="Auto">
-
-                    <DataGrid.Resources>
-
-                        <!-- Row style -->
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="MinHeight" Value="20"/>
-
-                            <EventSetter Event="RequestBringIntoView" Handler="DataGridRow_RequestBringIntoView"/>
-                            
-                            <!-- selection highlight -->
-                            <Style.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter Property="Background" Value="#1E293B"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#172554"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-
-                        <!-- Selected row style -->
-                        <Style TargetType="DataGridCell">
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Background" Value="Transparent"/>
-                            
-                            <EventSetter Event="RequestBringIntoView" Handler="DataGridRow_RequestBringIntoView"/>
-                        </Style>
-
-                    </DataGrid.Resources>
-
-                    <DataGrid.Columns>
-
-                        <!-- Line number -->
-                        <DataGridTextColumn Binding="{Binding LineNumber}" Width="55">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Cascadia Mono"/>
-                                    <Setter Property="Foreground" Value="#64748B"/>
-                                    <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    <Setter Property="Margin" Value="0,0,10,0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
-                        <!--Colour bar indicating mutations on line-->
-                        <DataGridTemplateColumn Width="Auto">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding MutationsOnLine, Converter={StaticResource WorstMutationToColourConverter}}" 
-                                            x:Name="LineMutationIndication"
-                                            HorizontalAlignment="Stretch" 
-                                            Margin="2,1"
-                                            Width="6"
-                                            CornerRadius="3"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-
-                        <!-- Code -->
-                        <DataGridTextColumn Binding="{Binding SourceCode}" Width="Auto">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontFamily" Value="Cascadia Mono"/>
-                                    <Setter Property="Foreground" Value="#E2E8F0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-            </Border>
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="3"
