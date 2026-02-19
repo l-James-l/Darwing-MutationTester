@@ -38,7 +38,7 @@ public class GeneralSettingsViewModel : ViewModelBase
                 _settings.DefaultGitComparisonBranch = value;
             }
         }
-    }
+    } = default!; //Make compiler happy, this will be set in RefreshFromNewProfile which is called in the constructor.
 
     public int BuildTimeout
     {
