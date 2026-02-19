@@ -70,7 +70,10 @@ public class SettingsViewModel : ViewModelBase
             SingleMutantPerLine = _settings.SingleMutantPerLine,
             BuildTimeout = _settings.BuildTimeout,
             TestRunTimeout = _settings.TestRunTimeout,
-            SkipTestingNoActiveMutants = _settings.SkipTestingNoActiveMutants
+            SkipTestingNoActiveMutants = _settings.SkipTestingNoActiveMutants,
+            DefaultGitComparisonBranch = _settings.DefaultGitComparisonBranch,
+            MutationTestTimeoutScaler = _settings.MutationTestTimeoutScaler,
+            UseAdvancedProjectTypeAnalysis = _settings.UseAdvancedProjectTypeAnalysis
         };
 
         return profileData;

@@ -7,12 +7,10 @@ namespace GUI.ViewModels.SettingsElements;
 public class GeneralSettingsViewModel : ViewModelBase
 {
     private readonly IMutationSettings _settings;
-    private readonly IEventAggregator _eventAggregator;
 
     public GeneralSettingsViewModel(IMutationSettings settings, IEventAggregator eventAggregator)
     {
         _settings = settings;
-        _eventAggregator = eventAggregator;
 
         RefreshFromNewProfile();
         eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => RefreshFromNewProfile(), ThreadOption.UIThread, true, x => x is DarwingOperation.LoadSolution);
@@ -25,6 +23,8 @@ public class GeneralSettingsViewModel : ViewModelBase
         TestTimeout = _settings.TestRunTimeout;
         SingleMutationPerLine = _settings.SingleMutantPerLine;
         SkipTestingNoActiveMutants = _settings.SkipTestingNoActiveMutants;
+        UseAdvancedProjectTypeAnalysis = _settings.UseAdvancedProjectTypeAnalysis;
+        MutationTestTimeoutScaler = (int)Math.Round((_settings.MutationTestTimeoutScaler * 100) - 100);
     }
 
     public string DefaultGitComparisonBranch
@@ -38,7 +38,7 @@ public class GeneralSettingsViewModel : ViewModelBase
                 _settings.DefaultGitComparisonBranch = value;
             }
         }
-    }
+    } = default!; //Make compiler happy, this will be set in RefreshFromNewProfile which is called in the constructor.
 
     public int BuildTimeout
     {
@@ -107,6 +107,24 @@ public class GeneralSettingsViewModel : ViewModelBase
             if (value != _settings.UseAdvancedProjectTypeAnalysis)
             {
                 _settings.UseAdvancedProjectTypeAnalysis = value;
+            }
+        }
+    }
+
+    /// <Note>In the model this property is a double, but is displayed as a percentage, and needs to be converted.</Note>
+    public int MutationTestTimeoutScaler
+    {
+        get;
+        set
+        {
+            if (int.TryParse(value.ToString(), out int result))
+            {
+                SetProperty(ref field, result);
+                double convertedResult = 1 + (result / 100.0);
+                if (convertedResult != _settings.MutationTestTimeoutScaler)
+                {
+                    _settings.MutationTestTimeoutScaler = convertedResult;
+                }
             }
         }
     }

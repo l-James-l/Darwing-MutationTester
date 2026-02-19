@@ -63,4 +63,11 @@ public interface IMutationSettings
     /// The branch name of the default branch to use for comparisons while establishing the diff to test
     /// </summary>
     public string DefaultGitComparisonBranch { get; set; }
+
+    /// <summary>
+    /// The scaler to apply to the timeout for test runs when we have information from an initial test run with no active mutants.
+    /// e.g., if the initial test run took 10 minutes, and the scaler is 1.5, then the timeout for test runs will be 15 minutes.
+    /// </summary>
+    double MutationTestTimeoutScaler { get; set; }
+
 }
