@@ -24,9 +24,6 @@ public interface ISolutionContainer
     /// </summary>
     public List<IProjectContainer> TestProjects { get; }
 
-    /// <inheritdoc/>
-    public string DirectoryPath { get; }
-
     /// <summary>
     /// The loaded solution
     /// </summary>
@@ -36,6 +33,11 @@ public interface ISolutionContainer
     /// The workspace. This is how we edit files and apply the changes without altering the actual loaded files
     /// </summary>
     public AdhocWorkspace Workspace { get; }
+
+    /// <summary>
+    /// The path to the directory containing the solution file.
+    /// </summary>
+    public string DirectoryPath { get; }
 
     /// <summary>
     /// When we apply changes to projects, it creates a new project rather than altering the existing one.

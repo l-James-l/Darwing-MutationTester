@@ -76,6 +76,8 @@ public abstract class SolutionTreeNode : ViewModelBase
         set
         {
             field = value;
+            //Checked value are initialized bottom up, before parents are assigned.
+            //So when we assign it, notify the parent it needs to reevaluate its state
             value?.NotifyCheckedUpdateFromChild();
         } 
     }

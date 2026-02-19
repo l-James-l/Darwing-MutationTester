@@ -7,10 +7,7 @@ namespace Mutator.MutationImplementations;
 
 public abstract class BaseMutationImplementation : IMutationImplementation
 {
-    private const string NodeIdKey = "DarwingMutatedNodeIdentifier";
-    
-    public static string ActiveMutationIndex = "DarwingActiveMutationIndex";
-    public static SyntaxAnnotation DontMutateAnnotation = new ("DarwingDoNotMutate");
+    private const string _nodeIdKey = "DarwingMutatedNodeIdentifier";
 
     public abstract SpecificMutation Mutation { get; }
 
@@ -56,8 +53,8 @@ public abstract class BaseMutationImplementation : IMutationImplementation
 
     private (SyntaxNode mutatedNode, SyntaxAnnotation identififer) GenerateIdAnnotation(SyntaxNode node)
     {
-        var idAnnotation = new SyntaxAnnotation(NodeIdKey, Guid.NewGuid().ToString());
-        return (node.WithAdditionalAnnotations(idAnnotation).WithAdditionalAnnotations(DontMutateAnnotation), idAnnotation);
+        var idAnnotation = new SyntaxAnnotation(_nodeIdKey, Guid.NewGuid().ToString());
+        return (node.WithAdditionalAnnotations(idAnnotation).WithAdditionalAnnotations(Annotations.DontMutateAnnotation), idAnnotation);
     }
 
     private SyntaxNode BuildMutationSwitcher(ExpressionSyntax originalNode, ExpressionSyntax mutatedNode, string id)
@@ -76,7 +73,7 @@ public abstract class BaseMutationImplementation : IMutationImplementation
                                 default,
                                 SyntaxFactory.LiteralExpression(
                                     SyntaxKind.StringLiteralExpression,
-                                    SyntaxFactory.Literal(ActiveMutationIndex)))
+                                    SyntaxFactory.Literal(Annotations.ActiveMutationIndex)))
                     })
             )
         );
@@ -94,15 +91,15 @@ public abstract class BaseMutationImplementation : IMutationImplementation
 
         condition = ApplyDontMutateAnnotation(condition) as BinaryExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
         mutatedNode = ApplyDontMutateAnnotation(mutatedNode) as ExpressionSyntax ?? throw new MutationException("Applying dont mutate annotation changed node type.");
-        originalNode = originalNode.WithAdditionalAnnotations(DontMutateAnnotation); // original node only needs the top level dont mutate annotation.
+        originalNode = originalNode.WithAdditionalAnnotations(Annotations.DontMutateAnnotation); // original node only needs the top level dont mutate annotation.
 
         // should be equivalent to: (Environment.GetEnvironmentVariable("DarwingActiveMutationIndex") == id ? mutatedNode : originalNode)
-        ExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, originalNode).WithAdditionalAnnotations(DontMutateAnnotation);
-        ExpressionSyntax parenthesizedSwitcher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(DontMutateAnnotation);
+        ExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, originalNode).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
+        ExpressionSyntax parenthesizedSwitcher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
         
         if (WrapInDiscardedMethod)
         {
-            parenthesizedSwitcher = WrapInDiscardMethod(parenthesizedSwitcher).WithAdditionalAnnotations(DontMutateAnnotation);
+            parenthesizedSwitcher = WrapInDiscardMethod(parenthesizedSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
         }
 
         return parenthesizedSwitcher.NormalizeWhitespace();
@@ -113,7 +110,7 @@ public abstract class BaseMutationImplementation : IMutationImplementation
     /// </summary>
     private SyntaxNode ApplyDontMutateAnnotation(SyntaxNode node)
     {
-        node = node.WithAdditionalAnnotations(DontMutateAnnotation);
+        node = node.WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
 
         Dictionary<SyntaxNode, SyntaxNode> chilrenWithAnnotation = new();
         foreach (SyntaxNode child in node.ChildNodes())

@@ -59,7 +59,8 @@ public class DiscoveredMutation
     /// The actual node that will be embedded in the syntax tree, that contains the original node, and the mutated node,
     /// inside a ternary statement
     /// </summary>
-    public SyntaxNode MutationSwitcher { 
+    public SyntaxNode MutationSwitcher
+    { 
         get; 
         set
         {

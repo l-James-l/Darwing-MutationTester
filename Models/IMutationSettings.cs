@@ -58,4 +58,9 @@ public interface IMutationSettings
     /// This is more accurate, but also significantly increases the time taken to load the solution, so is not on by default.
     /// </summary>
     public bool UseAdvancedProjectTypeAnalysis { get; set; }
+
+    /// <summary>
+    /// The branch name of the default branch to use for comparisons while establishing the diff to test
+    /// </summary>
+    public string DefaultGitComparisonBranch { get; set; }
 }

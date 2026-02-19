@@ -50,4 +50,12 @@ public class SourceCodeFileCollection : IEnumerable<SourceCodeFileContainer>
     public IEnumerator<SourceCodeFileContainer> GetEnumerator() => _documentsById.Values.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public void ForEach(Action<SourceCodeFileContainer> action)
+    {
+        foreach (SourceCodeFileContainer document in this)
+        {
+            action.Invoke(document);
+        }
+    }
 }

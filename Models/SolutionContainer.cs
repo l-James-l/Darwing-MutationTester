@@ -15,6 +15,9 @@ public class SolutionContainer: ISolutionContainer
     public Solution Solution => Workspace.CurrentSolution;
 
     /// <inheritdoc/>
+    public string DirectoryPath { get; private set; }
+
+    /// <inheritdoc/>
     public List<IProjectContainer> TestProjects => AllProjects.Where(x => x.ProjectType is ProjectType.Test).ToList();
 
     /// <inheritdoc/>
@@ -22,8 +25,6 @@ public class SolutionContainer: ISolutionContainer
 
     /// <inheritdoc/>
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
-
-    public string DirectoryPath { get; private set; }
 
     public SolutionContainer(IAnalyzerManager analyzerManager, IMutationSettings settings)
     {
@@ -45,22 +46,8 @@ public class SolutionContainer: ISolutionContainer
                 continue;
             }
             IProjectAnalyzer projectAnalyzer = analyzerManager.GetProject(project.FilePath);
-            ProjectContainer newProjContainer = new(project, projectAnalyzer, settings.UseAdvancedProjectTypeAnalysis);
+            ProjectContainer newProjContainer = new(project, projectAnalyzer, settings);
             AllProjects.Add(newProjContainer);
-            
-            //Override the determined project type value if the loaded settings specify its type.
-            if (settings.SourceCodeProjects.Contains(project.Name) || settings.SourceCodeProjects.Contains(project.AssemblyName))
-            {
-                newProjContainer.ProjectType = ProjectType.Source;
-            }
-            else if (settings.TestProjects.Contains(project.Name) || settings.TestProjects.Contains(project.AssemblyName))
-            {
-                newProjContainer.ProjectType = ProjectType.Test;
-            }
-            else if (settings.IgnoreProjects.Contains(project.Name) || settings.IgnoreProjects.Contains(project.AssemblyName))
-            {
-                newProjContainer.ProjectType = ProjectType.Ignore;
-            }
         }
     }
 

@@ -61,7 +61,7 @@ public class InitialTestRunnerTests
 
         _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
-        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build")).Returns(testProcess);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build --no-restore")).Returns(testProcess);
         testProcess.StartAndAwait(_mutationSettings.TestRunTimeout).Returns(true);
         testProcess.Success.Returns(true);
         testProcess.Output.Returns([]);
@@ -75,7 +75,7 @@ public class InitialTestRunnerTests
         //Assert
         _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
             x.FileName == "dotnet" &&
-            x.Arguments == "test solution.sln --no-build" &&
+            x.Arguments == "test solution.sln --no-build --no-restore" &&
             x.WorkingDirectory == "this\\is\\the\\path\\to" &&
             x.RedirectStandardError && x.RedirectStandardOutput));
 
@@ -92,7 +92,7 @@ public class InitialTestRunnerTests
         _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
         _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
-        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build")).Returns(testProcess);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build --no-restore")).Returns(testProcess);
         testProcess.StartAndAwait(Arg.Any<double>()).Returns(true);
         testProcess.Success.Returns(false);
         testProcess.Output.Returns([]);
@@ -104,7 +104,7 @@ public class InitialTestRunnerTests
         //Assert
         _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
             x.FileName == "dotnet" &&
-            x.Arguments == "test solution.sln --no-build" &&
+            x.Arguments == "test solution.sln --no-build --no-restore" &&
             x.WorkingDirectory == "this\\is\\the\\path\\to" &&
             x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
         testProcess.Received(1).StartAndAwait(_mutationSettings.TestRunTimeout);

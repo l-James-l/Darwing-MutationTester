@@ -59,6 +59,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IMutationRunInitiator, InitialTestRunner>();
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
         Services.AddSingleton<IStatusTracker, StatusTracker>();
+        Services.AddSingleton<IGitDiffManager, GitDiffManager>();
 
         RegisterMutators();
 

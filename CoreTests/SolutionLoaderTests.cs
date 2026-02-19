@@ -21,6 +21,7 @@ public class SolutionLoaderTests
     private IStatusTracker _statusTracker;
     private ISolutionProvider _slnProvider;
     private ISolutionBuilder _solutionBuilder;
+    private IGitDiffManager _gitDiffManager;
 
     [SetUp]
     public void Setup()
@@ -31,8 +32,9 @@ public class SolutionLoaderTests
         _statusTracker = Substitute.For<IStatusTracker>();
         _slnProvider = Substitute.For<ISolutionProvider>();
         _solutionBuilder = Substitute.For<ISolutionBuilder>();
+        _gitDiffManager = Substitute.For<IGitDiffManager>();
 
-        _slnLoader = new SolutionLoader(_analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _solutionBuilder, _statusTracker, _slnProvider);
+        _slnLoader = new SolutionLoader(_analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _solutionBuilder, _statusTracker, _slnProvider, _gitDiffManager);
     }
 
     [Test]
@@ -50,6 +52,7 @@ public class SolutionLoaderTests
         _solutionBuilder.DidNotReceive().InitialBuild();
         _slnProvider.DidNotReceive().NewSolution(Arg.Any<SolutionContainer>());
         _statusTracker.Received(0).FinishOperation(DarwingOperation.LoadSolution, Arg.Any<bool>());
+        _gitDiffManager.DidNotReceive().InitialGitDiff();
     }
 
     /// <summary>
@@ -74,6 +77,7 @@ public class SolutionLoaderTests
         _solutionBuilder.Received(1).InitialBuild();
         _slnProvider.Received(1).NewSolution(Arg.Any<SolutionContainer>());
         _statusTracker.Received(1).FinishOperation(DarwingOperation.LoadSolution, true);
+        _gitDiffManager.Received(1).InitialGitDiff();
     }
 
     [Test]
@@ -97,6 +101,7 @@ public class SolutionLoaderTests
             Is.Not.Null);
         _slnProvider.DidNotReceive().NewSolution(Arg.Any<SolutionContainer>());
         _statusTracker.Received(1).FinishOperation(DarwingOperation.LoadSolution, false);
+        _gitDiffManager.DidNotReceive().InitialGitDiff();
     }
 
     //TODO: see if I can add tests for the file/ syntax tree discovery section

@@ -16,11 +16,8 @@
             <views:FileExplorerView/>
         </DataTemplate>
 
-        <cv:MutationStatusColourConverter x:Key="MutationStatusColourConverter"/>
-        <cv:MutationStateStringConverter x:Key="MutationStateStringConverter"/>
-        <cv:PlusOneConverter x:Key="PlusOneConverter"/>
-        
         <views:SelectedFilePanel x:Key="SelectedFileView"/>
+        <views:MutationListOnLine x:Key="MutationListOnLine"/> 
 
         <Style TargetType="TextBlock" x:Key="HeaderStyle">
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -38,11 +35,50 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="25,0,25,10">
-            <TextBlock FontWeight="SemiBold" FontSize="26" Text="Solution Explorer" Foreground="White"/>
-            <TextBlock FontWeight="Light" FontSize="12" Text="In Depth Review of Testing" Foreground="LightGray"/>
-        </StackPanel>
+        <!--Header Row-->
+        <Grid Grid.Row="0" Margin="25,0,25,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!--Header/ subheader-->
+            <StackPanel Grid.Column="0">
+                <TextBlock FontWeight="SemiBold" FontSize="26" Text="Solution Explorer" Foreground="White"/>
+                <TextBlock FontWeight="Light" FontSize="12" Text="In Depth Review of Testing" Foreground="LightGray"/>
+            </StackPanel>
+
+            <!--Git managment-->
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="10" Visibility="{Binding GitVisibility}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <TextBlock Text="Comapre to:" Padding="0,0,15,0" Foreground="White" VerticalAlignment="Center"/>
+
+                    <ComboBox Grid.Column="0"
+                              ItemsSource="{Binding AvailableGitBranches}"
+                              SelectedItem="{Binding SelectedBranch}"
+                              Margin="0,5,5,5"
+                              MinWidth="200"
+                              MaxWidth="500"
+                              VerticalContentAlignment="Center">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xf0b9;" 
+                                               Style="{StaticResource FluentIcon}" 
+                                               Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
+                <TextBlock Text="Mutations will only be generated for changes between this branch and your workspace."
+               FontStyle="Italic" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0" Opacity="0.7" Foreground="White"/>
+            </StackPanel>
+        </Grid>
         
+        <!--Main content grid-->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="150"/> <!--File Tree-->
@@ -88,108 +124,7 @@
 
             <!--Right Panel Header-->
             <TextBlock Grid.Column="4" Grid.Row="0" Text="Mutation Details" Style="{DynamicResource HeaderStyle}"/>
-
-            <!--Selected Mutation Details Section-->
-            <Grid Grid.Column="4" Grid.Row="1" Background="#0F172A">
-
-                <!--No mutations on selected line, or no line selected-->
-                <StackPanel x:Name="NoMutationPanel" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedLine}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding SelectedLine.MutationsOnLine.Count}" Value="0">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </StackPanel.Style>
-
-                    <TextBlock Text="No Mutations on Selected Line" 
-                               TextWrapping="Wrap" 
-                               FontSize="16" 
-                               Opacity="0.5" 
-                               Foreground="White"
-                               TextAlignment="Center"/>
-                </StackPanel>
-                
-                <!--All mutations on selected line-->
-                <ScrollViewer x:Name="MutationListPanel">
-                    <ScrollViewer.Style>
-                        <Style TargetType="ScrollViewer">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedLine}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding SelectedLine.MutationsOnLine.Count}" Value="0">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ScrollViewer.Style>
-
-                    <ItemsControl ItemsSource="{Binding SelectedLine.MutationsOnLine}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Expander Margin="0,0,0,10" 
-                                        BorderBrush="#1E293B"
-                                        BorderThickness="0,0,0,1" 
-                                        IsExpanded="False">
-
-                                    <!--Make the first element expanded by default-->
-                                    <Expander.Style>
-                                        <Style TargetType="Expander">
-                                            <Setter Property="IsExpanded" Value="False"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=Items.Count}" Value="1">
-                                                    <Setter Property="IsExpanded" Value="True"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Expander.Style>
-
-                                    <Expander.Header>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Ellipse Width="10" Height="10" Margin="0,0,10,0"
-                                         Fill="{Binding Status, Converter={StaticResource MutationStatusColourConverter}}"/>
-                                            <TextBlock Text="{Binding SpecificType}" 
-                                           Foreground="#E2E8F0" 
-                                           FontWeight="SemiBold"/>
-                                        </StackPanel>
-                                    </Expander.Header>
-
-                                    <Border Padding="10" Background="#111827">
-                                        <StackPanel Orientation="Vertical">
-                                            <TextBlock Text="Status" FontWeight="Light" Foreground="Gray" Margin="0, 5, 0, 2"/>
-                                            <TextBlock Text="{Binding Status, Converter={StaticResource MutationStateStringConverter}}" Foreground="White"/>
-
-                                            <TextBlock Text="Category" FontWeight="Light" Foreground="Gray" Margin="0, 10, 0, 2"/>
-                                            <TextBlock Text="{Binding Category}" Foreground="White"/>
-
-                                            <TextBlock Text="Line Number" FontWeight="Light" Foreground="Gray" Margin="0, 10"/>
-                                            <TextBlock Text="{Binding LineSpan.StartLinePosition.Line, Converter={StaticResource PlusOneConverter}}" Foreground="White"/>
-
-                                            <TextBlock Text="Original Code" FontWeight="Light" Foreground="Gray" Margin="0, 10, 0, 2"/>
-                                            <Border Background="#450A0A" CornerRadius="4" Padding="8">
-                                                <TextBlock Text="{Binding OriginalNode}" Foreground="#FECACA" FontFamily="Cascadia Mono" TextWrapping="Wrap"/>
-                                            </Border>
-
-                                            <TextBlock Text="Mutated Code" FontWeight="Light" Foreground="Gray" Margin="0, 10, 0, 2"/>
-                                            <Border Background="#064E3B" CornerRadius="4" Padding="8">
-                                                <TextBlock Text="{Binding MutatedNode}" Foreground="#A7F3D0" FontFamily="Cascadia Mono" TextWrapping="Wrap"/>
-                                            </Border>
-                                        </StackPanel>
-                                    </Border>
-                                </Expander>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
+            <ContentControl Grid.Column="4" Grid.Row="1" Content="{StaticResource MutationListOnLine}"/>
         </Grid>
     </Grid>
 </UserControl>

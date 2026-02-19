@@ -23,7 +23,7 @@ public class MutationImplementationProvider : IMutationImplementationProvider
     public bool CanMutate(SyntaxNode node, [NotNullWhen(true)] out IMutationImplementation? mutator)
     {
         mutator = null;
-        if (node.HasAnnotation(BaseMutationImplementation.DontMutateAnnotation))
+        if (node.HasAnnotation(Annotations.DontMutateAnnotation))
         {
             return false;
         }

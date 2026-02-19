@@ -168,7 +168,7 @@ public class MutatedProjectBuilder : IStartUpProcess
     /// <summary>
     /// For each failure in the build diagnostics, we will remove the mutations which was introduced closest to that location.
     /// </summary>
-    /// <returns>True if all failures were actioned, False if any failures were unable to be actioned.</returns>
+    /// <returns>True if any failures were actioned, False if no failures were able to be actioned.</returns>
     private bool FindAndRemoveMutationsCausingFailures(IProjectContainer project, List<Diagnostic> failures)
     {
         bool anyActioned = false;

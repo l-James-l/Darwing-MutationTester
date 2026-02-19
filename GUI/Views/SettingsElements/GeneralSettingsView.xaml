@@ -65,6 +65,27 @@
     
     <StackPanel Orientation="Vertical" Margin="20" MaxWidth="800" HorizontalAlignment="Left">
 
+        <!--DefaultGitComparisonBranch-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Default Git Comparison Branch Name"
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="The name of the default branch to compare your working directory to, so that only changed files are tested." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1" 
+                     Text="{Binding DefaultGitComparisonBranch, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource TextBoxStyle}"/>
+        </Grid>
+
+        <Separator/>
+        
         <!--TestTimeout-->
         <Grid Margin="0,0,0,25">
             <Grid.ColumnDefinitions>

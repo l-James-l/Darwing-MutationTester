@@ -33,5 +33,8 @@ public class MutationSettings : IMutationSettings
 
     /// <inheritdoc/>
     public bool UseAdvancedProjectTypeAnalysis { get; set; } = false;
+
+    /// <inheritdoc/>
+    public string DefaultGitComparisonBranch { get; set; } = "master";
 }
 

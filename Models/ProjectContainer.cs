@@ -13,7 +13,7 @@ public class ProjectContainer : IProjectContainer
 {
     private Project _project;
 
-    public ProjectContainer(Project project, IProjectAnalyzer projectAnalyzer, bool advancedTypeAnalysis)
+    public ProjectContainer(Project project, IProjectAnalyzer projectAnalyzer, IMutationSettings settings)
     {
         ArgumentNullException.ThrowIfNull(project);
         ArgumentNullException.ThrowIfNull(project.FilePath);
@@ -21,10 +21,25 @@ public class ProjectContainer : IProjectContainer
         _project = project;
         CsprojFilePath = project.FilePath;
         DirectoryPath = Path.GetDirectoryName(_project.FilePath) ??
-            CsprojFilePath.Remove(CsprojFilePath.Count() - _project.Name.Count());
+            CsprojFilePath.Remove(CsprojFilePath.Length - _project.Name.Length);
 
         Log.Information("Determining type of project: {proj}", Name);
-        if (advancedTypeAnalysis)
+
+
+        //Override the determined project type value if the loaded settings specify its type.
+        if (settings.SourceCodeProjects.Contains(project.Name) || settings.SourceCodeProjects.Contains(project.AssemblyName))
+        {
+            ProjectType = ProjectType.Source;
+        }
+        else if (settings.TestProjects.Contains(project.Name) || settings.TestProjects.Contains(project.AssemblyName))
+        {
+            ProjectType = ProjectType.Test;
+        }
+        else if (settings.IgnoreProjects.Contains(project.Name) || settings.IgnoreProjects.Contains(project.AssemblyName))
+        {
+            ProjectType = ProjectType.Ignore;
+        }
+        else if (settings.UseAdvancedProjectTypeAnalysis)
         {
             DetermineTypeFromBuildAnalysis(projectAnalyzer);
         }

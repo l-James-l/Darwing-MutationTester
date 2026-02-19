@@ -47,6 +47,7 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
         AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();
         AssertBasicRegistartion<IStartUpProcess, MutatedProjectBuilder>();
+        AssertBasicRegistartion<IGitDiffManager, GitDiffManager>();
 
         //IMutationImplementation's
         AssertMutatorRegistration<AddToSubtractMutator>();

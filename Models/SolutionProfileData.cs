@@ -31,7 +31,7 @@ public class SolutionProfileData
     public List<string>? SourceCodeProjects { get; set; } = null;
 
     /// <summary>
-    /// Allows enabling or disabling specific mutation types.
+    /// Allows disabling specific mutation types.
     /// </summary>
     public List<SpecificMutation>? DisabledMutationTypes { get; set; } = null;
 
@@ -67,4 +67,9 @@ public class SolutionProfileData
     /// This is more accurate, but also significantly increases the time taken to load the solution, so is not on by default.
     /// </summary>
     public bool? UseAdvancedProjectTypeAnalysis { get; set; } = null;
+
+    /// <summary>
+    /// The branch name of the default branch to use for comparisons while establishing the diff to test
+    /// </summary>
+    public string? DefaultGitComparisonBranch { get; set; } = null;
 }

@@ -158,14 +158,14 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore   ",
+            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore",
             RedirectStandardError = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath),
             EnvironmentVariables =
             {
-                [BaseMutationImplementation.ActiveMutationIndex] = mutant.ID.Data
+                [Annotations.ActiveMutationIndex] = mutant.ID.Data
             }
         };
         IProcessWrapper testRun = _processFactory.Create(startInfo);

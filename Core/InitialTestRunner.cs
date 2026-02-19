@@ -67,7 +67,7 @@ public class InitialTestRunner : IMutationRunInitiator
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build",
+            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore",
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath)
