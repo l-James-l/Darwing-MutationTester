@@ -10,8 +10,13 @@
              d:DataContext="{d:DesignInstance Type=vm:SolutionExplorerViewModel}">
 
     <UserControl.Resources>
-        <cv:WorstMutationToColourConverter x:Key="WorstMutationToColourConverter"/>
-
+        <ResourceDictionary>
+            <cv:WorstMutationToColourConverter x:Key="WorstMutationToColourConverter"/>
+            
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Views/SolutionExplorerElements/CheckBoxStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </UserControl.Resources>
     
     <Border Background="#333">
@@ -59,20 +64,6 @@
                     <EventSetter Event="RequestBringIntoView" Handler="DataGridRow_RequestBringIntoView"/>
                 </Style>
 
-                <Style TargetType="CheckBox">
-                    <Style.Triggers>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Background" Value="LimeGreen"/>
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="False">
-                            <Setter Property="Background" Value="LightGray"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Opacity" Value="0.8"/>
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-
             </DataGrid.Resources>
 
             <DataGrid.Columns>
@@ -80,7 +71,8 @@
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      Style="{StaticResource LineSelectionCheckBox}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

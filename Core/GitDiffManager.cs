@@ -13,7 +13,7 @@ namespace Core;
 /// 
 /// We always do this from the working directory, and we can compare against either the head, or a specific branch.
 /// </summary>
-public class GitDiffManager : IGitDiffManager
+public sealed class GitDiffManager : IGitDiffManager, IDisposable
 {
     private readonly ISolutionProvider _solutionProvider;
     private readonly IMutationSettings _settings;
@@ -122,7 +122,6 @@ public class GitDiffManager : IGitDiffManager
         
         foreach (PatchEntryChanges change in patch)
         {
-            //string fullPath = Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, Path.change.Path);
             string path = Path.GetFullPath(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, change.Path));
             SourceCodeFileContainer? file = _solutionProvider.SolutionContainer.FindFile(path, ProjectType.Source);
             if (file is null)
@@ -143,5 +142,10 @@ public class GitDiffManager : IGitDiffManager
         }
 
         _eventAggregator.GetEvent<GitUpdateEvent>().Publish();
+    }
+
+    public void Dispose()
+    {
+        _repo?.Dispose();
     }
 }

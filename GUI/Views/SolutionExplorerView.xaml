@@ -63,10 +63,9 @@
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
-                                    <!--<Path Data="{StaticResource IconGitBranch}" 
-                                          Fill="Gray" 
-                                          Stretch="Uniform" 
-                                          Width="12" Margin="0,0,8,0"/>-->
+                                    <TextBlock Text="&#xf0b9;" 
+                                               Style="{StaticResource FluentIcon}" 
+                                               Margin="0,0,5,0"/>
                                     <TextBlock Text="{Binding}" />
                                 </StackPanel>
                             </DataTemplate>

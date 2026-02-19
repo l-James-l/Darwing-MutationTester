@@ -93,4 +93,14 @@ public class GeneralSettingsViewModelTests
             Assert.That(_sut.TestTimeout, Is.EqualTo(888));
         });
     }
+
+    [Test]
+    public void GivenGitBranchChanged_WhenUserSetsValue_ThenSettingsModelIsUpdated()
+    {
+        // Act
+        _sut.DefaultGitComparisonBranch = "develop";
+     
+        // Assert
+        _settings.Received(1).DefaultGitComparisonBranch = "develop";
+    }
 }

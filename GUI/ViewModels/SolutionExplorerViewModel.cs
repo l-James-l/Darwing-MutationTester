@@ -193,9 +193,9 @@ public class SolutionExplorerViewModel : ViewModelBase
 
         //Insert the constant option to test the full solution, this should always be at the top.
         AvailableGitBranches = _gitManager.Branches;
+        GitVisibility = _gitManager.Branches.Count > 0 ? Visibility.Visible : Visibility.Hidden;
         AvailableGitBranches.Insert(0, _defactoFullSolutionTestHeader);
 
-        GitVisibility = _gitManager.Branches.Count > 0 ? Visibility.Visible : Visibility.Hidden;
         //Set the backing field directly to avoid triggering the diff again, as the git manager will have already established the diff by the time this event is triggered.
         _selectedBranch = _gitManager.LastSelectedBranch ?? _defactoFullSolutionTestHeader;
         OnPropertyChanged(nameof(SelectedBranch));
