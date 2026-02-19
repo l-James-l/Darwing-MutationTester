@@ -76,11 +76,6 @@ public class InitialTestRunner : IMutationRunInitiator
 
         bool processSuccess = testRun.StartAndAwait(_mutationSettings.TestRunTimeout);
 
-        foreach (string output in testRun.Output)
-        {
-            Log.Information(output);
-        }
-
         if (!processSuccess || !testRun.Success)
         {
             Log.Error("Initial test run without mutations has failures. Cannot perform mutation testing.");

@@ -1,4 +1,5 @@
-﻿using GUI.ViewModels;
+﻿using Core.Interfaces;
+using GUI.ViewModels;
 using GUI.ViewModels.SolutionExplorerElements;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -18,6 +19,7 @@ public class SolutionExplorerViewModelTests
     private ISolutionProvider _solutionProvider;
     private IEventAggregator _eventAggregator;
     private IMutationDiscoveryManager _mutationDiscoveryManager;
+    private IGitDiffManager _gitDiffManager;
 
     private const string TestFilePath = "ViewModels\\SolutionExplorerTests\\TestData\\TestContentCodeFile.txt";
 
@@ -27,14 +29,16 @@ public class SolutionExplorerViewModelTests
         _eventAggregator = Substitute.For<IEventAggregator>();
         _solutionProvider = Substitute.For<ISolutionProvider>();
         _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
+        _gitDiffManager = Substitute.For<IGitDiffManager>();
 
         _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Returns(Substitute.For<DarwingOperationStatesChangedEvent>());
         _eventAggregator.GetEvent<MutationUpdated>().Returns(Substitute.For<MutationUpdated>());
         _eventAggregator.GetEvent<SettingChanged>().Returns(Substitute.For<SettingChanged>());
+        _eventAggregator.GetEvent<GitUpdateEvent>().Returns(Substitute.For<GitUpdateEvent>());
 
         _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager);
         
-        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider);
+        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider, _gitDiffManager);
     }
 
     [Test]

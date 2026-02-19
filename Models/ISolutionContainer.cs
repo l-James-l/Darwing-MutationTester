@@ -24,9 +24,6 @@ public interface ISolutionContainer
     /// </summary>
     public List<IProjectContainer> TestProjects { get; }
 
-    /// <inheritdoc/>
-    public string DirectoryPath { get; }
-
     /// <summary>
     /// The loaded solution
     /// </summary>

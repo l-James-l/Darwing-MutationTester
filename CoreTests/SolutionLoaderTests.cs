@@ -32,7 +32,7 @@ public class SolutionLoaderTests
         _slnProvider = Substitute.For<ISolutionProvider>();
         _solutionBuilder = Substitute.For<ISolutionBuilder>();
 
-        _slnLoader = new SolutionLoader(_analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _solutionBuilder, _statusTracker, _slnProvider);
+        _slnLoader = new SolutionLoader(_analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _solutionBuilder, _statusTracker, _slnProvider, Substitute.For<IGitDiffManager>());
     }
 
     [Test]

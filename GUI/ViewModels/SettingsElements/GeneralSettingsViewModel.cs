@@ -20,10 +20,24 @@ public class GeneralSettingsViewModel : ViewModelBase
 
     private void RefreshFromNewProfile()
     {
+        DefaultGitComparisonBranch = _settings.DefaultGitComparisonBranch;
         BuildTimeout = _settings.BuildTimeout;
         TestTimeout = _settings.TestRunTimeout;
         SingleMutationPerLine = _settings.SingleMutantPerLine;
         SkipTestingNoActiveMutants = _settings.SkipTestingNoActiveMutants;
+    }
+
+    public string DefaultGitComparisonBranch
+    {
+        get;
+        set
+        {
+            SetProperty(ref field, value);
+            if (value != _settings.DefaultGitComparisonBranch)
+            {
+                _settings.DefaultGitComparisonBranch = value;
+            }
+        }
     }
 
     public int BuildTimeout

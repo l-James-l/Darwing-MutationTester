@@ -30,6 +30,20 @@ public class FileExplorerViewModel : ViewModelBase
             ThreadOption.UIThread, true, x => x == DarwingOperation.LoadSolution);
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(OnMutationUpdated, ThreadOption.UIThread);
         _eventAggregator.GetEvent<SettingChanged>().Subscribe(_ => RefreshSolutionTree(), ThreadOption.UIThread, true, x => x == nameof(IMutationSettings.SourceCodeProjects));
+        _eventAggregator.GetEvent<GitUpdateEvent>().Subscribe(() => UpdateCheckedStates(SolutionTree), ThreadOption.UIThread);
+    }
+
+    public void UpdateCheckedStates(IEnumerable<SolutionTreeNode> solutionTree)
+    {
+        foreach (FileNode file in solutionTree.Where(x => x is FileNode))
+        {
+            file.NotifyCheckedFromLineInFile(null); //Pass null to get the file to self evaluate.
+        }
+        foreach (FolderNode folder in solutionTree.Where(x => x is FolderNode))
+        {
+            UpdateCheckedStates(folder.Children);
+            folder.NotifyCheckedUpdateFromChild();
+        }
     }
 
     /// <summary>

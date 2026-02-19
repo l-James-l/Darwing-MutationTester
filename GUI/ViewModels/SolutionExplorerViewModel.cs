@@ -1,34 +1,39 @@
-﻿using GUI.Services;
+﻿using Core.Interfaces;
+using GUI.Services;
 using GUI.ViewModels.SolutionExplorerElements;
 using Microsoft.CodeAnalysis;
 using Models;
 using Models.Enums;
 using Models.Events;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
+using System.Windows;
 
 namespace GUI.ViewModels;
 
 public class SolutionExplorerViewModel : ViewModelBase
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
+    private const string _defactoFullSolutionTestHeader = "Test full solution";
+
     private readonly IEventAggregator _eventAggregator;
     private readonly ISolutionProvider _solutionProvider;
+    private readonly IGitDiffManager _gitManager;
+
     private FileNode? _selectedFileNode = null;
 
     public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator, 
-        ISolutionProvider solutionProvider)
+        ISolutionProvider solutionProvider, IGitDiffManager gitManager)
     {
         FileExplorerViewModel = fileExplorerViewModel;
         _eventAggregator = eventAggregator;
         _solutionProvider = solutionProvider;
+        _gitManager = gitManager;
 
         fileExplorerViewModel.SelectedFileChangedCallBack += OnSelectedFileChanged;
 
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(_ => OnPropertyChanged(nameof(SelectedLine)), ThreadOption.UIThread, true, 
             x => SelectedLine is not null && SelectedLine.MutationsOnLine.Any(m => m.ID == x));
+        _eventAggregator.GetEvent<GitUpdateEvent>().Subscribe(OnGitUpdateEvent, ThreadOption.UIThread);
     }
 
     /// <summary>
@@ -52,12 +57,66 @@ public class SolutionExplorerViewModel : ViewModelBase
     /// </summary>
     public ObservableCollection<LineDetails> FileDetails { get; } = [];
 
+    /// <summary>
+    /// Binding property for the currently selected line in the file, 
+    /// which is used to display the mutations on that line in the details pane.
+    /// </summary>
     public LineDetails? SelectedLine
     {
         get;
         set => SetProperty(ref field, value);
     } = null;
-    
+
+    /// <summary>
+    /// Binding property for the visibility of the git branch selection dropdown. 
+    /// This is visible when a git repository is detected at the solution path, and hidden otherwise.
+    /// </summary>
+    public Visibility GitVisibility 
+    {
+        get;
+        private set
+        {
+            SetProperty(ref field, value);
+        }
+    } = Visibility.Hidden;
+
+    /// <summary>
+    /// Binding property for the list of git branches available to compare against. 
+    /// This is populated when a git repository is detected at the solution path, and is empty otherwise.
+    /// </summary>
+    public List<string> AvailableGitBranches 
+    {
+        get; 
+        set
+        {
+            SetProperty(ref field, value);
+        } 
+    } = [];
+
+    /// <summary>
+    /// Binding property for the currently selected git branch to compare against.
+    /// When this is set, the git manager will establish the diff, which will update the files/lines to mutate in the solution container.
+    /// </summary>
+    public string SelectedBranch
+    {
+        get => _selectedBranch;
+        set
+        {
+            if (value == _defactoFullSolutionTestHeader)
+            {
+                _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Full()));
+                OnPropertyChanged(nameof(FileDetails));
+                FileExplorerViewModel.UpdateCheckedStates(FileExplorerViewModel.SolutionTree);
+            }
+            else 
+            {
+                SetProperty(ref _selectedBranch, value);
+                _gitManager.EstablishDiff(value);
+            }
+        }
+    } 
+    private string _selectedBranch = "";
+
     private void OnSelectedFileChanged(FileNode selectedFile)
     {
         //If the same file is selected, try to keep the same line selected. Any expanded mutations will be lost, but that's acceptable.
@@ -125,6 +184,21 @@ public class SolutionExplorerViewModel : ViewModelBase
         {
             _selectedFileNode.NotifyCheckedFromLineInFile(false);
         }
+    }
+
+    private void OnGitUpdateEvent()
+    {
+        //Handle updates to checked lines in the selected file
+        OnPropertyChanged(nameof(FileDetails));
+
+        //Insert the constant option to test the full solution, this should always be at the top.
+        AvailableGitBranches = _gitManager.Branches;
+        AvailableGitBranches.Insert(0, _defactoFullSolutionTestHeader);
+
+        GitVisibility = _gitManager.Branches.Count > 0 ? Visibility.Visible : Visibility.Hidden;
+        //Set the backing field directly to avoid triggering the diff again, as the git manager will have already established the diff by the time this event is triggered.
+        _selectedBranch = _gitManager.LastSelectedBranch ?? _defactoFullSolutionTestHeader;
+        OnPropertyChanged(nameof(SelectedBranch));
     }
 }
 

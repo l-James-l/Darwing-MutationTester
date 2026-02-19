@@ -68,10 +68,11 @@ public sealed class FileNode : SolutionTreeNode
     /// Suppresses propagation into file lines
     /// </summary>
     /// <param name="check"></param>
-    public void NotifyCheckedFromLineInFile(bool check)
+    public void NotifyCheckedFromLineInFile(bool? check)
     {
         _supressFileLinesUpdate = true;
-        IsChecked = check;
+        // When check is null, it means the file should self evaluate whether it is checked based on its lines.
+        IsChecked = check ?? _file.LinesToMutate.Any();
         _supressFileLinesUpdate = false;
     }
 

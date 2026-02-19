@@ -28,9 +28,11 @@ public class SolutionLoader : ISolutionLoader
     private readonly ISolutionBuilder _solutionBuilder;
     private readonly IStatusTracker _statusTracker;
     private readonly ISolutionProvider _solutionProvider;
+    private readonly IGitDiffManager _gitManager;
 
     public SolutionLoader(IAnalyzerManagerFactory analyzerManagerFactory, ISolutionProfileDeserializer slnProfileDeserializer,
-        IMutationSettings mutationSettings, ISolutionBuilder solutionBuilder, IStatusTracker statusTracker, ISolutionProvider solutionProvider)
+        IMutationSettings mutationSettings, ISolutionBuilder solutionBuilder, IStatusTracker statusTracker,
+        ISolutionProvider solutionProvider, IGitDiffManager gitManager)
     {
         ArgumentNullException.ThrowIfNull(analyzerManagerFactory);
         ArgumentNullException.ThrowIfNull(slnProfileDeserializer);
@@ -38,6 +40,7 @@ public class SolutionLoader : ISolutionLoader
         ArgumentNullException.ThrowIfNull(solutionBuilder);
         ArgumentNullException.ThrowIfNull(solutionProvider);
         ArgumentNullException.ThrowIfNull(statusTracker);
+        ArgumentNullException.ThrowIfNull(gitManager);
 
         _analyzerManagerFactory = analyzerManagerFactory;
         _slnProfileDeserializer = slnProfileDeserializer;
@@ -45,6 +48,7 @@ public class SolutionLoader : ISolutionLoader
         _solutionBuilder = solutionBuilder;
         _statusTracker = statusTracker;
         _solutionProvider = solutionProvider;
+        _gitManager = gitManager;
     }
 
     public void Load(string solutionPath)
@@ -79,8 +83,8 @@ public class SolutionLoader : ISolutionLoader
             DiscoverSourceCodeFiles(solutionContainer);
             _solutionProvider.NewSolution(solutionContainer);
             _statusTracker.FinishOperation(DarwingOperation.LoadSolution, true);
+            _gitManager.InitialGitDiff();
 
-            new GitDiffManager(_solutionProvider, _mutationSettings).EstablishDiff();
             _solutionBuilder.InitialBuild();
         }
         else

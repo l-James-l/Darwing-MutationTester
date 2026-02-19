@@ -26,8 +26,6 @@ public class SolutionContainer: ISolutionContainer
     /// <inheritdoc/>
     public List<IProjectContainer> AllProjects { get; private set; } = new List<IProjectContainer>();
 
-    public string DirectoryPath { get; private set; }
-
     public SolutionContainer(IAnalyzerManager analyzerManager, IMutationSettings settings)
     {
         Workspace = analyzerManager.GetWorkspace();
