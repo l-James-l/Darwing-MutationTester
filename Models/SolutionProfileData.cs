@@ -9,7 +9,9 @@ namespace Models;
 /// IMPORTANT: When any new properties are added to this class, they should be made nullable and default to null.
 /// The logic in SolutionProfileDeserializer should be updated to only assign values from the profile if they are not null. 
 /// This allows for backwards compatibility with existing solution profiles when new properties are added.
+/// 
 /// Ensure any new properties are added to <see cref="SolutionProfileDeserializer.AssignSettingsFromProfile"/>
+/// and <see cref="SettingsViewModel.BuildNewProfileObject"/>
 /// </summary>
 public class SolutionProfileData
 {
@@ -72,4 +74,11 @@ public class SolutionProfileData
     /// The branch name of the default branch to use for comparisons while establishing the diff to test
     /// </summary>
     public string? DefaultGitComparisonBranch { get; set; } = null;
+
+    /// <summary>
+    /// The scaler to apply to the timeout for test runs when we have information from an initial test run with no active mutants.
+    /// e.g., if the initial test run took 10 minutes, and the scaler is 1.5, then the timeout for test runs will be 15 minutes.
+    /// </summary>
+    public double? MutationTestTimeoutScaler { get; set; } = null;
 }
+

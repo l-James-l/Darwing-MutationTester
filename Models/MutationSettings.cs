@@ -36,5 +36,8 @@ public class MutationSettings : IMutationSettings
 
     /// <inheritdoc/>
     public string DefaultGitComparisonBranch { get; set; } = "master";
+
+    /// <inheritdoc/>
+    public double MutationTestTimeoutScaler { get; set; } = 1.15;
 }
 

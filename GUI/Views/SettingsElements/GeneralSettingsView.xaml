@@ -96,7 +96,7 @@
             <StackPanel Grid.Column="0" Margin="0,0,40,0">
                 <TextBlock Text="Test Timeout (s)"
                            Style="{StaticResource SettingHeader}"/>
-                <TextBlock Text="This is the timeout given to each individual test run, for each mutation activation." 
+                <TextBlock Text="This is the timeout given to each full test run. For the unmuated tests and when not using coverage based testing." 
                            Style="{StaticResource SettingSubHeader}"/>
             </StackPanel>
 
@@ -124,6 +124,34 @@
             <TextBox Grid.Column="1" 
                      Text="{Binding BuildTimeout, UpdateSourceTrigger=PropertyChanged}" 
                      Style="{StaticResource TextBoxStyle}"/>
+        </Grid>
+
+        <Separator/>
+
+        <!--Mutation test scaler-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Mutation Test Timeout Scaler" 
+                           Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="This is the percentage added to the unmuatted time a test took before it is considered failed to handle (sudo)inifinate runs." 
+                           Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <Grid Grid.Column="1" Width="100">
+                <TextBox Text="{Binding MutationTestTimeoutScaler, UpdateSourceTrigger=PropertyChanged}" 
+                         Style="{StaticResource TextBoxStyle}"/>
+                <TextBlock Text="%" 
+                           HorizontalAlignment="Right" 
+                           Foreground="LightGray" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,20,0" 
+                           IsHitTestVisible="False"/>
+            </Grid>
         </Grid>
 
         <Separator/>

@@ -103,4 +103,30 @@ public class GeneralSettingsViewModelTests
         // Assert
         _settings.Received(1).DefaultGitComparisonBranch = "develop";
     }
+
+    [Test]
+    public void GivenMutationTestTimeoutScalerChanged_WhenUserSetsValue_ThenSettingsModelIsUpdated()
+    {
+        // Arrange
+        _settings.MutationTestTimeoutScaler.Returns(1.5);
+
+        // Act
+        _sut.MutationTestTimeoutScaler = 15; 
+
+        // Assert
+        _settings.Received(1).MutationTestTimeoutScaler = 1.15;
+    }
+
+    [Test]
+    public void GivenMutationTestTimeoutScalerChanged_WhenLoad_ThenViewModelUpdates()
+    {
+        // Arrange
+        _settings.MutationTestTimeoutScaler.Returns(1.5);
+
+        // Act
+        _onRefreshAction.Invoke(0);
+
+        // Assert
+        Assert.That(_sut.MutationTestTimeoutScaler, Is.EqualTo(50));
+    }
 }

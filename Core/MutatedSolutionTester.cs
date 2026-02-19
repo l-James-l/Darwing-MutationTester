@@ -137,8 +137,8 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         bool processSuccess;
         if (_initialTestRunInfo is not null)
         {
-            //use the original test run plus 15%. TODO make this configurable
-            processSuccess = testRun.StartAndAwait(_initialTestRunInfo.InitialRunDuration * 1.15);
+            //use the original test run plus a % scaler.
+            processSuccess = testRun.StartAndAwait(_initialTestRunInfo.InitialRunDuration * _mutationSettings.MutationTestTimeoutScaler);
         }
         else
         {
