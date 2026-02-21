@@ -140,7 +140,7 @@ public class SolutionExplorerViewModel : ViewModelBase
             {
                 SourceCode = line,
                 LineNumber = index + 1,
-                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport()).Select(x => new MutationViewModel(x))],
+                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport()).Select(x => new MutationViewModel(x, _geminiApi.IsConfigured))],
                 IsChecked = file.LinesToMutate.ContainsLine(index)
             })];
 

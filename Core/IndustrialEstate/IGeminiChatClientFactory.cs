@@ -7,5 +7,5 @@ namespace Core.IndustrialEstate;
 /// </summary>
 public interface IGeminiChatClientFactory
 {
-    IChatClient Create();
+    IChatClient? TryCreate();
 }
