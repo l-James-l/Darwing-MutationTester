@@ -12,7 +12,7 @@ namespace Core;
 /// <inheritdoc/>
 public sealed class GeminiApiHandler : IDisposable, IGeminiApiHandler
 {
-    private readonly IChatClient _client;
+    private readonly IChatClient? _client;
     private readonly ISolutionProvider _solutionProvider;
     private readonly IMutationSettings _settings;
     private readonly ICancelationTokenFactory _cancelationTokenFactory;
@@ -20,16 +20,25 @@ public sealed class GeminiApiHandler : IDisposable, IGeminiApiHandler
     public GeminiApiHandler(IGeminiChatClientFactory clientFactory, ISolutionProvider solutionProvider,
         ICancelationTokenFactory cancelationTokenFactory, IMutationSettings settings)
     {
-        _client = clientFactory.Create();
+        _client = clientFactory.TryCreate();
         _solutionProvider = solutionProvider;
         _settings = settings;
         _cancelationTokenFactory = cancelationTokenFactory;
     }
 
     /// <inheritdoc/>
+    public bool IsConfigured => _client != null;
+
+    /// <inheritdoc/>
     public async Task GenerateUnitTest(DiscoveredMutation mutation, Action<string, string> callback)
     {
         Log.Information("Gemini API handler invoked.");
+        if (_client == null)
+        {
+            Log.Warning("Tried to invoke Gemini API without a valid client");
+            return;
+        }
+
         SourceCodeFileContainer? file = _solutionProvider.SolutionContainer.FindFile(mutation.Document);
         if (file == null)
         {
@@ -55,6 +64,7 @@ public sealed class GeminiApiHandler : IDisposable, IGeminiApiHandler
 
     private async Task<GeminiQueryResponse> QueryClient(string fullFile, string originalNode, string mutatedNode, int lineNo)
     {
+        ArgumentNullException.ThrowIfNull(_client);
         try
         {
             Log.Information("Sending API request");
@@ -99,7 +109,7 @@ public sealed class GeminiApiHandler : IDisposable, IGeminiApiHandler
 
     public void Dispose()
     {
-        _client.Dispose();
+        _client?.Dispose();
     }
 
     private string ResponseJsonSchema = @"

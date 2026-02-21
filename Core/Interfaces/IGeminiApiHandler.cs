@@ -12,6 +12,11 @@ namespace Core.Interfaces;
 public interface IGeminiApiHandler
 {
     /// <summary>
+    /// Indicates whether a client was able to be created 
+    /// </summary>
+    public bool IsConfigured { get; }
+
+    /// <summary>
     /// Ask Gemini for a unit test to address the surviving mutation
     /// async
     /// </summary>

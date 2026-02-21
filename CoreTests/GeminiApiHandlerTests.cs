@@ -34,7 +34,7 @@ public class GeminiApiHandlerTests
         _eventAggregator.GetEvent<MutationUpdated>().Returns(new MutationUpdated());
 
         // Ensure the factory returns our mock client
-        _clientFactory.Create().Returns(_chatClient);
+        _clientFactory.TryCreate().Returns(_chatClient);
 
         // Setup default token
         var cts = Substitute.For<ICancellationTokenWrapper>();

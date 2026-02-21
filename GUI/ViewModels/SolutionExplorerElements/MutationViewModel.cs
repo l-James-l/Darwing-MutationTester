@@ -10,9 +10,12 @@ namespace GUI.ViewModels.SolutionExplorerElements;
 /// </summary>
 public class MutationViewModel: ViewModelBase
 {
-    public MutationViewModel(DiscoveredMutation mutation)
+    private readonly bool _geminiApiConfigured;
+
+    public MutationViewModel(DiscoveredMutation mutation, bool geminiApiConfigured=false)
     {
         Mutation = mutation;
+        _geminiApiConfigured = geminiApiConfigured;
         CopyTestCommand = new DelegateCommand(CopyTest);
     }
 
@@ -36,7 +39,7 @@ public class MutationViewModel: ViewModelBase
     /// Shown when the mutation survived.
     /// Updating this is handled by the subscription to <see cref="MutationUpdated"/> in <see cref="SolutionExplorerViewModel"/>
     /// </summary>
-    public Visibility SuggestTestButtonVisibility => Mutation.Status.IncludeInSurvivedCount() ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility SuggestTestButtonVisibility => _geminiApiConfigured && Mutation.Status.IncludeInSurvivedCount() ? Visibility.Visible : Visibility.Collapsed;
 
     /// <summary>
     /// Binding property for if the test generation ongoing progress bar should be visible
