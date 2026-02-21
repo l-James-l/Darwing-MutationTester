@@ -3,7 +3,6 @@ using Core.Interfaces;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Options;
 using Models;
 using Serilog;
 using System.Text.Json;

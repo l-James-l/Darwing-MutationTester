@@ -4,6 +4,10 @@ namespace Core.Interfaces;
 
 /// <summary>
 /// Handles API interaction with the gemini API
+/// 
+/// To use this API, you must set up the API key in your user secrets.
+/// To create an API key go to https://aistudio.google.com/app/api-keys
+/// Once you have created an API key, use the command: dotnet user-secrets set "Gemini:ApiKey" "YOUR KEY"
 /// </summary>
 public interface IGeminiApiHandler
 {
