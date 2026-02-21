@@ -8,7 +8,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        IServiceProvider serviceProvider = new CliDependencyRegistrar(new ServiceCollection()).Build();
+        IServiceProvider serviceProvider = new CliDependencyRegistrar(new ServiceCollection()).RegisterConfigurations().Build();
         CLIApp cLIApp = serviceProvider.GetRequiredService<CLIApp>();
         cLIApp.Run(args);
     }

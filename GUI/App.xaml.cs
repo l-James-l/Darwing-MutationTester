@@ -14,7 +14,7 @@ public partial class App : Application
     {
         base.OnStartup(e);
         
-        IServiceProvider serviceProvider = new GuiDependencyRegistrar(new ServiceCollection()).Build();
+        IServiceProvider serviceProvider = new GuiDependencyRegistrar(new ServiceCollection()).RegisterConfigurations().Build();
 
         MainWindow mainWindow = serviceProvider.GetRequiredService<MainWindow>();
         MainWindowViewModel mainWindowViewModel = serviceProvider.GetRequiredService<MainWindowViewModel>();

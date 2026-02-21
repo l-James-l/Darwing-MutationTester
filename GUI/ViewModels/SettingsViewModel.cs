@@ -73,7 +73,8 @@ public class SettingsViewModel : ViewModelBase
             SkipTestingNoActiveMutants = _settings.SkipTestingNoActiveMutants,
             DefaultGitComparisonBranch = _settings.DefaultGitComparisonBranch,
             MutationTestTimeoutScaler = _settings.MutationTestTimeoutScaler,
-            UseAdvancedProjectTypeAnalysis = _settings.UseAdvancedProjectTypeAnalysis
+            UseAdvancedProjectTypeAnalysis = _settings.UseAdvancedProjectTypeAnalysis,
+            AiTestGenerationAdditionalInstructions = _settings.AiTestGenerationAdditionalInstructions
         };
 
         return profileData;

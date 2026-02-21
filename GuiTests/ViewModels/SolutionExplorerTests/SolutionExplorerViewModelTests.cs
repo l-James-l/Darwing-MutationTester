@@ -21,6 +21,7 @@ public class SolutionExplorerViewModelTests
     private IEventAggregator _eventAggregator;
     private IMutationDiscoveryManager _mutationDiscoveryManager;
     private IGitDiffManager _gitDiffManager;
+    private IGeminiApiHandler _geminiApiHandler;
 
     private const string TestFilePath = "ViewModels\\SolutionExplorerTests\\TestData\\TestContentCodeFile.txt";
 
@@ -33,6 +34,7 @@ public class SolutionExplorerViewModelTests
         _solutionProvider = Substitute.For<ISolutionProvider>();
         _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
         _gitDiffManager = Substitute.For<IGitDiffManager>();
+        _geminiApiHandler = Substitute.For<IGeminiApiHandler>();
 
         GitUpdateEvent gitEvent = Substitute.For<GitUpdateEvent>();
         _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Returns(Substitute.For<DarwingOperationStatesChangedEvent>());
@@ -47,7 +49,7 @@ public class SolutionExplorerViewModelTests
 
         _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager);
         
-        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider, _gitDiffManager);
+        _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider, _gitDiffManager, _geminiApiHandler);
     }
 
     [Test]
@@ -112,5 +114,28 @@ public class SolutionExplorerViewModelTests
 
         // Assert
         _gitDiffManager.Received(1).EstablishDiff("feature/mutation-fix");
+    }
+
+    [Test]
+    public void WhenGenerateUnitTestCommand_ThenGeminiApiInvoked()
+    {
+        //Arrange
+        DiscoveredMutation m = new(new SyntaxAnnotation(), SyntaxFactory.EmptyStatement(), SyntaxFactory.EmptyStatement(), SyntaxFactory.EmptyStatement(), _eventAggregator, 0, 0);
+        MutationViewModel mutationVm = new MutationViewModel(m);
+        TaskCompletionSource asyncTaskSource = new();
+        _geminiApiHandler.GenerateUnitTest(Arg.Any<DiscoveredMutation>(), Arg.Any<Action<string, string>>()).Returns(asyncTaskSource.Task);
+
+        //Act
+        _solutionExplorer.TryGetUnitTestCommand.Execute(mutationVm);
+
+        //Assert
+        _geminiApiHandler.Received(1).GenerateUnitTest(Arg.Is<DiscoveredMutation>(x => x == m), Arg.Any<Action<string, string>>());
+        Assert.That(mutationVm.TestGenerationOngoingVisibility, Is.EqualTo(Visibility.Visible));
+
+        //Act - complete task
+        asyncTaskSource.SetResult();
+
+        //Assert
+        Assert.That(mutationVm.TestGenerationOngoingVisibility, Is.EqualTo(Visibility.Collapsed));
     }
 }

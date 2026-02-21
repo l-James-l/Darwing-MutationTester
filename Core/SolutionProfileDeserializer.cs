@@ -67,5 +67,6 @@ public class SolutionProfileDeserializer : ISolutionProfileDeserializer
         _mutationSettings.UseAdvancedProjectTypeAnalysis = profileData.UseAdvancedProjectTypeAnalysis ?? _mutationSettings.UseAdvancedProjectTypeAnalysis;
         _mutationSettings.DefaultGitComparisonBranch = profileData.DefaultGitComparisonBranch ?? _mutationSettings.DefaultGitComparisonBranch;
         _mutationSettings.MutationTestTimeoutScaler = profileData.MutationTestTimeoutScaler ?? _mutationSettings.MutationTestTimeoutScaler;
+        _mutationSettings.AiTestGenerationAdditionalInstructions = profileData.AiTestGenerationAdditionalInstructions ?? _mutationSettings.AiTestGenerationAdditionalInstructions;
     }
 }

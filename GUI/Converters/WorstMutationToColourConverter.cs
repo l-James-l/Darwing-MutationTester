@@ -1,4 +1,5 @@
-﻿using Models;
+﻿using GUI.ViewModels.SolutionExplorerElements;
+using Models;
 using Models.Enums;
 using System.Globalization;
 using System.Windows.Data;
@@ -13,16 +14,16 @@ class WorstMutationToColourConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not IEnumerable<DiscoveredMutation> mutations || !mutations.Any())
+        if (value is not IEnumerable<MutationViewModel> mutations || !mutations.Any())
         {
             return Brushes.Transparent;
         }
 
-        if (mutations.Any(x => x.Status.IncludeInSurvivedCount()))
+        if (mutations.Any(x => x.Mutation.Status.IncludeInSurvivedCount()))
         {
             return Brushes.Red;
         }
-        else if (mutations.Any(x => !x.Status.IncludeInKilledCount()))
+        else if (mutations.Any(x => !x.Mutation.Status.IncludeInKilledCount()))
         {
             return Brushes.Orange;
         }

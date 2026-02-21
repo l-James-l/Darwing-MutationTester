@@ -71,7 +71,7 @@ public class CLIApp
     private void MainLoop()
     {
         //Using the DI'd cancelation token allows the process to be cancelled from unit tests.
-        while (!_cancelationToken.IsCancelled())
+        while (!_cancelationToken.IsCancellationRequested)
         {
             Console.Write("\nDarwing > ");
 

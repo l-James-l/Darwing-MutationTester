@@ -80,5 +80,11 @@ public class SolutionProfileData
     /// e.g., if the initial test run took 10 minutes, and the scaler is 1.5, then the timeout for test runs will be 15 minutes.
     /// </summary>
     public double? MutationTestTimeoutScaler { get; set; } = null;
+
+    /// <summary>
+    /// Allows setting of a custom additional prompt to give to Gemini when generating tests to improve the chance
+    /// of useful tests being generated
+    /// </summary>
+    public string? AiTestGenerationAdditionalInstructions { get; set; } = "";
 }
 

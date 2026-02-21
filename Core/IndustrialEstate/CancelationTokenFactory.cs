@@ -1,3 +1,5 @@
+using YamlDotNet.Core.Tokens;
+
 namespace Core.IndustrialEstate;
 
 public class CancelationTokenFactory : ICancelationTokenFactory, IDisposable
@@ -34,14 +36,13 @@ public interface ICancelationTokenFactory
 /// </summary>
 public interface ICancellationTokenWrapper
 {
-    bool IsCancelled();
+    bool IsCancellationRequested { get; }
 
     void Cancel();
+
+    CancellationToken Token { get; }
 }
 
 public class CancellationTokenWrapper : CancellationTokenSource,  ICancellationTokenWrapper
 {
-    public bool IsCancelled() => IsCancellationRequested;
-
-    public new void Cancel() => base.Cancel();
 }
