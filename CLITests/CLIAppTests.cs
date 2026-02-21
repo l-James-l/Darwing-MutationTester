@@ -50,7 +50,7 @@ public class CLIAppTests
         ensureSingleRunQueue.Enqueue(false);
         ensureSingleRunQueue.Enqueue(true);
 
-        _cancelationToken.IsCancelled().Returns(_ => ensureSingleRunQueue.Dequeue());
+        _cancelationToken.IsCancellationRequested.Returns(_ => ensureSingleRunQueue.Dequeue());
     }
 
     [TearDown]
@@ -74,7 +74,7 @@ public class CLIAppTests
     }
 
     [Test]
-    public void GivenLaunchSettingPathAndNouserInput_WhenRun_ThenDoesNotPublish()
+    public void GivenLaunchSettingPathAndNoUserInput_WhenRun_ThenDoesNotPublish()
     {
         // Arrange
         Console.SetIn(new StringReader(Environment.NewLine));

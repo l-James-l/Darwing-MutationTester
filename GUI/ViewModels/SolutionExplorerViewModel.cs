@@ -18,21 +18,24 @@ public class SolutionExplorerViewModel : ViewModelBase
     private readonly IEventAggregator _eventAggregator;
     private readonly ISolutionProvider _solutionProvider;
     private readonly IGitDiffManager _gitManager;
+    private readonly IGeminiApiHandler _geminiApi;
 
     private FileNode? _selectedFileNode = null;
 
     public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator, 
-        ISolutionProvider solutionProvider, IGitDiffManager gitManager)
+        ISolutionProvider solutionProvider, IGitDiffManager gitManager, IGeminiApiHandler geminiApi)
     {
         FileExplorerViewModel = fileExplorerViewModel;
         _eventAggregator = eventAggregator;
         _solutionProvider = solutionProvider;
         _gitManager = gitManager;
+        _geminiApi = geminiApi;
 
         fileExplorerViewModel.SelectedFileChangedCallBack += OnSelectedFileChanged;
+        TryGetUnitTestCommand = new DelegateCommand<MutationViewModel>(TryGetUnitTest);
 
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(_ => OnPropertyChanged(nameof(SelectedLine)), ThreadOption.UIThread, true, 
-            x => SelectedLine is not null && SelectedLine.MutationsOnLine.Any(m => m.ID == x));
+            x => SelectedLine is not null && SelectedLine.MutationsOnLine.Any(m => m.Mutation.ID == x));
         _eventAggregator.GetEvent<GitUpdateEvent>().Subscribe(OnGitUpdateEvent, ThreadOption.UIThread);
     }
 
@@ -137,7 +140,7 @@ public class SolutionExplorerViewModel : ViewModelBase
             {
                 SourceCode = line,
                 LineNumber = index + 1,
-                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport())],
+                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport()).Select(x => new MutationViewModel(x))],
                 IsChecked = file.LinesToMutate.ContainsLine(index)
             })];
 
@@ -200,6 +203,17 @@ public class SolutionExplorerViewModel : ViewModelBase
         _selectedBranch = _gitManager.LastSelectedBranch ?? _defactoFullSolutionTestHeader;
         OnPropertyChanged(nameof(SelectedBranch));
     }
+
+    /// <summary>
+    /// Binding command for the button to generate a suggested test for a failed mutation.
+    /// </summary>
+    public DelegateCommand<MutationViewModel> TryGetUnitTestCommand { get; }
+    private async void TryGetUnitTest(MutationViewModel mutation)
+    {
+        mutation.TestGenerationOngoingVisibility = Visibility.Visible;
+        await _geminiApi.GenerateUnitTest(mutation.Mutation, mutation.MutationTestCreatedCallBack);
+        mutation.TestGenerationOngoingVisibility = Visibility.Collapsed;
+    }
 }
 
 /// <summary>
@@ -211,7 +225,7 @@ public class LineDetails
 
     public int LineNumber { get; set; } = -1;
 
-    public ObservableCollection<DiscoveredMutation> MutationsOnLine { get; set; } = [];
+    public ObservableCollection<MutationViewModel> MutationsOnLine { get; set; } = [];
 
     public bool IsChecked 
     { 

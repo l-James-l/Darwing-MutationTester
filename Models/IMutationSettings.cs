@@ -70,4 +70,10 @@ public interface IMutationSettings
     /// </summary>
     double MutationTestTimeoutScaler { get; set; }
 
+    /// <summary>
+    /// Allows setting of a custom additional prompt to give to Gemini when generating tests to improve the chance
+    /// of useful tests being generated
+    /// </summary>
+    string AiTestGenerationAdditionalInstructions { get; set; }
+
 }

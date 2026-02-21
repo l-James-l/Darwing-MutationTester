@@ -1,4 +1,5 @@
 ﻿using GUI.Converters;
+using GUI.ViewModels.SolutionExplorerElements;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Models;
@@ -10,13 +11,13 @@ namespace GuiTests.Converters;
 
 public class WorstMutationToColourConverterTests
 {
-    private DiscoveredMutation CreateMutation(MutantStatus status)
+    private MutationViewModel CreateMutation(MutantStatus status)
     {
         DiscoveredMutation newMutation = new(new SyntaxAnnotation(), SyntaxFactory.EmptyStatement(), SyntaxFactory.EmptyStatement(), SyntaxFactory.EmptyStatement(), Substitute.For<IEventAggregator>(), 0, 0)
         {
             Status = status
         };
-        return newMutation;
+        return new MutationViewModel(newMutation);
     }
 
     [Test]
@@ -26,9 +27,9 @@ public class WorstMutationToColourConverterTests
         var converter = new WorstMutationToColourConverter();
 
         // Act & Assert
-        Assert.That(converter.Convert(new List<DiscoveredMutation> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Killed) }, null, null, null), Is.EqualTo(Brushes.Green));
-        Assert.That(converter.Convert(new List<DiscoveredMutation> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Available) }, null, null, null), Is.EqualTo(Brushes.Orange));
-        Assert.That(converter.Convert(new List<DiscoveredMutation> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Survived) }, null, null, null), Is.EqualTo(Brushes.Red));
+        Assert.That(converter.Convert(new List<MutationViewModel> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Killed) }, null, null, null), Is.EqualTo(Brushes.Green));
+        Assert.That(converter.Convert(new List<MutationViewModel> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Available) }, null, null, null), Is.EqualTo(Brushes.Orange));
+        Assert.That(converter.Convert(new List<MutationViewModel> { CreateMutation(MutantStatus.Killed), CreateMutation(MutantStatus.Survived) }, null, null, null), Is.EqualTo(Brushes.Red));
     }
     
     [Test]
@@ -36,7 +37,7 @@ public class WorstMutationToColourConverterTests
     {
         // Arrange
         var converter = new WorstMutationToColourConverter();
-        var emptyCollection = new List<DiscoveredMutation>();
+        var emptyCollection = new List<MutationViewModel>();
         
         // Act
         var result = converter.Convert(emptyCollection, null, null, null);

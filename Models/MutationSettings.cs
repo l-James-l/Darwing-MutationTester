@@ -39,5 +39,8 @@ public class MutationSettings : IMutationSettings
 
     /// <inheritdoc/>
     public double MutationTestTimeoutScaler { get; set; } = 1.15;
+
+    /// <inheritdoc/>
+    public string AiTestGenerationAdditionalInstructions { get; set; } = "";
 }
 
