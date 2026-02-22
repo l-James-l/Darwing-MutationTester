@@ -33,11 +33,11 @@ public sealed class FileNode : SolutionTreeNode
             //If the file is checked, check all the lines in the file. If its unchecked, uncheck all lines.
             if (!_supressFileLinesUpdate &&  value)
             {
-                _file.LinesToMutate.Full();
+                File.LinesToMutate.Full();
             }
             else if (!_supressFileLinesUpdate)
             {
-                _file.LinesToMutate.Clear();
+                File.LinesToMutate.Clear();
             }
             // Invoke the callback so that the updated lines are displayed
             _vm.SelectedFile = this;
@@ -72,7 +72,7 @@ public sealed class FileNode : SolutionTreeNode
     {
         _supressFileLinesUpdate = true;
         // When check is null, it means the file should self evaluate whether it is checked based on its lines.
-        IsChecked = check ?? _file.LinesToMutate.Any();
+        IsChecked = check ?? File.LinesToMutate.Any();
         _supressFileLinesUpdate = false;
     }
 
@@ -81,12 +81,16 @@ public sealed class FileNode : SolutionTreeNode
     /// </summary>
     public List<DiscoveredMutation> MutationInFile { get; } = [];
 
-    private readonly SourceCodeFileContainer _file;
+    /// <summary>
+    /// The file container this node represents
+    /// </summary>
+    public SourceCodeFileContainer File { get; }
+    
     private readonly FileExplorerViewModel _vm;
 
     public FileNode(SourceCodeFileContainer file, FileExplorerViewModel vm) : base(file.Path)
     {
-        _file = file;
+        File = file;
         _vm = vm;
         IsChecked = file.LinesToMutate.Any();
     }
