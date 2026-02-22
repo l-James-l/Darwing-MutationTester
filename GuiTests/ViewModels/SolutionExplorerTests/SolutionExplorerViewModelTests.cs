@@ -138,4 +138,54 @@ public class SolutionExplorerViewModelTests
         //Assert
         Assert.That(mutationVm.TestGenerationOngoingVisibility, Is.EqualTo(Visibility.Collapsed));
     }
+
+    [Test]
+    public void GivenFileWithMutatedTreeSelected_WhenShowMutatedTreeTrue_ShowsMutatedFile()
+    {
+        //Arrange
+        SourceCodeFileContainer file = new(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText("public void UnmutatedTree() \n {}"));
+        file.MutatedTree = CSharpSyntaxTree.ParseText("public void MutatedTree() {}");
+        _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), ProjectType.Source).Returns(file);
+
+        _fileExplorerViewModel.SelectedFile = new FileNode(file, _fileExplorerViewModel);
+
+        //Act
+        _solutionExplorer.ShowFullMutatedFile = true;
+
+        //Assert
+        Assert.That(_solutionExplorer.FileDetails.Count, Is.EqualTo(1)); 
+        Assert.That(_solutionExplorer.FileDetails[0].SourceCode, Is.EqualTo("public void MutatedTree() {}"));
+    }
+
+    [Test]
+    public void GivenFileWithNoMutatedTreeSelected_WhenShowMutatedTreeTrue_ShowsNormalFile()
+    {
+        //Arrange
+        SourceCodeFileContainer file = new(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText("public void UnmutatedTree() \n {}"));
+        file.MutatedTree = null;
+        _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), ProjectType.Source).Returns(file);
+
+        _fileExplorerViewModel.SelectedFile = new FileNode(file, _fileExplorerViewModel);
+
+        //Act
+        _solutionExplorer.ShowFullMutatedFile = true;
+
+        //Assert
+        Assert.That(_solutionExplorer.FileDetails.Count, Is.EqualTo(2)); 
+        Assert.That(_solutionExplorer.FileDetails[0].SourceCode, Is.EqualTo("public void UnmutatedTree() "));
+        Assert.That(_solutionExplorer.FileDetails[1].SourceCode, Is.EqualTo(" {}"));
+    }
+
+    [Test]
+    public void GivenNoFileSelected_WhenShowMutatedTreeSelected_ShowsNothing()
+    {
+        //Act
+        _solutionExplorer.ShowFullMutatedFile = true;
+
+        //Assert
+        Assert.That(_solutionExplorer.FileDetails.Count, Is.Zero);
+        Assert.That(_solutionExplorer.SelectedLine, Is.Null);
+        Assert.That(_solutionExplorer.SelectedFileHeader, Is.EqualTo("No File Selected"));
+
+    }
 }
