@@ -54,10 +54,10 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         AssertMutatorRegistration<SubtractToAddMutator>();
         AssertMutatorRegistration<EqualToNotEqualMutator>();
         AssertMutatorRegistration<NotEqualToEqualMutator>();
-        AssertMutatorRegistration<GreaterThanOrEqualToLessThan>();
-        AssertMutatorRegistration<GreaterThanToLessThanOrEqualTo>();
-        AssertMutatorRegistration<LessThanOrEqualToGreaterThan>();
-        AssertMutatorRegistration<LessThanToGreaterThanOrEqualTo>();
+        AssertMutatorRegistration<GreaterThanOrEqualToLessThanMutator>();
+        AssertMutatorRegistration<GreaterThanToLessThanOrEqualToMutator>();
+        AssertMutatorRegistration<LessThanOrEqualToGreaterThanMutator>();
+        AssertMutatorRegistration<LessThanToGreaterThanOrEqualToMutator>();
         AssertMutatorRegistration<IncrementToDecrementMutator>();
         AssertMutatorRegistration<DecrementToIncrementMutator>();
 

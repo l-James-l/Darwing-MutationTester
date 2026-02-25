@@ -7,37 +7,38 @@ using Mutator.MutationImplementations;
 
 namespace MutatorTests.MutationImplementations;
 
-public class SubtractToAddMutatorTests
+public class GreaterThanToLessThanOrEqualToMutatorTests
 {
-    private SubtractToAddMutator _mutator;
+    private GreaterThanToLessThanOrEqualToMutator _mutator;
 
     [SetUp]
     public void SetUp()
     {
-        _mutator = new SubtractToAddMutator();
+        _mutator = new GreaterThanToLessThanOrEqualToMutator();
     }
+
 
     [Test]
     public void AssertParamsCorrect()
     {
-        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Arithmetic));
-        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.SubtractToAdd));
-        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.SubtractExpression));
+        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Conditional));
+        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.GreaterThanToLessThanOrEqual));
+        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.GreaterThanExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(BinaryExpressionSyntax)));
     }
 
     [Test]
-    public void GivenSubtractNode_WhenMutate_ThenGivesAddNodeWithSameLeftAndRight()
+    public void GivenLessThanNode_WhenMutate_ThenGivesGreaterOrEqualNodeWithSameLeftAndRight()
     {
         //Arrange
-        SyntaxNode root = "'a' - 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        SyntaxNode root = "'a' > 'b'".GetNodeOfType<BinaryExpressionSyntax>();
 
         //Act
         (SyntaxNode _, SyntaxAnnotation _, SyntaxNode mutatedNode) = _mutator.Mutate(root);
 
         //Assert
-        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.AddExpression));
-        SyntaxNode expected = "'a' + 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.LessThanOrEqualExpression));
+        SyntaxNode expected = "'a' <= 'b'".GetNodeOfType<BinaryExpressionSyntax>();
         expected.AssertEquivalent(mutatedNode);
     }
 

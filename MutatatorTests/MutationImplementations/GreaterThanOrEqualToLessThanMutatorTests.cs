@@ -7,37 +7,38 @@ using Mutator.MutationImplementations;
 
 namespace MutatorTests.MutationImplementations;
 
-public class SubtractToAddMutatorTests
+public class GreaterThanOrEqualToLessThanMutatorTests
 {
-    private SubtractToAddMutator _mutator;
+    private GreaterThanOrEqualToLessThanMutator _mutator;
 
     [SetUp]
     public void SetUp()
     {
-        _mutator = new SubtractToAddMutator();
+        _mutator = new GreaterThanOrEqualToLessThanMutator();
     }
+
 
     [Test]
     public void AssertParamsCorrect()
     {
-        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Arithmetic));
-        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.SubtractToAdd));
-        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.SubtractExpression));
+        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Conditional));
+        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.GreaterThanOrEqualToLessThan));
+        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.GreaterThanOrEqualExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(BinaryExpressionSyntax)));
     }
 
     [Test]
-    public void GivenSubtractNode_WhenMutate_ThenGivesAddNodeWithSameLeftAndRight()
+    public void GivenGreaterOrEqualNode_WhenMutate_ThenGivesLessThanNodeWithSameLeftAndRight()
     {
         //Arrange
-        SyntaxNode root = "'a' - 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        SyntaxNode root = "'a' >= 'b'".GetNodeOfType<BinaryExpressionSyntax>();
 
         //Act
         (SyntaxNode _, SyntaxAnnotation _, SyntaxNode mutatedNode) = _mutator.Mutate(root);
 
         //Assert
-        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.AddExpression));
-        SyntaxNode expected = "'a' + 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.LessThanExpression));
+        SyntaxNode expected = "'a' < 'b'".GetNodeOfType<BinaryExpressionSyntax>();
         expected.AssertEquivalent(mutatedNode);
     }
 

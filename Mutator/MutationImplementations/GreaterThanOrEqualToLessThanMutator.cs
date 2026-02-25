@@ -5,25 +5,27 @@ using Models.Enums;
 
 namespace Mutator.MutationImplementations;
 
-public class GreaterThanToLessThanOrEqualTo : BaseMutationImplementation
+public class GreaterThanOrEqualToLessThanMutator : BaseMutationImplementation
 {
-    public override SpecificMutation Mutation => SpecificMutation.GreaterThanToLessThanOrEqual;
+    public override SpecificMutation Mutation => SpecificMutation.GreaterThanOrEqualToLessThan;
 
     public override MutationCategory Category => MutationCategory.Conditional;
-    
-    public override SyntaxKind Kind => SyntaxKind.GreaterThanExpression;
-    
+
+    public override SyntaxKind Kind => SyntaxKind.GreaterThanOrEqualExpression;
+
     public override Type RequiredNodeType => typeof(BinaryExpressionSyntax);
-    
+
     protected override SyntaxNode SpecificMutationImplementation(SyntaxNode node)
     {
         if (node is BinaryExpressionSyntax binaryExp)
         {
-            BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.LessThanOrEqualExpression,
+            BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.LessThanExpression,
                         binaryExp.Left,
                         binaryExp.Right);
+
             return newSyntaxNode;
         }
-        throw new MutationException($"Failed to cast syntax node to required type in {nameof(GreaterThanToLessThanOrEqualTo)}");
+
+        throw new MutationException($"Failed to cast syntax node to required type in {nameof(GreaterThanOrEqualToLessThanMutator)}");
     }
 }

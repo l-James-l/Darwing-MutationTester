@@ -7,37 +7,38 @@ using Mutator.MutationImplementations;
 
 namespace MutatorTests.MutationImplementations;
 
-public class SubtractToAddMutatorTests
+public class EqualToNotEqualMutatorTests
 {
-    private SubtractToAddMutator _mutator;
+    private EqualToNotEqualMutator _mutator;
 
     [SetUp]
     public void SetUp()
     {
-        _mutator = new SubtractToAddMutator();
+        _mutator = new EqualToNotEqualMutator();
     }
+
 
     [Test]
     public void AssertParamsCorrect()
     {
-        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Arithmetic));
-        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.SubtractToAdd));
-        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.SubtractExpression));
+        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Logical));
+        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.EqualToNotEqual));
+        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.EqualsExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(BinaryExpressionSyntax)));
     }
 
     [Test]
-    public void GivenSubtractNode_WhenMutate_ThenGivesAddNodeWithSameLeftAndRight()
+    public void GivenEqualsNode_WhenMutate_ThenGivesNotEqualsNodeWithSameLeftAndRight()
     {
         //Arrange
-        SyntaxNode root = "'a' - 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        SyntaxNode root = "'a' == 'b'".GetNodeOfType<BinaryExpressionSyntax>();
 
         //Act
         (SyntaxNode _, SyntaxAnnotation _, SyntaxNode mutatedNode) = _mutator.Mutate(root);
 
         //Assert
-        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.AddExpression));
-        SyntaxNode expected = "'a' + 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.NotEqualsExpression));
+        SyntaxNode expected = "'a' != 'b'".GetNodeOfType<BinaryExpressionSyntax>();
         expected.AssertEquivalent(mutatedNode);
     }
 

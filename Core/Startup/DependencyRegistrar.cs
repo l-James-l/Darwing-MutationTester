@@ -85,10 +85,10 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IMutationImplementation, NotEqualToEqualMutator>();
 
         //conditional
-        Services.AddSingleton<IMutationImplementation, GreaterThanOrEqualToLessThan>();
-        Services.AddSingleton<IMutationImplementation, GreaterThanToLessThanOrEqualTo>();
-        Services.AddSingleton<IMutationImplementation, LessThanOrEqualToGreaterThan>();
-        Services.AddSingleton<IMutationImplementation, LessThanToGreaterThanOrEqualTo>();
+        Services.AddSingleton<IMutationImplementation, GreaterThanOrEqualToLessThanMutator>();
+        Services.AddSingleton<IMutationImplementation, GreaterThanToLessThanOrEqualToMutator>();
+        Services.AddSingleton<IMutationImplementation, LessThanOrEqualToGreaterThanMutator>();
+        Services.AddSingleton<IMutationImplementation, LessThanToGreaterThanOrEqualToMutator>();
     }
 
     private void StartUpProcesses()
