@@ -63,7 +63,7 @@
         </Style>
     </UserControl.Resources>
     
-    <StackPanel Orientation="Vertical" Margin="20" MaxWidth="800" HorizontalAlignment="Left">
+    <StackPanel Orientation="Vertical" Margin="20" HorizontalAlignment="Left">
 
         <!--DefaultGitComparisonBranch-->
         <Grid Margin="0,0,0,25">
@@ -142,7 +142,7 @@
                            Style="{StaticResource SettingSubHeader}"/>
             </StackPanel>
 
-            <Grid Grid.Column="1" Width="100">
+            <Grid Grid.Column="1" Width="80">
                 <TextBox Text="{Binding MutationTestTimeoutScaler, UpdateSourceTrigger=PropertyChanged}" 
                          Style="{StaticResource TextBoxStyle}"/>
                 <TextBlock Text="%" 
@@ -214,8 +214,31 @@
                       Style="{StaticResource SwitchStyle}"
                       IsChecked="{Binding UseAdvancedProjectTypeAnalysis}"/>
         </Grid>
-        
-        
+
+        <!--AiTestGenerationAdditionalInstructions-->
+        <Grid Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,40,0">
+                <TextBlock Text="Additional instructions for AI test generation" 
+                   Style="{StaticResource SettingHeader}"/>
+                <TextBlock Text="This text will be passed to the AI test generation along with the standard prompt. It should be used to specify how the test should be generated. i.e., any specific libraries it should use, or any standards it should follow." 
+                   Style="{StaticResource SettingSubHeader}"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding AiTestGenerationAdditionalInstructions, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource TextBoxStyle}"
+                     Width="500"
+                     Height="Auto"
+                     MaxHeight="100"
+                     VerticalAlignment="Top"
+                     TextWrapping="WrapWithOverflow"
+                     AcceptsReturn="True"/>
+        </Grid>
 
     </StackPanel>
 </UserControl>

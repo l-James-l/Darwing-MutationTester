@@ -1,5 +1,6 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.Exceptions;
@@ -52,7 +53,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
         Services.AddSingleton<IMutationSettings, MutationSettings>();
         Services.AddSingleton<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        Services.AddSingleton<ISolutionBuilder, SolutionBuilder>(); 
+        Services.AddSingleton<ISolutionBuilder, SolutionBuilder>();
         Services.AddSingleton<ICancelationTokenFactory, CancelationTokenFactory>();
         Services.AddSingleton<ISolutionLoader, SolutionLoader>();
         Services.AddSingleton<ISolutionProvider, SolutionProvider>();
@@ -60,10 +61,24 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
         Services.AddSingleton<IStatusTracker, StatusTracker>();
         Services.AddSingleton<IGitDiffManager, GitDiffManager>();
+        Services.AddSingleton<IGeminiChatClientFactory, GeminiChatClientFactory>();
+        Services.AddSingleton<IGeminiApiHandler, GeminiApiHandler>();
 
         RegisterMutators();
 
         RegisterLocalDependencies();
+    }
+
+    public DependencyRegistrar RegisterConfigurations()
+    {
+        IConfiguration config = new ConfigurationBuilder()
+                    .AddJsonFile("appsettings.json", optional: true)
+                    .AddUserSecrets<GeminiApiHandler>() // Give this any class from the Core project so that it can find the sectrets file ID
+                    .Build();
+
+        Services.AddSingleton(config);
+        Services.Configure<GeminiSettings>(config.GetSection("Gemini"));
+        return this;
     }
 
     private void RegisterMutators()

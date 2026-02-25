@@ -2,6 +2,7 @@
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Core.Startup;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.SharedInterfaces;
@@ -43,11 +44,13 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
         AssertBasicRegistartion<IMutationRunInitiator, InitialTestRunner>();
         AssertRegisterManySingleton<MutatedSolutionTester>([typeof(IStartUpProcess), typeof(IMutatedSolutionTester)]);
+        AssertBasicRegistartion<IGitDiffManager, GitDiffManager>();
+        AssertBasicRegistartion<IGeminiChatClientFactory, GeminiChatClientFactory>();
+        AssertBasicRegistartion<IGeminiApiHandler, GeminiApiHandler>();
 
         AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
         AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();
         AssertBasicRegistartion<IStartUpProcess, MutatedProjectBuilder>();
-        AssertBasicRegistartion<IGitDiffManager, GitDiffManager>();
 
         //IMutationImplementation's
         AssertMutatorRegistration<AddToSubtractMutator>();

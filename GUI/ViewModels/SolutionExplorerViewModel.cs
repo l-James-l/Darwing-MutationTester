@@ -18,21 +18,24 @@ public class SolutionExplorerViewModel : ViewModelBase
     private readonly IEventAggregator _eventAggregator;
     private readonly ISolutionProvider _solutionProvider;
     private readonly IGitDiffManager _gitManager;
+    private readonly IGeminiApiHandler _geminiApi;
 
     private FileNode? _selectedFileNode = null;
 
     public SolutionExplorerViewModel(FileExplorerViewModel fileExplorerViewModel, IEventAggregator eventAggregator, 
-        ISolutionProvider solutionProvider, IGitDiffManager gitManager)
+        ISolutionProvider solutionProvider, IGitDiffManager gitManager, IGeminiApiHandler geminiApi)
     {
         FileExplorerViewModel = fileExplorerViewModel;
         _eventAggregator = eventAggregator;
         _solutionProvider = solutionProvider;
         _gitManager = gitManager;
+        _geminiApi = geminiApi;
 
         fileExplorerViewModel.SelectedFileChangedCallBack += OnSelectedFileChanged;
+        TryGetUnitTestCommand = new DelegateCommand<MutationViewModel>(TryGetUnitTest);
 
         _eventAggregator.GetEvent<MutationUpdated>().Subscribe(_ => OnPropertyChanged(nameof(SelectedLine)), ThreadOption.UIThread, true, 
-            x => SelectedLine is not null && SelectedLine.MutationsOnLine.Any(m => m.ID == x));
+            x => SelectedLine is not null && SelectedLine.MutationsOnLine.Any(m => m.Mutation.ID == x));
         _eventAggregator.GetEvent<GitUpdateEvent>().Subscribe(OnGitUpdateEvent, ThreadOption.UIThread);
     }
 
@@ -117,7 +120,41 @@ public class SolutionExplorerViewModel : ViewModelBase
     } 
     private string _selectedBranch = "";
 
+    public bool ShowFullMutatedFile
+    {
+        get;
+        set
+        {
+            if (value != field)
+            {
+                SetProperty(ref field, value);
+                if (_selectedFileNode != null)
+                {
+                    BuildFileDetails(_selectedFileNode);
+                }
+            }
+            
+        }
+    }
+
     private void OnSelectedFileChanged(FileNode selectedFile)
+    {
+        _selectedFileNode = null; 
+        ShowFullMutatedFile = false;
+        if (_solutionProvider.SolutionContainer.FindFile(selectedFile.FullPath, ProjectType.Source) is { } file)
+        {
+            SelectedFileHeader = selectedFile.Name;
+            _selectedFileNode = selectedFile;
+            BuildFileDetails(selectedFile);
+        }
+        else
+        {
+            SelectedFileHeader = _defaultFileDisplayHeader;
+            FileDetails.Clear();
+        }
+    }
+
+    private void BuildFileDetails(FileNode selectedFile)
     {
         //If the same file is selected, try to keep the same line selected. Any expanded mutations will be lost, but that's acceptable.
         int selectedLineNumber = -1;
@@ -126,39 +163,34 @@ public class SolutionExplorerViewModel : ViewModelBase
             selectedLineNumber = SelectedLine.LineNumber;
         }
 
-        SelectedLine = null;
-        FileDetails.Clear();        
-        if (_solutionProvider.SolutionContainer.FindFile(selectedFile.FullPath, ProjectType.Source) is { } file)
+        FileDetails.Clear();
+        IEnumerable<string> lines;
+        if (ShowFullMutatedFile && selectedFile.File.MutatedTree is not null)
         {
-            SelectedFileHeader = selectedFile.Name;
-            _selectedFileNode = selectedFile;
-            IEnumerable<string> lines = file.SyntaxTree.GetText().Lines.Select(x => x.ToString());
-            List<LineDetails> lineDetails = [.. lines.Select((line, index) => new LineDetails
-            {
-                SourceCode = line,
-                LineNumber = index + 1,
-                MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport())],
-                IsChecked = file.LinesToMutate.ContainsLine(index)
-            })];
-
-            FileDetails.AddRange(lineDetails);
-
-            //Set the callback after so that initialization doesn't mess with included lines.
-            foreach (LineDetails line in FileDetails)
-            {
-                line.ToggleLineInclusion = (int lineNo, bool include) => ToggleLineInclusion(lineNo, include, file.LinesToMutate);
-                
-            }
-
-            if (selectedLineNumber > -1)
-            {
-                SelectedLine = FileDetails.FirstOrDefault(x => x.LineNumber == selectedLineNumber);
-            }
+            lines = selectedFile.File.MutatedTree.GetText().Lines.Select(x => x.ToString());
         }
         else
         {
-            SelectedFileHeader = _defaultFileDisplayHeader;
+            lines = selectedFile.File.SyntaxTree.GetText().Lines.Select(x => x.ToString());
         }
+        List<LineDetails> lineDetails = [.. lines.Select((line, index) => new LineDetails
+        {
+            SourceCode = line,
+            LineNumber = index + 1,
+            MutationsOnLine = [.. selectedFile.MutationInFile.Where(x => x.LineSpan.StartLinePosition.Line == index && x.Status.IncludeInReport()).Select(x => new MutationViewModel(x, _geminiApi.IsConfigured))],
+            IsChecked = selectedFile.File.LinesToMutate.ContainsLine(index)
+        })];
+
+        FileDetails.AddRange(lineDetails);
+
+        //Set the callback after so that initialization doesn't mess with included lines.
+        foreach (LineDetails line in FileDetails)
+        {
+            line.ToggleLineInclusion = (int lineNo, bool include) => ToggleLineInclusion(lineNo, include, selectedFile.File.LinesToMutate);
+
+        }
+
+        SelectedLine = selectedLineNumber > -1 ? FileDetails.FirstOrDefault(x => x.LineNumber == selectedLineNumber) : null;
     }
 
     private void ToggleLineInclusion(int lineNo, bool include, FileLineCollection lineCollection)
@@ -200,6 +232,17 @@ public class SolutionExplorerViewModel : ViewModelBase
         _selectedBranch = _gitManager.LastSelectedBranch ?? _defactoFullSolutionTestHeader;
         OnPropertyChanged(nameof(SelectedBranch));
     }
+
+    /// <summary>
+    /// Binding command for the button to generate a suggested test for a failed mutation.
+    /// </summary>
+    public DelegateCommand<MutationViewModel> TryGetUnitTestCommand { get; }
+    private async void TryGetUnitTest(MutationViewModel mutation)
+    {
+        mutation.TestGenerationOngoingVisibility = Visibility.Visible;
+        await _geminiApi.GenerateUnitTest(mutation.Mutation, mutation.MutationTestCreatedCallBack);
+        mutation.TestGenerationOngoingVisibility = Visibility.Collapsed;
+    }
 }
 
 /// <summary>
@@ -211,7 +254,7 @@ public class LineDetails
 
     public int LineNumber { get; set; } = -1;
 
-    public ObservableCollection<DiscoveredMutation> MutationsOnLine { get; set; } = [];
+    public ObservableCollection<MutationViewModel> MutationsOnLine { get; set; } = [];
 
     public bool IsChecked 
     { 

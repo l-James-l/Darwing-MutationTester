@@ -129,4 +129,31 @@ public class GeneralSettingsViewModelTests
         // Assert
         Assert.That(_sut.MutationTestTimeoutScaler, Is.EqualTo(50));
     }
+
+    [Test]
+    public void WhenAiExtraPromptConfigChanged_ThenSettingsUpdated()
+    {
+        //Arrange
+        _settings.AiTestGenerationAdditionalInstructions = "init";
+
+        //Act
+        _sut.AiTestGenerationAdditionalInstructions = "new value";
+
+        //Assert
+        _settings.AiTestGenerationAdditionalInstructions = "new value";
+    }
+
+    [Test]
+    public void GivenAiExtraPromptConfigChanged_WhenRefresh_VmValueUpdated()
+    {
+        //Arrange
+        _sut.AiTestGenerationAdditionalInstructions = "init";
+        _settings.AiTestGenerationAdditionalInstructions = "new value";
+
+        //Act
+        _onRefreshAction.Invoke(DarwingOperation.LoadSolution);
+
+        //Assert
+        _sut.AiTestGenerationAdditionalInstructions = "new value";
+    }
 }

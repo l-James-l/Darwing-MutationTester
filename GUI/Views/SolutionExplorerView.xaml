@@ -82,9 +82,9 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" MinWidth="150"/> <!--File Tree-->
-                <ColumnDefinition Width="2"/> <!--Splitter-->
+                <ColumnDefinition Width="5"/> <!--Splitter-->
                 <ColumnDefinition Width="3*" MinWidth="300"/> <!--File contents-->
-                <ColumnDefinition Width="2"/> <!--Splitter-->
+                <ColumnDefinition Width="5"/> <!--Splitter-->
                 <ColumnDefinition Width="*" MinWidth="150"/> <!--Mutation details-->
             </Grid.ColumnDefinitions>
 
@@ -108,7 +108,23 @@
                           ShowsPreview="True"/>
 
             <!-- File Content Panel -->
-            <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding SelectedFileHeader}" Style="{DynamicResource HeaderStyle}"/>
+            <Grid Grid.Column="2" Grid.Row="0" 
+                  Background="#1f2939">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0" Text="{Binding SelectedFileHeader}" Style="{DynamicResource HeaderStyle}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Toggle mutated/Unmutated view:" HorizontalAlignment="Right"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               Margin="5,0"/>
+                    <CheckBox Style="{StaticResource SwitchStyle}" HorizontalAlignment="Right"
+                              IsChecked="{Binding ShowFullMutatedFile}"/>
+                </StackPanel>
+            </Grid>
             <ContentControl Grid.Column="2" Grid.Row="1" Content="{StaticResource SelectedFileView}"/>
 
 

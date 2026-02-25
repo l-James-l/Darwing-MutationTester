@@ -128,4 +128,17 @@ public class GeneralSettingsViewModel : ViewModelBase
             }
         }
     }
+
+    public string AiTestGenerationAdditionalInstructions
+    {
+        get;
+        set
+        {
+            SetProperty(ref field, value);
+            if (value != _settings.AiTestGenerationAdditionalInstructions)
+            {
+                _settings.AiTestGenerationAdditionalInstructions = value;
+            }
+        }
+    }
 }
