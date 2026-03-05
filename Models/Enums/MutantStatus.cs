@@ -51,7 +51,12 @@ public enum MutantStatus
     /// <summary>
     /// Mutant has been tested and it was killed - failed unit tests.
     /// </summary>
-    Killed
+    Killed,
+
+    /// <summary>
+    /// Mutant was killed by a timeout, i.e., its test process ran out
+    /// </summary>
+    KilledByTimeOut
 }
 
 public static class MutationStatusMethods
@@ -68,7 +73,7 @@ public static class MutationStatusMethods
 
     public static bool IncludeInKilledCount(this MutantStatus mutantStatus)
     {
-        return mutantStatus == MutantStatus.Killed;
+        return mutantStatus is MutantStatus.Killed or MutantStatus.KilledByTimeOut;
     }
 
     public static bool IncludeInSurvivedCount(this MutantStatus mutantStatus)

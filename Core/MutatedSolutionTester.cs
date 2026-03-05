@@ -2,7 +2,6 @@ using Core.IndustrialEstate;
 using Core.Interfaces;
 using Models;
 using Models.Enums;
-using Models.Events;
 using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
@@ -11,34 +10,27 @@ using System.Diagnostics;
 
 namespace Core;
 
-public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
+public class MutatedSolutionTester : IMutatedSolutionTester
 {
-    private readonly IEventAggregator _eventAggregator;
     private readonly IMutationDiscoveryManager _mutationDiscoveryManager;
     private readonly IProcessWrapperFactory _processFactory;
     private readonly IMutationSettings _mutationSettings;
     private readonly IStatusTracker _statusTracker;
-    private InitialTestRunInfo? _initialTestRunInfo;
-    
-    public MutatedSolutionTester(IEventAggregator eventAggregator, IMutationDiscoveryManager mutationDiscoveryManager, IProcessWrapperFactory processFactory, 
-        IMutationSettings mutationSettings, IStatusTracker statusTracker)
+    private readonly ISolutionProvider _solutionProvider;
+
+    public MutatedSolutionTester(IMutationDiscoveryManager mutationDiscoveryManager, IProcessWrapperFactory processFactory, 
+        IMutationSettings mutationSettings, IStatusTracker statusTracker, ISolutionProvider solutionProvider)
     {
-        ArgumentNullException.ThrowIfNull(eventAggregator);
         ArgumentNullException.ThrowIfNull(mutationDiscoveryManager);
         ArgumentNullException.ThrowIfNull(processFactory);
         ArgumentNullException.ThrowIfNull(mutationSettings);
         ArgumentNullException.ThrowIfNull(statusTracker);
 
-        _eventAggregator = eventAggregator;
         _mutationDiscoveryManager = mutationDiscoveryManager;
         _processFactory = processFactory;
         _mutationSettings = mutationSettings;
         _statusTracker = statusTracker;
-    }
-
-    public void StartUp()
-    {
-        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Subscribe(x => _initialTestRunInfo = x, ThreadOption.BackgroundThread);
+        _solutionProvider = solutionProvider;
     }
 
     public void RunTestsOnMutatedSolution()
@@ -48,11 +40,6 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
             return;
         }
 
-        if (_initialTestRunInfo == null)
-        {
-            Log.Error("Initial test run info was never received. Cannot do mutation testing based on coverage or execution time. " +
-                "All test will now be run for each mutation which may result in slower execution.");
-        }
         try
         {
             bool completed = TestAllMutants();
@@ -103,7 +90,7 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build",
+            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore",
             RedirectStandardError = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -111,12 +98,10 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
         };
         IProcessWrapper testRun = _processFactory.Create(startInfo);
 
-        bool processSuccess = StartProcess(testRun);
+        bool processSuccess = testRun.StartAndAwait(_mutationSettings.TestRunTimeout);
 
-        foreach (string output in testRun.Output)
-        {
-            Log.Debug(output);
-        }
+        testRun.Output.ForEach(Log.Debug);
+        testRun.Errors.ForEach(Log.Error);
 
         if (!processSuccess || !testRun.Success)
         {
@@ -129,73 +114,96 @@ public class MutatedSolutionTester : IStartUpProcess, IMutatedSolutionTester
             Log.Information("Preliminary test run successful, starting testing of individual mutants.");
             return true;
         }
-    }
+    }   
 
-    private bool StartProcess(IProcessWrapper testRun)
-    {
-        //If we have initial test run info, use that to determine a timeout, otherwise fall back to the default timeout.
-        bool processSuccess;
-        if (_initialTestRunInfo is not null)
-        {
-            //use the original test run plus a % scaler.
-            processSuccess = testRun.StartAndAwait(_initialTestRunInfo.InitialRunDuration * _mutationSettings.MutationTestTimeoutScaler);
-        }
-        else
-        {
-            processSuccess = testRun.StartAndAwait(_mutationSettings.TestRunTimeout);
-        }
-
-        return processSuccess;
-    }
-
+    // TODO: It would be better to open a single test host and feed it tests, because starting the test host is now the most taxing part of testing each mutant
+    // TODO: Look into running tests on multiple threads
     private bool TestMutant(DiscoveredMutation mutant)
     {
         Log.Information("Testing mutant {mutant} in {file}.", mutant.MutatedNode.ToString(), mutant.OriginalNode.SyntaxTree.FilePath);
 
         mutant.Status = MutantStatus.TestOngoing;
 
-        //TODO add filter for covered test cases
-        ProcessStartInfo startInfo = new()
+        List<TestInfo> testsToRun = GetTestsToRun(mutant);
+        // Have to run the tests on a project by project basis otherwise the testhost gets confused and cant find tests.
+        foreach (IGrouping<IProjectContainer, TestInfo> testInfos in testsToRun.GroupBy(x => x.TestProject))
+        {
+            IProcessWrapper testRun = CreateTestProcess(mutant, testInfos);
+            // Get the total run time of all the tests we need to run, + a scaler percentage + 10 seconds for the test host to start + an additional second per test.
+            TimeSpan totalRunTime = TimeSpan.FromSeconds(
+                testsToRun.Select(x => x.Duration).Sum(x => x.TotalSeconds) * _mutationSettings.MutationTestTimeoutScaler + testsToRun.Count * 2 + 10);
+
+            bool processSuccess = testRun.StartAndAwait(totalRunTime);
+
+            testRun.Output.ForEach(Log.Debug);
+            testRun.Errors.ForEach(Log.Error);
+
+            if (!processSuccess)
+            {
+                mutant.Status = MutantStatus.KilledByTimeOut;
+                Log.Information("Mutation killed by introducing infinite test run.");
+                return true;
+            }
+            if (!testRun.Success)
+            {
+                mutant.Status = MutantStatus.Killed;
+                //TODO - should be able to say which tests failed.
+                Log.Information("Mutation killed by failing test.");
+                return true;
+            }
+            else
+            {
+                mutant.Status = MutantStatus.Survived;
+                Log.Warning("Mutant survived.");
+                return false;
+            }
+        }
+
+        // No tests ran
+        mutant.Status = MutantStatus.NoCoverage;
+        return false;
+    }
+
+    private IProcessWrapper CreateTestProcess(DiscoveredMutation mutant, IEnumerable<TestInfo> testsToRun)
+    {
+        // FullyQualifiedName~Test1|FullyQualifiedName=Test2.
+        // using ~ so that testcases are run
+        // TODO: if this gets really long it could break it...
+        IEnumerable<string> filterParts = testsToRun.Select(t => $"FullyQualifiedName~{t.RelativePath}");
+
+        IProcessWrapper testProcess = _processFactory.Create(new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore",
+            Arguments = $"test --no-build --no-restore " +
+                        $"--filter \"{string.Join("|", filterParts)}\"",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
-            WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath),
+            WorkingDirectory = testsToRun.First().TestProject.DirectoryPath,
             EnvironmentVariables =
             {
                 [Annotations.ActiveMutationIndex] = mutant.ID.Data
             }
-        };
-        IProcessWrapper testRun = _processFactory.Create(startInfo);
+        });
+        Log.Debug($"{testProcess}");
+        return testProcess;
+    }
 
-        //TODO per test basis once coverage based testing is introduced
-        bool processSuccess = StartProcess(testRun);
-
-        foreach (string output in testRun.Output)
+    private List<TestInfo> GetTestsToRun(DiscoveredMutation mutant)
+    {
+        SourceCodeFileContainer? file = _solutionProvider.SolutionContainer.FindFile(mutant.Document);
+        if (file == null)
         {
-            Log.Information(output);
+            Log.Error("Mutant file not found. Setting no coverage.");
+            mutant.Status = MutantStatus.NoCoverage;
+            return [];
         }
-
-        if (!processSuccess)
+        if (!file.LineToTestMapping.TryGetValue(mutant.LineSpan.StartLinePosition.Line+1, out List<TestInfo>? testsToRun) ||
+            testsToRun.Count == 0)
         {
-            mutant.Status = MutantStatus.Killed;
-            Log.Information("Mutation killed by introducing infinite test run.");
-            return true;
+            Log.Information("No coverage for mutant.");
+            mutant.Status = MutantStatus.NoCoverage;
+            return [];
         }
-        if (!testRun.Success)
-        {
-            mutant.Status = MutantStatus.Killed;
-            //TODO - should be able to say which tests failed.
-            Log.Information("Mutation killed by failing test.");
-            return true;
-        }
-        else
-        {
-            mutant.Status = MutantStatus.Survived;
-            Log.Warning("Mutant survived.");
-            return false;
-        }
+        return testsToRun;
     }
 }

@@ -1,42 +1,170 @@
-﻿using Core;
-using Core.IndustrialEstate;
+﻿using NSubstitute;
+using Core;
 using Core.Interfaces;
 using Models;
 using Models.Enums;
-using Models.Events;
-using Models.SharedInterfaces;
-using Mutator;
-using NSubstitute;
 using System.Diagnostics;
+using Models.SharedInterfaces;
+using Core.IndustrialEstate;
+using Mutator;
+using Serilog;
+using Serilog.Sinks.TestCorrelator;
 
 namespace CoreTests;
 
 public class InitialTestRunnerTests
 {
-    private InitialTestRunner _runner; // SUT
-
-    private IEventAggregator _eventAggregator;
     private IMutationSettings _mutationSettings;
+    private IStatusTracker _statusTracker;
     private IProcessWrapperFactory _processWrapperFactory;
     private IMutationDiscoveryManager _mutationDiscoveryManager;
-    private IStatusTracker _statusTracker;
+    private ISolutionProvider _solutionProvider;
+    private ICoverageMapper _coverageMapper;
 
-
-    private InitialTestRunCompleteEvent _initiateTestRunCompleteEvent;
+    private InitialTestRunner _runner;
 
     [SetUp]
     public void SetUp()
     {
-        _eventAggregator = Substitute.For<IEventAggregator>();
         _mutationSettings = Substitute.For<IMutationSettings>();
+        _statusTracker = Substitute.For<IStatusTracker>();
         _processWrapperFactory = Substitute.For<IProcessWrapperFactory>();
         _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
-        _statusTracker = Substitute.For<IStatusTracker>();
+        _solutionProvider = Substitute.For<ISolutionProvider>();
+        _coverageMapper = Substitute.For<ICoverageMapper>();
 
-        _runner = new InitialTestRunner(_eventAggregator, _mutationSettings, _statusTracker, _processWrapperFactory, _mutationDiscoveryManager);
+        _mutationSettings.TestRunTimeout.Returns(30);
 
-        _initiateTestRunCompleteEvent = Substitute.For<InitialTestRunCompleteEvent>();
-        _eventAggregator.GetEvent<InitialTestRunCompleteEvent>().Returns(_initiateTestRunCompleteEvent);
+        _runner = new InitialTestRunner(
+            _mutationSettings,
+            _statusTracker,
+            _processWrapperFactory,
+            _mutationDiscoveryManager,
+            _solutionProvider,
+            _coverageMapper);
+    }
+
+    [Test]
+    public void GivenOperationAlreadyRunning_WhenRunIsCalled_ThenDoesNotProceed()
+    {
+        // Arrange
+        _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(false);
+
+        // Act
+        _runner.Run();
+
+        // Assert
+        _processWrapperFactory.DidNotReceiveWithAnyArgs().Create(Arg.Any<ProcessStartInfo>());
+    }
+
+    [Test]
+    public void GivenAltCoverInstallFails_WhenRunIsCalled_ThenFinishesOperationWithFailure()
+    {
+        // Arrange
+        _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
+
+        IProcessWrapper installProcess = Substitute.For<IProcessWrapper>();
+        installProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        installProcess.Success.Returns(false); // Install failed
+        installProcess.Output.Returns([]);
+        installProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("tool install")))
+                       .Returns(installProcess);
+        Log.Logger = new LoggerConfiguration().WriteTo.TestCorrelator().CreateLogger();
+        TestCorrelator.CreateContext();
+
+        // Act
+        _runner.Run();
+
+        // Assert
+        _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
+        _mutationDiscoveryManager.DidNotReceive().PerformMutationDiscovery();
+        Assert.That(TestCorrelator.GetLogEventsFromCurrentContext().FirstOrDefault(x => x.MessageTemplate.Text == "Unable to install altcover. Testing cannot be done using coverage."), Is.Not.Null);
+    }
+
+    [Test]
+    public void GivenSuccessfulTestRun_WhenRunIsCalled_ThenTriggersMutationDiscovery()
+    {
+        // Arrange
+        _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
+
+        // Mock AltCover Install
+        IProcessWrapper installProcess = Substitute.For<IProcessWrapper>();
+        installProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        installProcess.Success.Returns(true);
+        installProcess.Output.Returns([]);
+        installProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("tool install")))
+                       .Returns(installProcess);
+
+        // Mock Test Project and Process
+        IProjectContainer testProject = Substitute.For<IProjectContainer>();
+        testProject.Name.Returns("TestProj");
+        testProject.OutputDirectory.Returns(Path.GetTempPath());
+        testProject.CsprojFilePath.Returns("test.csproj");
+
+        ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
+        solutionContainer.TestProjects.Returns([testProject]);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
+
+        IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
+        testProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        testProcess.Success.Returns(true);
+        testProcess.Output.Returns([]);
+        testProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.FileName == "altcover" && !i.Arguments.Contains("--collect")))
+                       .Returns(testProcess);
+
+        // Mock Collection and Mapping
+        var collectProcess = Substitute.For<IProcessWrapper>();
+        collectProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        collectProcess.Success.Returns(true);
+        collectProcess.Output.Returns([]);
+        collectProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("--collect")))
+                       .Returns(collectProcess);
+
+        _coverageMapper.MapFullCoverage(Arg.Any<string>()).Returns(true);
+
+        // Act
+        _runner.Run();
+
+        // Assert
+        installProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
+        testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
+        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(10)) == 0));
+        _coverageMapper.Received(1).MapFullCoverage(Path.Combine(testProject.OutputDirectory, "DarwingCoverage.xml"));
+
+        _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, true);
+        _mutationDiscoveryManager.Received(1).PerformMutationDiscovery();
+    }
+
+    [Test]
+    public void GivenExceptionInRunner_WhenRunIsCalled_ThenStatusIsMarkedAsFailed()
+    {
+        // Arrange
+        _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
+        _processWrapperFactory.When(x => x.Create(Arg.Any<ProcessStartInfo>())).Do(x => { throw new Exception("Boom"); });
+
+        // Act
+        _runner.Run();
+
+        // Assert
+        _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
+    }
+
+    [Test]
+    public void GivenNoBackupDirectory_WhenRestoreIsCalled_ThenReturnsFalse()
+    {
+        // Arrange
+        IProjectContainer testProject = Substitute.For<IProjectContainer>();
+        testProject.OutputDirectory.Returns(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+
+        // Act
+        bool result = _runner.Restore(testProject);
+
+        // Assert
+        Assert.That(result, Is.False);
     }
 
     [Test]
@@ -54,61 +182,100 @@ public class InitialTestRunnerTests
 
 
     [Test]
-    public void GivenCanRun_WhenRun_ThenTestRunStarted()
+    public void WhenRun_AndCollectCoverageProcessFailed_ThenMutationDiscoveryNotStarted()
     {
-        //Arrange
+        // Arrange
         _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
 
-        _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
+        // Mock AltCover Install
+        IProcessWrapper installProcess = Substitute.For<IProcessWrapper>();
+        installProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        installProcess.Success.Returns(true);
+        installProcess.Output.Returns([]);
+        installProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("tool install")))
+                       .Returns(installProcess);
+
+        // Mock Test Project and Process
+        IProjectContainer testProject = Substitute.For<IProjectContainer>();
+        testProject.Name.Returns("TestProj");
+        testProject.OutputDirectory.Returns(Path.GetTempPath());
+        testProject.CsprojFilePath.Returns("test.csproj");
+
+        ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
+        solutionContainer.TestProjects.Returns([testProject]);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
+
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
-        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build --no-restore")).Returns(testProcess);
-        testProcess.StartAndAwait(_mutationSettings.TestRunTimeout).Returns(true);
+        testProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
         testProcess.Success.Returns(true);
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
-        testProcess.Duration.Returns(TimeSpan.FromSeconds(30));
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.FileName == "altcover" && !i.Arguments.Contains("--collect")))
+                       .Returns(testProcess);
 
+        // Mock Collection and Mapping
+        var collectProcess = Substitute.For<IProcessWrapper>();
+        collectProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        collectProcess.Success.Returns(false);
+        collectProcess.Output.Returns([]);
+        collectProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("--collect")))
+                       .Returns(collectProcess);
 
-        //Act
+        _coverageMapper.MapFullCoverage(Arg.Any<string>()).Returns(true);
+
+        // Act
         _runner.Run();
 
-        //Assert
-        _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
-            x.FileName == "dotnet" &&
-            x.Arguments == "test solution.sln --no-build --no-restore" &&
-            x.WorkingDirectory == "this\\is\\the\\path\\to" &&
-            x.RedirectStandardError && x.RedirectStandardOutput));
+        // Assert
+        installProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
+        testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
+        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(10)) == 0));
+        _coverageMapper.DidNotReceive().MapFullCoverage(Arg.Any<string>());
 
-        testProcess.Received(1).StartAndAwait(_mutationSettings.TestRunTimeout);
-        _mutationDiscoveryManager.Received(1).PerformMutationDiscovery();
-        _initiateTestRunCompleteEvent.Received(1).Publish(Arg.Is<InitialTestRunInfo>(x => x.WasSuccesful && x.InitialRunDuration.Seconds == 30));
-        _statusTracker.Received(1).FinishOperation(DarwingOperation.TestUnmutatedSolution, true);
+        _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
+        _mutationDiscoveryManager.DidNotReceive().PerformMutationDiscovery();
     }
 
     [Test]
-    public void GivenSuccessfulBuild_WhenPublishEvent_ThenTestRunStarted_AndTestRunFails_ThenResultAvailable()
+    public void WhenStart_AndTestRunFails_ThenProcessMarkedAsFailed_AndMutationDiscoveryNotStarted()
     {
         //Arrange
         _statusTracker.TryStartOperation(DarwingOperation.TestUnmutatedSolution).Returns(true);
-        _mutationSettings.SolutionPath.Returns("this/is/the/path/to/solution.sln");
+
+        // Mock AltCover Install
+        IProcessWrapper installProcess = Substitute.For<IProcessWrapper>();
+        installProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
+        installProcess.Success.Returns(true);
+        installProcess.Output.Returns([]);
+        installProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.Arguments.Contains("tool install")))
+                       .Returns(installProcess);
+
+        // Mock Test Project and Process
+        IProjectContainer testProject = Substitute.For<IProjectContainer>();
+        testProject.Name.Returns("TestProj");
+        testProject.OutputDirectory.Returns(Path.GetTempPath());
+        testProject.CsprojFilePath.Returns("test.csproj");
+
+        ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
+        solutionContainer.TestProjects.Returns([testProject]);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
+
         IProcessWrapper testProcess = Substitute.For<IProcessWrapper>();
-        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(x => x.Arguments == "test solution.sln --no-build --no-restore")).Returns(testProcess);
-        testProcess.StartAndAwait(Arg.Any<double>()).Returns(true);
+        testProcess.StartAndAwait(Arg.Any<TimeSpan>()).Returns(true);
         testProcess.Success.Returns(false);
         testProcess.Output.Returns([]);
         testProcess.Errors.Returns([]);
+        _processWrapperFactory.Create(Arg.Is<ProcessStartInfo>(i => i.FileName == "altcover" && !i.Arguments.Contains("--collect")))
+                       .Returns(testProcess);
 
         //Act
         _runner.Run();
 
         //Assert
-        _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
-            x.FileName == "dotnet" &&
-            x.Arguments == "test solution.sln --no-build --no-restore" &&
-            x.WorkingDirectory == "this\\is\\the\\path\\to" &&
-            x.RedirectStandardError && x.RedirectStandardOutput && !x.UseShellExecute));
-        testProcess.Received(1).StartAndAwait(_mutationSettings.TestRunTimeout);
-        _initiateTestRunCompleteEvent.Received(1).Publish(Arg.Is<InitialTestRunInfo>(x => !x.WasSuccesful));
+        testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
         _mutationDiscoveryManager.DidNotReceiveWithAnyArgs().PerformMutationDiscovery();
         _statusTracker.Received(1).FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
     }

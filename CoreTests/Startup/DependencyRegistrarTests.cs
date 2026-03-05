@@ -43,11 +43,11 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
         AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
         AssertBasicRegistartion<IMutationRunInitiator, InitialTestRunner>();
-        AssertRegisterManySingleton<MutatedSolutionTester>([typeof(IStartUpProcess), typeof(IMutatedSolutionTester)]);
+        AssertBasicRegistartion<IMutatedSolutionTester, MutatedSolutionTester>();
         AssertBasicRegistartion<IGitDiffManager, GitDiffManager>();
         AssertBasicRegistartion<IGeminiChatClientFactory, GeminiChatClientFactory>();
         AssertBasicRegistartion<IGeminiApiHandler, GeminiApiHandler>();
-
+        AssertBasicRegistartion<ICoverageMapper, CoverageMapper>();
         AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
         AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();
         AssertBasicRegistartion<IStartUpProcess, MutatedProjectBuilder>();

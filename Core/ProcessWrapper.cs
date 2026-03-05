@@ -110,10 +110,13 @@ public class ProcessWrapper : Process, IProcessWrapper
             Kill(entireProcessTree: true);
         }
 
-        stopwatch.Stop();
-        Duration = stopwatch.Elapsed;
         
-        return ExitCode == 0;
+        return _processCompleted;
+    }
+
+    public override string ToString()
+    {
+        return $"{StartInfo.FileName} {StartInfo.Arguments}";
     }
 
 }

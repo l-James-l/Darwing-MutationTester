@@ -23,7 +23,7 @@ class WorstMutationToColourConverter : IValueConverter
         {
             return Brushes.Red;
         }
-        else if (mutations.Any(x => !x.Mutation.Status.IncludeInKilledCount()))
+        else if (mutations.Any(x => !x.Mutation.Status.IncludeInKilledCount() && x.Mutation.Status != MutantStatus.IgnoredMultipleOnLine))
         {
             return Brushes.Orange;
         }
