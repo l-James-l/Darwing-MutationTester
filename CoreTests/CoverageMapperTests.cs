@@ -69,6 +69,11 @@ public class CoverageMapperTests
                     <TrackedMethodRef uid=""42"" vc=""1"" />
                   </TrackedMethodRefs>
                 </SequencePoint>
+                <SequencePoint vc=""1"" sl=""20"">
+                  <TrackedMethodRefs>
+                    <TrackedMethodRef uid=""42"" vc=""1"" />
+                  </TrackedMethodRefs>
+                </SequencePoint>
               </SequencePoints>
             </Method>
           </Methods>
@@ -96,10 +101,59 @@ public class CoverageMapperTests
         {
             Assert.That(result, Is.True);
             Assert.That(sourceFile.LineToTestMapping.ContainsKey(10), Is.True);
+            Assert.That(sourceFile.LineToTestMapping.ContainsKey(20), Is.True);
 
             TestInfo mappedTest = sourceFile.LineToTestMapping[10].First();
             Assert.That(mappedTest.RelativePath, Is.EqualTo("Project.Tests.Unit.MyTest"));
             Assert.That(mappedTest.Duration.TotalSeconds, Is.EqualTo(2));
+
+            TestInfo mappedTest2 = sourceFile.LineToTestMapping[20].First();
+            Assert.That(mappedTest2.RelativePath, Is.EqualTo("Project.Tests.Unit.MyTest"));
+            Assert.That(mappedTest2.Duration.TotalSeconds, Is.EqualTo(2));
+        });
+    }
+
+    [Test]
+    public void GivenValidAltCoverReport_ButFormattedInSingleLine_WhenMapFullCoverageIsCalled_ThenLinesAreMappedToTests()
+    {
+        // Arrange
+        IProjectContainer testProject = Substitute.For<IProjectContainer>();
+        testProject.Name.Returns("ProjectTests");
+
+        IProjectContainer sourceProject = Substitute.For<IProjectContainer>();
+        sourceProject.Name.Returns("ProjectCore");
+
+        SourceCodeFileCollection fileCollection = new();
+        fileCollection.AddDocument(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText("").WithFilePath("C:\\Code\\Logic.cs"));
+        sourceProject.FileCollection.Returns(fileCollection);
+        var sourceFile = fileCollection.First();
+
+        ISolutionContainer solutionContainer = Substitute.For<ISolutionContainer>();
+        solutionContainer.TestProjects.Returns([testProject]);
+        solutionContainer.SolutionProjects.Returns([sourceProject]);
+        _solutionProvider.SolutionContainer.Returns(solutionContainer);
+
+        // chceks that we dont rely on any specific wihtespcaing
+        string xml = @"<CoverageSession><Modules><Module><ModuleName>ProjectCore</ModuleName><Files><File uid=""1"" fullPath=""C:\Code\Logic.cs"" /></Files><Classes><Class><Methods><Method><FileRef uid=""1"" /><SequencePoints><SequencePoint vc=""1"" sl=""10""><TrackedMethodRefs><TrackedMethodRef uid=""42"" vc=""1"" /></TrackedMethodRefs></SequencePoint><SequencePoint vc=""1"" sl=""20""><TrackedMethodRefs><TrackedMethodRef uid=""42"" vc=""1"" /></TrackedMethodRefs></SequencePoint></SequencePoints></Method></Methods></Class></Classes></Module><Module><ModuleName>ProjectTests</ModuleName><TrackedMethods><TrackedMethod uid=""42"" name=""System.Void Project.Tests.Unit::MyTest()"" entry=""10000000"" exit=""30000000"" /></TrackedMethods></Module></Modules></CoverageSession>";
+        File.WriteAllText(_tempXmlPath, xml);
+
+        // Act
+        bool result = _coverageMapper.MapFullCoverage(_tempXmlPath);
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.True);
+            Assert.That(sourceFile.LineToTestMapping.ContainsKey(10), Is.True);
+            Assert.That(sourceFile.LineToTestMapping.ContainsKey(20), Is.True);
+
+            TestInfo mappedTest = sourceFile.LineToTestMapping[10].First();
+            Assert.That(mappedTest.RelativePath, Is.EqualTo("Project.Tests.Unit.MyTest"));
+            Assert.That(mappedTest.Duration.TotalSeconds, Is.EqualTo(2));
+
+            TestInfo mappedTest2 = sourceFile.LineToTestMapping[20].First();
+            Assert.That(mappedTest2.RelativePath, Is.EqualTo("Project.Tests.Unit.MyTest"));
+            Assert.That(mappedTest2.Duration.TotalSeconds, Is.EqualTo(2));
         });
     }
 
