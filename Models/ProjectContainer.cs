@@ -50,26 +50,37 @@ public class ProjectContainer : IProjectContainer
 
         //TODO: maybe throwing here isnt the most robust solution.
         DllFilePath = project.OutputFilePath ?? throw new Exception($"Could not establish the output file path for {Name}");
+        OutputDirectory = Path.GetDirectoryName(DllFilePath) ?? throw new Exception($"Could not establish the output directory path for {Name}"); ;
     }
 
+    /// <inheritdoc/>
     public ProjectId ID => _project.Id;
 
+    /// <inheritdoc/>
     public string CsprojFilePath { get; }
 
+    /// <inheritdoc/>
     public string DirectoryPath { get; }
 
+    /// <inheritdoc/>
     public string Name => _project.Name;
 
-    public string AssemblyName => _project.AssemblyName;
-
+    /// <inheritdoc/>
     public string DllFilePath { get; }
 
+    /// <inheritdoc/>
     public SourceCodeFileCollection FileCollection { get; } = new();
 
+    /// <inheritdoc/>
     public ProjectType ProjectType { get; set; }
 
+    /// <inheritdoc/>
+    public string OutputDirectory { get; }
+
+    /// <inheritdoc/>
     public Compilation? GetCompilation() => _project.GetCompilationAsync().GetAwaiter().GetResult();
 
+    /// <inheritdoc/>
     public void UpdateFromMutatedProject(Project proj)
     {
         if (proj.Id == _project.Id)

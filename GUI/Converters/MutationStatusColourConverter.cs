@@ -17,6 +17,7 @@ class MutationStatusColourConverter : IValueConverter
         return status switch
         {
             MutantStatus.Killed => Brushes.Green,
+            MutantStatus.KilledByTimeOut => Brushes.Green,
             MutantStatus.Survived => Brushes.Red,
             MutantStatus.NoCoverage => Brushes.Red,
             MutantStatus.Available => Brushes.Orange,

@@ -63,6 +63,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IGitDiffManager, GitDiffManager>();
         Services.AddSingleton<IGeminiChatClientFactory, GeminiChatClientFactory>();
         Services.AddSingleton<IGeminiApiHandler, GeminiApiHandler>();
+        Services.AddSingleton<ICoverageMapper, CoverageMapper>();
 
         RegisterMutators();
 
