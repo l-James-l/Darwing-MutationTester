@@ -34,6 +34,20 @@ public class MutationStateStringConverterTests
     }
 
     [Test]
+    public void GivenKilledByTimeoutStatus_WhenConvertIsCalled_ThenKilledByTimeoutIsReturned()
+    {
+        // Arrange
+        var converter = new MutationStateStringConverter();
+        var status = MutantStatus.KilledByTimeOut;
+
+        // Act
+        var result = converter.Convert(status, null, null, null);
+        
+        // Assert
+        Assert.That(result, Is.EqualTo("Killed by test timeout"));
+    }
+
+    [Test]
     public void GivenSurvivedStatus_WhenConvertIsCalled_ThenSurvivedIsReturned()
     {
         // Arrange
@@ -78,7 +92,7 @@ public class MutationStateStringConverterTests
     [Test]
     public void GivenOtherStatuses_WhenConvertIsCalled_ThenAwaitingTestIsReturned()
     {
-        foreach (var status in Enum.GetValues<MutantStatus>().Except([MutantStatus.Killed, MutantStatus.Survived, MutantStatus.NoCoverage, MutantStatus.IgnoredMultipleOnLine]))
+        foreach (var status in Enum.GetValues<MutantStatus>().Except([MutantStatus.Killed, MutantStatus.Survived, MutantStatus.NoCoverage, MutantStatus.IgnoredMultipleOnLine, MutantStatus.KilledByTimeOut]))
         {
             // Arrange
             var converter = new MutationStateStringConverter();

@@ -130,7 +130,7 @@ public class InitialTestRunner : IMutationRunInitiator
         }
 
         Log.Information("Testing complete, trying to compile coverage");
-        Thread.Sleep(2000);
+
         bool success = ExtractCoverageInfo(testProject, reportPath);
 
         if (!Restore(testProject))

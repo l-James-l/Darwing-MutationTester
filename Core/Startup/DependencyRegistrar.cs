@@ -87,7 +87,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IMutationDiscoveryManager, MutationDiscoveryManager>(); 
         Services.AddSingleton<IMutationImplementationProvider, MutationImplementationProvider>();
         Services.AddSingleton<IStartUpProcess, MutatedProjectBuilder>();
-        Services.RegisterManySingleton<MutatedSolutionTester>();
+        Services.AddSingleton<IMutatedSolutionTester, MutatedSolutionTester>();
 
         //Specific implementations:
         //Arithmetic:
