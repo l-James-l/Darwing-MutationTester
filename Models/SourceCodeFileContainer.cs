@@ -32,6 +32,12 @@ public class SourceCodeFileContainer
     /// </summary>
     public FileLineCollection LinesToMutate { get; }
 
+    /// <summary>
+    /// A mapping of line number to test names that cover each line.
+    /// 1-indexed
+    /// </summary>
+    public Dictionary<int, List<TestInfo>> LineToTestMapping { get; }
+
     public SourceCodeFileContainer(DocumentId documentId, SyntaxTree tree)
     {
         ArgumentNullException.ThrowIfNull(tree.FilePath);
@@ -40,5 +46,6 @@ public class SourceCodeFileContainer
         DocumentId = documentId;
         Path = tree.FilePath;
         LinesToMutate = new FileLineCollection(tree);
+        LineToTestMapping = new Dictionary<int, List<TestInfo>>();
     }
 }

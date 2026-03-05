@@ -63,6 +63,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IGitDiffManager, GitDiffManager>();
         Services.AddSingleton<IGeminiChatClientFactory, GeminiChatClientFactory>();
         Services.AddSingleton<IGeminiApiHandler, GeminiApiHandler>();
+        Services.AddSingleton<ICoverageMapper, CoverageMapper>();
 
         RegisterMutators();
 
@@ -86,7 +87,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IMutationDiscoveryManager, MutationDiscoveryManager>(); 
         Services.AddSingleton<IMutationImplementationProvider, MutationImplementationProvider>();
         Services.AddSingleton<IStartUpProcess, MutatedProjectBuilder>();
-        Services.RegisterManySingleton<MutatedSolutionTester>();
+        Services.AddSingleton<IMutatedSolutionTester, MutatedSolutionTester>();
 
         //Specific implementations:
         //Arithmetic:

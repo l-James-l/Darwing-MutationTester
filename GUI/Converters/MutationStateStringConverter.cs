@@ -20,6 +20,7 @@ class MutationStateStringConverter : IValueConverter
         {
             MutantStatus.Survived => nameof(MutantStatus.Survived),
             MutantStatus.Killed => nameof(MutantStatus.Killed),
+            MutantStatus.KilledByTimeOut => "Killed by test timeout",
             MutantStatus.NoCoverage => "Survived, No Coverage",
             MutantStatus.IgnoredMultipleOnLine => "Not Tested, Multiple Mutants on Line",
             _ => "Awaiting Test"
