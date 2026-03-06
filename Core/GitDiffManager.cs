@@ -1,3 +1,4 @@
+using Core.IndustrialEstate;
 using Core.Interfaces;
 using LibGit2Sharp;
 using Microsoft.CodeAnalysis;
@@ -18,10 +19,11 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
     private readonly ISolutionProvider _solutionProvider;
     private readonly IMutationSettings _settings;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IRepositoryFactory _repositoryFactory;
+    private IRepository? _repo = null;
 
-    private Repository? _repo = null;
-
-    public GitDiffManager(ISolutionProvider solutionProvider, IMutationSettings settings, IEventAggregator eventAggregator)
+    public GitDiffManager(ISolutionProvider solutionProvider, IMutationSettings settings, IEventAggregator eventAggregator,
+        IRepositoryFactory repositoryFactory)
     {
         ArgumentNullException.ThrowIfNull(solutionProvider);
         ArgumentNullException.ThrowIfNull(settings);
@@ -29,6 +31,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
         _solutionProvider = solutionProvider;
         _settings = settings;
         _eventAggregator = eventAggregator;
+        _repositoryFactory = repositoryFactory;
     }
 
     public List<string> Branches => [.._repo?.Branches.Select(x => x.FriendlyName) ?? []];
@@ -49,7 +52,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
 
         try
         {
-            _repo = new Repository(wouldBeGitPath);
+            _repo = _repositoryFactory.Get(wouldBeGitPath);
             Log.Information("Git repository loaded successfully. Branches found: {branches}", Branches);
         }
         catch (Exception ex)
@@ -110,7 +113,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to get git diff. {ex}");
+            Log.Error(ex, "Failed to get git diff.");
             return null;
         }
     }
