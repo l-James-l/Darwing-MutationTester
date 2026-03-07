@@ -7,6 +7,7 @@ using Models.Exceptions;
 using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
+using System.IO.Abstractions;
 
 namespace Core.Startup;
 
@@ -48,6 +49,7 @@ public abstract class DependencyRegistrar : IDisposable
 
     private void RegisterDependencies()
     {
+        Services.AddSingleton<IFileSystem, FileSystem>();
         Services.AddSingleton<IEventAggregator, EventAggregator>();
         Services.AddSingleton<EstablishLoggerConfiguration>();
         Services.AddSingleton<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
@@ -61,6 +63,7 @@ public abstract class DependencyRegistrar : IDisposable
         Services.AddSingleton<IProcessWrapperFactory, ProcessWrapperFactory>();
         Services.AddSingleton<IStatusTracker, StatusTracker>();
         Services.AddSingleton<IGitDiffManager, GitDiffManager>();
+        Services.AddSingleton<IRepositoryFactory, RepositoryFactory>();
         Services.AddSingleton<IGeminiChatClientFactory, GeminiChatClientFactory>();
         Services.AddSingleton<IGeminiApiHandler, GeminiApiHandler>();
         Services.AddSingleton<ICoverageMapper, CoverageMapper>();

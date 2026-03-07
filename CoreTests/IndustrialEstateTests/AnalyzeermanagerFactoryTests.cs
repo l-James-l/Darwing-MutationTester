@@ -2,7 +2,7 @@
 
 namespace CoreTests.IndustrialEstateTests;
 
-public class AnalyzeerManagerFactoryTests
+public class AnalyzerManagerFactoryTests
 {
     [Test]
     public void GivenNullPath_WhenCreateAnalyzerManager_ThenThrowsArgumentNullException()

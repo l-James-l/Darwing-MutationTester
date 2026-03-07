@@ -32,17 +32,17 @@ public class GuiDependencyRegistrar : DependencyRegistrar
         Services.AddSingleton<MainWindowViewModel>();
 
         //Dashboard
-        Services.AddSingleton<DashBoardViewModel>();
+        Services.AddSingleton<IDashBoardViewModel, DashBoardViewModel>();
         Services.AddSingleton<StatusBarViewModel>();
         Services.AddSingleton<MutationScoreByProjectViewModel>();
         Services.AddSingleton<SummaryCountsViewModel>();
 
         //Solution Explorer 
-        Services.AddSingleton<SolutionExplorerViewModel>();
+        Services.AddSingleton<ISolutionExplorerViewModel, SolutionExplorerViewModel>();
         Services.AddSingleton<FileExplorerViewModel>();
         
         //Settings
-        Services.AddSingleton<SettingsViewModel>();
+        Services.AddSingleton<ISettingsViewModel, SettingsViewModel>();
         Services.AddSingleton<ProjectTypeCollectionSettings>();
         Services.AddSingleton<GeneralSettingsViewModel>();
         Services.AddSingleton<DisabledMutationTypesViewModel>();

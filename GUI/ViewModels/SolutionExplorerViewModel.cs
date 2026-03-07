@@ -10,7 +10,12 @@ using System.Windows;
 
 namespace GUI.ViewModels;
 
-public class SolutionExplorerViewModel : ViewModelBase
+/// <summary>
+/// Interface to the <see cref="SolutionExplorerViewModel"/> to allow testing
+/// </summary>
+public interface ISolutionExplorerViewModel { }
+
+public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewModel
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
     private const string _defactoFullSolutionTestHeader = "Test full solution";

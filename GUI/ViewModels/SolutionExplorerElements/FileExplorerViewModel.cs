@@ -7,6 +7,7 @@ using Mutator;
 using Serilog;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Abstractions;
 
 namespace GUI.ViewModels.SolutionExplorerElements;
 
@@ -18,13 +19,15 @@ public class FileExplorerViewModel : ViewModelBase
     private readonly ISolutionProvider _solutionProvider;
     private readonly IEventAggregator _eventAggregator;
     private readonly IMutationDiscoveryManager _mutationDiscoveryManager;
+    private readonly IFileSystem _fileSystem;
 
     public FileExplorerViewModel(ISolutionProvider solutionProvider, IEventAggregator eventAggregator,
-        IMutationDiscoveryManager mutationDiscoveryManager)
+        IMutationDiscoveryManager mutationDiscoveryManager, IFileSystem fileSystem)
     {
         _solutionProvider = solutionProvider;
         _eventAggregator = eventAggregator;
         _mutationDiscoveryManager = mutationDiscoveryManager;
+        _fileSystem = fileSystem;
 
         _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Subscribe(_ => RefreshSolutionTree(),
             ThreadOption.UIThread, true, x => x == DarwingOperation.LoadSolution);
@@ -134,7 +137,7 @@ public class FileExplorerViewModel : ViewModelBase
     private void RefreshSolutionTree()
     {
         SolutionTree.Clear();
-        if (!_solutionProvider.IsAvailable || _solutionProvider.SolutionContainer.Solution.FilePath is null)
+        if (!_solutionProvider.IsAvailable)
         {
             return;
         }
@@ -146,7 +149,7 @@ public class FileExplorerViewModel : ViewModelBase
 
     private void BuildSolutionTree(FolderNode parentFolder)
     {
-        foreach (string filePath in Directory.GetFiles(parentFolder.FullPath, "*.cs", SearchOption.TopDirectoryOnly))
+        foreach (string filePath in _fileSystem.Directory.GetFiles(parentFolder.FullPath, "*.cs", SearchOption.TopDirectoryOnly))
         {
             string fileName = Path.GetFileName(filePath);
             if (fileName.EndsWith(".xaml.cs") || fileName.EndsWith(".g.cs") || fileName.EndsWith(".g.i.cs"))
@@ -169,7 +172,7 @@ public class FileExplorerViewModel : ViewModelBase
             parentFolder.ContainsCodeFiles = true;
         }
 
-        foreach (string dir in Directory.GetDirectories(parentFolder.FullPath, "*", SearchOption.TopDirectoryOnly))
+        foreach (string dir in _fileSystem.Directory.GetDirectories(parentFolder.FullPath, "*", SearchOption.TopDirectoryOnly))
         {
             string name = Path.GetFileName(dir);
             if (name.EndsWith(".git") || name.EndsWith("bin") || name.EndsWith("obj") || name.StartsWith('.'))
@@ -178,7 +181,7 @@ public class FileExplorerViewModel : ViewModelBase
             }
 
             string wouldBeProjFile = Path.Combine(dir, $"{name}.csproj");
-            if (File.Exists(wouldBeProjFile))
+            if (_fileSystem.File.Exists(wouldBeProjFile))
             {
                 if (!_solutionProvider.SolutionContainer.SolutionProjects.Any(x => x.CsprojFilePath == wouldBeProjFile))
                 {
