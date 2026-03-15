@@ -90,9 +90,8 @@ public class MutatedSolutionTester : IMutatedSolutionTester
         ProcessStartInfo startInfo = new()
         {
             FileName = "dotnet",
-            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore",
+            Arguments = $"test {Path.GetFileName(_mutationSettings.SolutionPath)} --no-build --no-restore -- --stop-on-failure",
             RedirectStandardError = true,
-            UseShellExecute = false,
             RedirectStandardOutput = true,
             WorkingDirectory = Path.GetDirectoryName(_mutationSettings.SolutionPath),
         };
@@ -129,9 +128,8 @@ public class MutatedSolutionTester : IMutatedSolutionTester
         foreach (IGrouping<IProjectContainer, TestInfo> testInfos in testsToRun.GroupBy(x => x.TestProject))
         {
             IProcessWrapper testRun = CreateTestProcess(mutant, testInfos);
-            // Get the total run time of all the tests we need to run, + a scaler percentage + 10 seconds for the test host to start + an additional second per test.
-            TimeSpan totalRunTime = TimeSpan.FromSeconds(
-                testsToRun.Select(x => x.Duration).Sum(x => x.TotalSeconds) * _mutationSettings.MutationTestTimeoutScaler + testsToRun.Count * 2 + 10);
+            // Add a generous 10 seconds to the timeout to allow the testhost to start. This should only take 2-4 seconds.
+            TimeSpan totalRunTime = GetRunTime(testsToRun) + TimeSpan.FromSeconds(10);
 
             bool processSuccess = testRun.StartAndAwait(totalRunTime);
 
@@ -164,18 +162,25 @@ public class MutatedSolutionTester : IMutatedSolutionTester
         return false;
     }
 
+    private TimeSpan GetRunTime(List<TestInfo> testsToRun)
+    {
+        // Get the total run time of all the tests we need to run + a scaler percentage + an additional second per test.
+        return TimeSpan.FromSeconds(testsToRun.Select(x => x.Duration).Sum(x => x.TotalSeconds) * _mutationSettings.MutationTestTimeoutScaler + testsToRun.Count);
+    }
+
     private IProcessWrapper CreateTestProcess(DiscoveredMutation mutant, IEnumerable<TestInfo> testsToRun)
     {
         // FullyQualifiedName~Test1|FullyQualifiedName=Test2.
         // using ~ so that testcases are run
-        // TODO: if this gets really long it could break it...
+        // TODO: if this gets really long it could break it, but should be exceedingly rare that many tests hit a single line
         IEnumerable<string> filterParts = testsToRun.Select(t => $"FullyQualifiedName~{t.RelativePath}");
 
         IProcessWrapper testProcess = _processFactory.Create(new()
         {
             FileName = "dotnet",
             Arguments = $"test --no-build --no-restore " +
-                        $"--filter \"{string.Join("|", filterParts)}\"",
+                        $"--filter \"{string.Join("|", filterParts)}\" "+
+                        $"-- --stop-on-failure  -- RunConfiguration.TestSessionTimeout={(int)GetRunTime([.. testsToRun]).TotalMilliseconds}",
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             WorkingDirectory = testsToRun.First().TestProject.DirectoryPath,
