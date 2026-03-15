@@ -102,12 +102,12 @@ public class InitialTestRunner : IMutationRunInitiator
         string altCoverArgs =
             $"--inplace --save " + // override the binaries in place, while saving the originals elsewhere.
             $"--linecover --all " + // Track line-to-test coverage, and track all hits rather than one and done
-            $"-c \"[Test]\" -c \"[Fact]\" -c \"[Theory]\" -c \"[TestMethod]\" " + //Attributes that define a a test so we know what test ran each line
+            $"-c \"[Test]\" -c \"[Fact]\" -c \"[Theory]\" -c \"[TestMethod]\" " + //Attributes that define a test so we know what test ran each line
             $"--inputDirectory \"{testProject.OutputDirectory}\" " + // The bin folder of the test project
             $"--outputDirectory \"{_originalBinariesSaveFolder}\" " + // The folder to save the original binaries in
             $"--report \"DarwingCoverage.xml\" " + // Where to save the report
             $"-- " + // Embeds the test command
-            $"dotnet test \"{testProject.CsprojFilePath}\" --no-build --no-restore";
+            $"dotnet test \"{testProject.CsprojFilePath}\" --no-build --no-restore -- --stop-on-failure";
 
         IProcessWrapper testingProcess = _processFactory.Create(new ProcessStartInfo
         {
@@ -209,7 +209,7 @@ public class InitialTestRunner : IMutationRunInitiator
         IProcessWrapper collectProcess = _processFactory.Create(new ProcessStartInfo
         {
             FileName = "altcover",
-            Arguments = $"runner --collect --recorderDirectory \"{testProject.OutputDirectory}\" ",
+            Arguments = $"runner --collect --recorderDirectory \"{testProject.OutputDirectory}\"",
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             WorkingDirectory = testProject.OutputDirectory
