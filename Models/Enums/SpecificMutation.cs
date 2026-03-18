@@ -36,4 +36,16 @@ public enum SpecificMutation
 
     [MutationDescription("Replace a less than with a greater than or equal to. < -> >=")]
     LessThanToGreaterThanOrEqualTo,
+    
+    [MutationDescription("Replace an AND comparison with an OR comparison. && => ||")]
+    AndToOr,
+    
+    [MutationDescription("Replace an OR comparison with an AND comparison. || => &&")]
+    OrToAnd,
+    
+    [MutationDescription("Replace a multiplication operation with a divide operation. * => /")]
+    MultiplyToDivide,
+    
+    [MutationDescription("Replace a divide operation with a multiplication operation. / => *")]
+    DivideToMultiply,
 }

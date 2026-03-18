@@ -1,4 +1,4 @@
-﻿using Mutator.MutationImplementations;
+﻿using Mutator.MutationImplementations.Arithmetic;
 
 namespace MutatorTests.MutationImplementations;
 
