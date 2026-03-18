@@ -1,44 +1,43 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 using Mutator;
-using Mutator.MutationImplementations;
+using Mutator.MutationImplementations.Logical;
 
-namespace MutatorTests.MutationImplementations;
+namespace MutatorTests.MutationImplementations.Logical;
 
-public class EqualToNotEqualMutatorTests
+public class AndToOrMutatorTests
 {
-    private EqualToNotEqualMutator _mutator;
+    private AndToOrMutator _mutator;
 
     [SetUp]
     public void SetUp()
     {
-        _mutator = new EqualToNotEqualMutator();
+        _mutator = new AndToOrMutator();
     }
-
 
     [Test]
     public void AssertParamsCorrect()
     {
         Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Logical));
-        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.EqualToNotEqual));
-        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.EqualsExpression));
+        Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.AndToOr));
+        Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.LogicalAndExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(BinaryExpressionSyntax)));
     }
 
     [Test]
-    public void GivenEqualsNode_WhenMutate_ThenGivesNotEqualsNodeWithSameLeftAndRight()
+    public void GivenAndNode_WhenMutate_ThenGivesOrNodeWithSameLeftAndRight()
     {
         //Arrange
-        SyntaxNode root = "'a' == 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        SyntaxNode root = "'a' && 'b'".GetNodeOfType<BinaryExpressionSyntax>();
 
         //Act
         (SyntaxNode _, SyntaxAnnotation _, SyntaxNode mutatedNode) = _mutator.Mutate(root);
 
         //Assert
-        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.NotEqualsExpression));
-        SyntaxNode expected = "'a' != 'b'".GetNodeOfType<BinaryExpressionSyntax>();
+        Assert.That(mutatedNode.Kind, Is.EqualTo(SyntaxKind.LogicalOrExpression));
+        SyntaxNode expected = "'a' || 'b'".GetNodeOfType<BinaryExpressionSyntax>();
         expected.AssertEquivalent(mutatedNode);
     }
 

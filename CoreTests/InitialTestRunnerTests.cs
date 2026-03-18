@@ -79,6 +79,8 @@ public class InitialTestRunnerTests
         // Assert
         _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, false);
         _mutationDiscoveryManager.DidNotReceive().PerformMutationDiscovery();
+        _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
+            x.FileName == "dotnet" && x.Arguments == "tool install -g altcover.global"));
         Assert.That(TestCorrelator.GetLogEventsFromCurrentContext().FirstOrDefault(x => x.MessageTemplate.Text == "Unable to install altcover. Testing cannot be done using coverage."), Is.Not.Null);
     }
 
@@ -134,7 +136,25 @@ public class InitialTestRunnerTests
         testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
         collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(10)) == 0));
         _coverageMapper.Received(1).MapFullCoverage(Path.Combine(testProject.OutputDirectory, "DarwingCoverage.xml"));
-
+        _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
+            x.FileName == "altcover" &&
+            !x.Arguments.StartsWith("runner") &&
+            x.Arguments.Contains("--inplace") &&
+            x.Arguments.Contains("--save") &&
+            x.Arguments.Contains("--linecover") &&
+            x.Arguments.Contains("--all") &&
+            x.Arguments.Contains("-c \"[Test]\"") &&
+            x.Arguments.Contains("-c \"[Fact]\"") &&
+            x.Arguments.Contains("-c \"[Theory]\"") &&
+            x.Arguments.Contains("-c \"[TestMethod]\"") &&
+            x.Arguments.Contains($"--inputDirectory \"{testProject.OutputDirectory}\"") &&
+            x.Arguments.Contains("--outputDirectory \"DarwingOriginalSavedBinaries\"") &&
+            x.Arguments.Contains("--report \"DarwingCoverage.xml\"") &&
+            x.Arguments.EndsWith($"-- dotnet test \"{testProject.CsprojFilePath}\" --no-build --no-restore -- --stop-on-failure")
+            ));
+        _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
+            x.FileName == "altcover" &&
+            x.Arguments == $"runner --collect --recorderDirectory \"{testProject.OutputDirectory}\""));
         _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, true);
         _mutationDiscoveryManager.Received(1).PerformMutationDiscovery();
     }

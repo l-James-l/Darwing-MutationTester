@@ -3,30 +3,31 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 
-namespace Mutator.MutationImplementations;
+namespace Mutator.MutationImplementations.Arithmetic;
 
-public class SubtractToAddMutator : BaseMutationImplementation
+public class AddToSubtractMutator : BaseMutationImplementation
 {
-    public override SpecificMutation Mutation => SpecificMutation.SubtractToAdd;
+    public override SpecificMutation Mutation => SpecificMutation.AddToSubtract;
 
     public override MutationCategory Category => MutationCategory.Arithmetic;
 
-    public override SyntaxKind Kind => SyntaxKind.SubtractExpression;
+    public override SyntaxKind Kind => SyntaxKind.AddExpression;
 
     public override Type RequiredNodeType => typeof(BinaryExpressionSyntax);
+
 
     protected override SyntaxNode SpecificMutationImplementation(SyntaxNode node)
     {
         if (node is BinaryExpressionSyntax binaryExp)
         {
-            BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.AddExpression,
+            BinaryExpressionSyntax newSyntaxNode = SyntaxFactory.BinaryExpression(SyntaxKind.SubtractExpression,
                         binaryExp.Left,
                         binaryExp.Right);
+
 
             return newSyntaxNode;
         }
 
-        throw new MutationException($"Failed to cast syntax node to required type in {nameof(SubtractToAddMutator)}");
-
+        throw new MutationException($"Failed to cast syntax node to required type in {nameof(AddToSubtractMutator)}");
     }
 }

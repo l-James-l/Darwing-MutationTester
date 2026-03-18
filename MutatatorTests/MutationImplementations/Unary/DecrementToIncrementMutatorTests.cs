@@ -4,8 +4,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 using Mutator;
 using Mutator.MutationImplementations;
+using Mutator.MutationImplementations.Unary;
 
-namespace MutatorTests.MutationImplementations;
+namespace MutatorTests.MutationImplementations.Unary;
 
 public class DecrementToIncrementMutatorTests
 {
@@ -20,7 +21,7 @@ public class DecrementToIncrementMutatorTests
     [Test]
     public void AssertParamsCorrect()
     {
-        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Arithmetic));
+        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Unary));
         Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.DecrementToIncrement));
         Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.PostDecrementExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(PostfixUnaryExpressionSyntax)));

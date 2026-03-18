@@ -14,8 +14,8 @@ public enum MutationCategory
     Logical,
 
     [MutationDescription("Mutations that replace a relational operator with another. E.g., > => <=")]
-    Conditional,
+    Relational,
 
-    [MutationDescription("Mutations that replace a bitwise operator with another. E.g., & => |")]
-    Bitwise
+    [MutationDescription("Mutations that replace a unary operator with another. E.g., a++ => a--")]
+    Unary
 }

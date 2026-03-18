@@ -23,6 +23,6 @@ public class CliDependencyRegistrarTests : DepencyRegisrationTestsHelper
         registrar.Build();
 
         //Assert
-        AssertBasicRegistartion<CLIApp>();
+        AssertBasicRegistration<CLIApp>();
     }
 }

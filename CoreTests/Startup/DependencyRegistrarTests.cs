@@ -1,14 +1,15 @@
-﻿using Core;
+using Core;
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Core.Startup;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Models;
 using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
 using NSubstitute;
+using System.IO.Abstractions;
+using System.Reflection;
 
 namespace CoreTests.Startup;
 
@@ -31,38 +32,38 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         registrar.Build();
 
         //Assert
-        AssertBasicRegistartion<ISolutionLoader, SolutionLoader>();
-        AssertBasicRegistartion<ISolutionProvider, SolutionProvider>();
-        AssertBasicRegistartion<EstablishLoggerConfiguration>();
-        AssertBasicRegistartion<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
-        AssertBasicRegistartion<IEventAggregator, EventAggregator>();
-        AssertBasicRegistartion<IStatusTracker, StatusTracker>();
-        AssertBasicRegistartion<IMutationSettings, MutationSettings>();
-        AssertBasicRegistartion<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
-        AssertBasicRegistartion<ISolutionBuilder, SolutionBuilder>();
-        AssertBasicRegistartion<ICancelationTokenFactory, CancelationTokenFactory>();
-        AssertBasicRegistartion<IProcessWrapperFactory, ProcessWrapperFactory>();
-        AssertBasicRegistartion<IMutationRunInitiator, InitialTestRunner>();
-        AssertBasicRegistartion<IMutatedSolutionTester, MutatedSolutionTester>();
-        AssertBasicRegistartion<IGitDiffManager, GitDiffManager>();
-        AssertBasicRegistartion<IGeminiChatClientFactory, GeminiChatClientFactory>();
-        AssertBasicRegistartion<IGeminiApiHandler, GeminiApiHandler>();
-        AssertBasicRegistartion<ICoverageMapper, CoverageMapper>();
-        AssertBasicRegistartion<IMutationDiscoveryManager, MutationDiscoveryManager>();
-        AssertBasicRegistartion<IMutationImplementationProvider, MutationImplementationProvider>();
-        AssertBasicRegistartion<IStartUpProcess, MutatedProjectBuilder>();
+        AssertBasicRegistration<ISolutionLoader, SolutionLoader>();
+        AssertBasicRegistration<IFileSystem, FileSystem>();
+        AssertBasicRegistration<ISolutionProvider, SolutionProvider>();
+        AssertBasicRegistration<EstablishLoggerConfiguration>();
+        AssertBasicRegistration<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
+        AssertBasicRegistration<IEventAggregator, EventAggregator>();
+        AssertBasicRegistration<IStatusTracker, StatusTracker>();
+        AssertBasicRegistration<IMutationSettings, MutationSettings>();
+        AssertBasicRegistration<ISolutionProfileDeserializer, SolutionProfileDeserializer>();
+        AssertBasicRegistration<ISolutionBuilder, SolutionBuilder>();
+        AssertBasicRegistration<ICancelationTokenFactory, CancelationTokenFactory>();
+        AssertBasicRegistration<IProcessWrapperFactory, ProcessWrapperFactory>();
+        AssertBasicRegistration<IMutationRunInitiator, InitialTestRunner>();
+        AssertBasicRegistration<IMutatedSolutionTester, MutatedSolutionTester>();
+        AssertBasicRegistration<IGitDiffManager, GitDiffManager>();
+        AssertBasicRegistration<IRepositoryFactory, RepositoryFactory>();
+        AssertBasicRegistration<IGeminiChatClientFactory, GeminiChatClientFactory>();
+        AssertBasicRegistration<IGeminiApiHandler, GeminiApiHandler>();
+        AssertBasicRegistration<ICoverageMapper, CoverageMapper>();
+        AssertBasicRegistration<IMutationDiscoveryManager, MutationDiscoveryManager>();
+        AssertBasicRegistration<IMutationImplementationProvider, MutationImplementationProvider>();
+        AssertBasicRegistration<IStartUpProcess, MutatedProjectBuilder>();
 
-        //IMutationImplementation's
-        AssertMutatorRegistration<AddToSubtractMutator>();
-        AssertMutatorRegistration<SubtractToAddMutator>();
-        AssertMutatorRegistration<EqualToNotEqualMutator>();
-        AssertMutatorRegistration<NotEqualToEqualMutator>();
-        AssertMutatorRegistration<GreaterThanOrEqualToLessThanMutator>();
-        AssertMutatorRegistration<GreaterThanToLessThanOrEqualToMutator>();
-        AssertMutatorRegistration<LessThanOrEqualToGreaterThanMutator>();
-        AssertMutatorRegistration<LessThanToGreaterThanOrEqualToMutator>();
-        AssertMutatorRegistration<IncrementToDecrementMutator>();
-        AssertMutatorRegistration<DecrementToIncrementMutator>();
+        //Assert all IMutationImplementation's are registered
+        List<Type> implementations = Assembly.GetAssembly(typeof(IMutationImplementation))!
+            .GetTypes()
+            .Where(t => typeof(IMutationImplementation).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
+            .ToList();
+        foreach (Type mutationImplementation in implementations)
+        {
+            AssertBasicRegistration(typeof(IMutationImplementation), mutationImplementation);
+        }
 
         _services!.ReceivedWithAnyArgs(_expectedRegistrations).Add(default!);
     }

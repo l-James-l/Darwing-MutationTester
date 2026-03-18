@@ -1,11 +1,11 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 using Mutator;
-using Mutator.MutationImplementations;
+using Mutator.MutationImplementations.Arithmetic;
 
-namespace MutatorTests.MutationImplementations;
+namespace MutatorTests.MutationImplementations.Arithmetic;
 
 public class AddToSubtractMutatorTests
 {

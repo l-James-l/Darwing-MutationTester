@@ -3,13 +3,13 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 
-namespace Mutator.MutationImplementations;
+namespace Mutator.MutationImplementations.Relational;
 
 public class LessThanOrEqualToGreaterThanMutator : BaseMutationImplementation
 {
     public override SpecificMutation Mutation => SpecificMutation.LessThanOrEqualToGreaterThan;
 
-    public override MutationCategory Category => MutationCategory.Conditional;
+    public override MutationCategory Category => MutationCategory.Relational;
     
     public override SyntaxKind Kind => SyntaxKind.LessThanOrEqualExpression;
     

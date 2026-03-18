@@ -48,7 +48,7 @@ public class MutatedSolutionTesterTests
     }
 
     [Test]
-    public void GivenNoTestsRunSuccessfullyInitially_WhenRunTestsIsCalled_ThenAbortsAndReturnsFalse()
+    public void GivenInitialRunWithNoActiveMutantsFails_WhenRunTestsIsCalled_ThenAbortsAndReturnsFalse()
     {
         // Arrange
         _statusTracker.TryStartOperation(DarwingOperation.TestMutants).Returns(true);
@@ -68,6 +68,10 @@ public class MutatedSolutionTesterTests
         _mutantTester.RunTestsOnMutatedSolution();
 
         // Assert
+        _processFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
+            x.FileName == "dotnet" &&
+            x.Arguments == "test MySolution.sln --no-build --no-restore -- --stop-on-failure"));
+        _processFactory.Received(1).Create(Arg.Any<ProcessStartInfo>());
         _statusTracker.Received().FinishOperation(DarwingOperation.TestMutants, false);
         LogEvent? log = TestCorrelator.GetLogEventsFromCurrentContext().FirstOrDefault(x => x.MessageTemplate.Text == "Introducing mutations caused tests to fail, cannot proceed with mutation testing.");
         Assert.That(log, Is.Not.Null);
@@ -115,6 +119,11 @@ public class MutatedSolutionTesterTests
         // Assert
         Assert.That(mutant.Status, Is.EqualTo(MutantStatus.Killed));
         _statusTracker.Received().FinishOperation(DarwingOperation.TestMutants, true);
+        _processFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
+            x.FileName == "dotnet" &&
+            x.Arguments.StartsWith("test --no-build --no-restore") &&
+            x.Arguments.Contains("--filter \"FullyQualifiedName~MyTest\"") &&
+            x.Arguments.Contains($"-- --stop-on-failure  -- RunConfiguration.TestSessionTimeout=2500")));
     }
 
     [Test]

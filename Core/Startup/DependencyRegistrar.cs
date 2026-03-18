@@ -7,6 +7,10 @@ using Models.Exceptions;
 using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
+using Mutator.MutationImplementations.Arithmetic;
+using Mutator.MutationImplementations.Logical;
+using Mutator.MutationImplementations.Relational;
+using Mutator.MutationImplementations.Unary;
 using System.IO.Abstractions;
 
 namespace Core.Startup;
@@ -96,18 +100,24 @@ public abstract class DependencyRegistrar : IDisposable
         //Arithmetic:
         Services.AddSingleton<IMutationImplementation, SubtractToAddMutator>();
         Services.AddSingleton<IMutationImplementation, AddToSubtractMutator>();
-        Services.AddSingleton<IMutationImplementation, IncrementToDecrementMutator>();
-        Services.AddSingleton<IMutationImplementation, DecrementToIncrementMutator>();
+        Services.AddSingleton<IMutationImplementation, DivideToMultiplyMutator>();
+        Services.AddSingleton<IMutationImplementation, MultiplyToDivideMutator>();
 
-        //Equality
+        //Relational
         Services.AddSingleton<IMutationImplementation, EqualToNotEqualMutator>();
         Services.AddSingleton<IMutationImplementation, NotEqualToEqualMutator>();
-
-        //conditional
         Services.AddSingleton<IMutationImplementation, GreaterThanOrEqualToLessThanMutator>();
         Services.AddSingleton<IMutationImplementation, GreaterThanToLessThanOrEqualToMutator>();
         Services.AddSingleton<IMutationImplementation, LessThanOrEqualToGreaterThanMutator>();
         Services.AddSingleton<IMutationImplementation, LessThanToGreaterThanOrEqualToMutator>();
+
+        //Unary
+        Services.AddSingleton<IMutationImplementation, IncrementToDecrementMutator>();
+        Services.AddSingleton<IMutationImplementation, DecrementToIncrementMutator>();
+
+        //Logical
+        Services.AddSingleton<IMutationImplementation, AndToOrMutator>();
+        Services.AddSingleton<IMutationImplementation, OrToAndMutator>();
     }
 
     private void StartUpProcesses()

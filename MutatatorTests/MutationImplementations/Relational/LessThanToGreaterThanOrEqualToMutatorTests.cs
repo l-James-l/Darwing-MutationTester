@@ -3,9 +3,9 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 using Mutator;
-using Mutator.MutationImplementations;
+using Mutator.MutationImplementations.Relational;
 
-namespace MutatorTests.MutationImplementations;
+namespace MutatorTests.MutationImplementations.Relational;
 
 public class LessThanToGreaterThanOrEqualToMutatorTests
 {
@@ -20,7 +20,7 @@ public class LessThanToGreaterThanOrEqualToMutatorTests
     [Test]
     public void AssertParamsCorrect()
     {
-        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Conditional));
+        Assert.That(_mutator.Category, Is.EqualTo(MutationCategory.Relational));
         Assert.That(_mutator.Mutation, Is.EqualTo(SpecificMutation.LessThanToGreaterThanOrEqualTo));
         Assert.That(_mutator.Kind, Is.EqualTo(SyntaxKind.LessThanExpression));
         Assert.That(_mutator.RequiredNodeType, Is.EqualTo(typeof(BinaryExpressionSyntax)));
