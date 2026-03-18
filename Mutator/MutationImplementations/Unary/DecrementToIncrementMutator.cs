@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 
-namespace Mutator.MutationImplementations;
+namespace Mutator.MutationImplementations.Unary;
 
 public class DecrementToIncrementMutator : BaseMutationImplementation
 {
@@ -14,7 +14,7 @@ public class DecrementToIncrementMutator : BaseMutationImplementation
 
     public override SpecificMutation Mutation => SpecificMutation.DecrementToIncrement;
     
-    public override MutationCategory Category => MutationCategory.Arithmetic;
+    public override MutationCategory Category => MutationCategory.Unary;
     
     public override SyntaxKind Kind => SyntaxKind.PostDecrementExpression;
     

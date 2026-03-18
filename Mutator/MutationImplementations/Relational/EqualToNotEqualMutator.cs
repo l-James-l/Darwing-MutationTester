@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Models.Enums;
 
-namespace Mutator.MutationImplementations;
+namespace Mutator.MutationImplementations.Relational;
 
 public class EqualToNotEqualMutator : BaseMutationImplementation
 {

@@ -9,11 +9,11 @@ public abstract class DepencyRegisrationTestsHelper
     protected int _expectedRegistrations;
     protected IServiceCollection? _services { get; set; }
 
-    protected void AssertMutatorRegistration<T>() => AssertBasicRegistartion<IMutationImplementation, T>(true);
+    protected void AssertBasicRegistration<T>(bool isSingleton = true) => AssertBasicRegistration<T, T>(isSingleton);
 
-    protected void AssertBasicRegistartion<T>(bool isSingleton = true) => AssertBasicRegistartion<T, T>(isSingleton);
+    protected void AssertBasicRegistration<T1, T2>(bool isSingleton = true) => AssertBasicRegistration(typeof(T1), typeof(T2), isSingleton);
 
-    protected void AssertBasicRegistartion<T1, T2>(bool isSingleton = true)
+    protected void AssertBasicRegistration(Type t1, Type t2, bool isSingleton = true)
     {
         _expectedRegistrations++;
 
@@ -25,8 +25,8 @@ public abstract class DepencyRegisrationTestsHelper
 
         _services.Received(1).Add(Arg.Is<ServiceDescriptor>(x =>
         x.Lifetime == (isSingleton ? ServiceLifetime.Singleton : ServiceLifetime.Transient)
-        && x.ImplementationType == typeof(T2)
-        && x.ServiceType == typeof(T1)));
+        && x.ImplementationType == t2
+        && x.ServiceType == t1));
     }
 
     protected void AssertRegisterManySingleton<T>(Type[] baseTypes)
@@ -37,7 +37,7 @@ public abstract class DepencyRegisrationTestsHelper
             return;
         }
 
-        AssertBasicRegistartion<T>();
+        AssertBasicRegistration<T>();
         foreach (Type type in baseTypes)
         {
             _expectedRegistrations++;
