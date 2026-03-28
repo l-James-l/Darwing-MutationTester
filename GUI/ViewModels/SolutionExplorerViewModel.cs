@@ -112,7 +112,7 @@ public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewMod
         {
             if (value == _defactoFullSolutionTestHeader)
             {
-                _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Full()));
+                _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Fill()));
                 OnPropertyChanged(nameof(FileDetails));
                 FileExplorerViewModel.UpdateCheckedStates(FileExplorerViewModel.SolutionTree);
             }

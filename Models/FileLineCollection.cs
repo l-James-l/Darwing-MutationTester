@@ -7,7 +7,6 @@ namespace Models;
 /// </summary>
 public class FileLineCollection : List<LineRange>
 {
-    private readonly SyntaxTree _syntaxTree;
     private readonly int _finalLineIndex;
     private readonly string _filePath;
 
@@ -18,28 +17,6 @@ public class FileLineCollection : List<LineRange>
 
         //Start with the entire file  
         Add(new LineRange { Start=0, End=_finalLineIndex });
-        _syntaxTree = syntaxTree;
-    }
-
-    /// <summary>
-    /// Will determine if the node is within any range contained in the collection.
-    /// If the node is not in the tree at all false is returned.
-    /// </summary>
-    public bool IsNodeWithin(SyntaxNode node)
-    {
-        if (!_syntaxTree.GetRoot().Contains(node))
-        {
-            return false;
-        }
-        if (_syntaxTree.GetLocation(node.Span) is Location { IsInSource: true } location)
-        {
-            int line = location.GetLineSpan().StartLinePosition.Line;
-            if (this.Any(x => x.Start <= line && line <= x.End))
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     /// <summary>
@@ -192,7 +169,7 @@ public class FileLineCollection : List<LineRange>
         return containingSpan;
     }
 
-    public void Full()
+    public void Fill()
     {
         Clear();
         Add(new LineRange

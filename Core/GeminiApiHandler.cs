@@ -130,7 +130,7 @@ public sealed class GeminiApiHandler : IDisposable, IGeminiApiHandler
 
     private string PromptFormatter(string fullFile, string originalNode, string mutatedNode, int lineNo)
     {
-        string basicPrompt = $"You are to suggest a suitable unit test to address a failing mutation from a mutation testing result in the following file. The failed mutation is that line {lineNo} {originalNode} was changed from '{originalNode}' to '{mutatedNode}' and no test failed. Here is the full file: {fullFile}. ";
+        string basicPrompt = $"You are to suggest a suitable unit test to address a failing mutation from a mutation testing result in the following file. The failed mutation is that line {lineNo} was changed from '{originalNode}' to '{mutatedNode}' and no test failed. Here is the full file: {fullFile}. ";
         basicPrompt += "IMPORTANT: Ensure all source code is formatted properly with correct whitespace and line breaks for best human readability. ";
         if (!string.IsNullOrEmpty(_settings.AiTestGenerationAdditionalInstructions))
         {

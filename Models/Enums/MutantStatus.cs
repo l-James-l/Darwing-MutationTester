@@ -17,6 +17,16 @@ public enum MutantStatus
     /// </summary>
     CausedBuildError,
 
+    /// <summary>
+    /// Indicates a mutant that was applied to a file, and then wont be tested as that line in the file 
+    /// has been set to not be mutated.
+    /// </summary>
+    /// <remarks>
+    /// Used when there are some lines in the file that are being mutated, but since during mutation we dont know line spans,
+    /// we cant say if the mutation is in the accepted range or not.
+    /// </remarks>
+    IgnoreOutsideRange,
+
     //-----------------------------
     // The following are all valid mutations that should be included in the report
     // ----------------------------
