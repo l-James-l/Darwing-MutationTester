@@ -81,23 +81,25 @@ public class MutationDiscoveryManagerTests
         // Arrange
         _statusTracker.TryStartOperation(DarwingOperation.DiscoveringMutants).Returns(true);
 
-        var buildEvent = Substitute.For<BuildMutatedSolution>();
-        _eventAggregator.GetEvent<BuildMutatedSolution>().Returns(buildEvent);
+        var buildEvent = Substitute.For<BuildMutatedSolutionEvent>();
+        _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Returns(buildEvent);
 
         var mockProject = CreateMockProjectWithFiles();
         var solutionContainer = Substitute.For<ISolutionContainer>();
-        var workspace = Substitute.For<Workspace>();
+
+        using var workspace = new AdhocWorkspace();
+        var emptySolution = workspace.CurrentSolution;
 
         solutionContainer.SolutionProjects.Returns(new List<IProjectContainer> { mockProject });
         solutionContainer.Workspace.Returns(workspace);
-        solutionContainer.Solution.Returns(Substitute.For<Solution>());
+        solutionContainer.Solution.Returns(emptySolution);
         _solutionProvider.SolutionContainer.Returns(solutionContainer);
 
-        // Simulate successful workspace update
-        workspace.TryApplyChanges(Arg.Any<Solution>()).Returns(true);
+        // Note: AdhocWorkspace.TryApplyChanges usually returns true by default 
+        // as long as the solution belongs to the workspace.
 
         // Act
-        _mutationDiscoveryManager.PerformMutationDiscovery();
+        _mutationDiscoveryManager.PerformMutationDiscovery(); //SUT
 
         // Assert
         solutionContainer.Received().RestoreProjects();
@@ -113,10 +115,10 @@ public class MutationDiscoveryManagerTests
         var mockProject = CreateMockProjectWithFiles();
         _solutionProvider.SolutionContainer.SolutionProjects.Returns(new List<IProjectContainer> { mockProject });
 
-        IMutationImplementation mutator;
-        _mutationImplementationProvider.CanMutate(Arg.Any<SyntaxNode>(), out mutator)
+        IMutationImplementation mutator = Substitute.For<IMutationImplementation>();
+        _mutationImplementationProvider.CanMutate(Arg.Any<SyntaxNode>(), out _)
             .Returns(x => {
-                x[1] = Substitute.For<IMutationImplementation>();
+                x[1] = mutator;
                 return true;
             });
 
@@ -140,20 +142,11 @@ public class MutationDiscoveryManagerTests
 
     private IProjectContainer CreateMockProjectWithFiles()
     {
-        var project = Substitute.For<IProjectContainer>();
-        var file = Substitute.For<SourceCodeFileContainer>();
-
-        var lines = new FileLineCollection(SyntaxFactory.EmptyStatement().SyntaxTree)
-        {
-            { 1, 5 }
-        };
-
-        file.LinesToMutate.Returns(lines);
-        file.SyntaxTree.Returns(CSharpSyntaxTree.ParseText("public class A {}"));
-        file.DocumentId.Returns(DocumentId.CreateNewId(ProjectId.CreateNewId()));
-
+        IProjectContainer project = Substitute.For<IProjectContainer>();
+        
         SourceCodeFileCollection fileCollection = new();
-        fileCollection.AddDocument(DocumentId.CreateNewId(ProjectId.CreateNewId()), SyntaxFactory.EmptyStatement().SyntaxTree);
+
+        fileCollection.AddDocument(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText("public class A {}"));
         project.FileCollection.Returns(fileCollection);
         return project;
     }

@@ -36,7 +36,7 @@ public class MutatedProjectBuilder : IStartUpProcess
         // We use an event here rather than a direct call to avoid a circular dependency with the mutation discovery manager.
         // This means we need to use the keepSubscriberReferenceAlive parameter to ensure this instance is not
         // garbage collected as only the container owns this class.
-        _eventAggregator.GetEvent<BuildMutatedSolution>().Subscribe(Build, true);
+        _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Subscribe(Build, true);
     }
 
     private void Build()

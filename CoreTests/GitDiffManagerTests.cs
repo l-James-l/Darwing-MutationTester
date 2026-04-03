@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.IndustrialEstate;
 using LibGit2Sharp;
 using Microsoft.CodeAnalysis;
@@ -12,6 +12,8 @@ using NSubstitute.ReturnsExtensions;
 using Serilog;
 using Serilog.Sinks.TestCorrelator;
 using System.Collections;
+using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 
 namespace CoreTests;
 
@@ -23,8 +25,9 @@ public class GitDiffManagerTests
     private IRepositoryFactory _repositoryFactory;
     private IRepository _mockRepo;
     private GitUpdateEvent _mockGitEvent;
+    private IFileSystem _fileSystem;
 
-    private GitDiffManager _sut;
+    private GitDiffManager _sut; //SUT
 
     [SetUp]
     public void SetUp()
@@ -36,19 +39,23 @@ public class GitDiffManagerTests
         _mockRepo = Substitute.For<IRepository>();
         _mockGitEvent = Substitute.For<GitUpdateEvent>();
 
-        _eventAggregator.GetEvent<GitUpdateEvent>().Returns(_mockGitEvent);
+        // Using MockFileSystem for easier setup, but you can use Substitute.For<IFileSystem>() if preferred
+        _fileSystem = new MockFileSystem();
 
+        _eventAggregator.GetEvent<GitUpdateEvent>().Returns(_mockGitEvent);
         _repositoryFactory.Get(Arg.Any<string>()).Returns(_mockRepo);
 
         // Setup a dummy solution path
         var container = Substitute.For<ISolutionContainer>();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string tempDir = @"C:\MockSolution";
         container.DirectoryPath.Returns(tempDir);
-        Directory.CreateDirectory(Path.Combine(tempDir, ".git"));
+
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(tempDir, ".git"));
+
         _solutionProvider.SolutionContainer.Returns(container);
         _solutionProvider.SolutionContainer.DirectoryPath.Returns(tempDir);
 
-        _sut = new GitDiffManager(_solutionProvider, _settings, _eventAggregator, _repositoryFactory);
+        _sut = new GitDiffManager(_solutionProvider, _settings, _eventAggregator, _repositoryFactory, _fileSystem); 
     }
 
     [TearDown]
@@ -62,7 +69,7 @@ public class GitDiffManagerTests
     public void GivenNoGitDirectoryExists_WhenInitialGitDiffIsCalled_ThenPublishesUpdateEventAndReturns()
     {
         // Arrange
-        var nonExistentPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var nonExistentPath = @"C:\NonExistent";
         _solutionProvider.SolutionContainer.DirectoryPath.Returns(nonExistentPath);
 
         // Act
@@ -77,7 +84,7 @@ public class GitDiffManagerTests
     public void GivenLoadingGitRepoThrowsException_WhenInitialGitDiffIsCalled_ThenExceptionCaught_AndNoDiffSet()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
         _repositoryFactory.Get(Arg.Any<string>()).Throws<Exception>();
 
@@ -94,7 +101,7 @@ public class GitDiffManagerTests
     public void GivenLoadingGitRepoReturnsNull_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
         _repositoryFactory.Get(Arg.Any<string>()).ReturnsNull();
 
@@ -111,7 +118,7 @@ public class GitDiffManagerTests
     public void GivenLoadValidRepo_ButNoBranchFound_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
         BranchCollection branchCollection = Substitute.For<BranchCollection>();
         _mockRepo.Branches.Returns(branchCollection);
@@ -134,7 +141,7 @@ public class GitDiffManagerTests
     public void GivenLoadValidRepoAndBranch_ButDiffThrowsException_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
 
         BranchCollection branchCollection = Substitute.For<BranchCollection>();
@@ -142,7 +149,8 @@ public class GitDiffManagerTests
         mockBranch.FriendlyName.Returns("main");
         var branchList = new List<Branch> { mockBranch };
         branchCollection.GetEnumerator().Returns(_ => branchList.GetEnumerator());
-        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator()); _mockRepo.Branches.Returns(branchCollection);
+        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator());
+        _mockRepo.Branches.Returns(branchCollection);
 
         _mockRepo.Diff.Compare(default, default).Throws<Exception>();
 
@@ -164,7 +172,7 @@ public class GitDiffManagerTests
     public void GivenLoadValidRepoAndBranch_ButDiffReturnsNull_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
 
         BranchCollection branchCollection = Substitute.For<BranchCollection>();
@@ -172,7 +180,8 @@ public class GitDiffManagerTests
         mockBranch.FriendlyName.Returns("main");
         var branchList = new List<Branch> { mockBranch };
         branchCollection.GetEnumerator().Returns(_ => branchList.GetEnumerator());
-        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator()); _mockRepo.Branches.Returns(branchCollection);
+        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator());
+        _mockRepo.Branches.Returns(branchCollection);
 
         _mockRepo.Diff.Compare(default, default).ReturnsNull();
 
@@ -190,14 +199,11 @@ public class GitDiffManagerTests
         Assert.That(log, Is.Not.Null);
     }
 
-
-
-
     [Test]
     public void GivenPatchWithAddedLines_WhenEstablishDiffIsCalled_ThenLinesToMutateArePopulated()
     {
         // Arrange
-        Directory.CreateDirectory(Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
         _settings.DefaultGitComparisonBranch.Returns("main");
 
         // Will load the repo
@@ -211,7 +217,8 @@ public class GitDiffManagerTests
         mockBranch.Tip.Returns(commit);
         var branchList = new List<Branch> { mockBranch };
         branchCollection.GetEnumerator().Returns(_ => branchList.GetEnumerator());
-        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator()); _mockRepo.Branches.Returns(branchCollection);
+        ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator());
+        _mockRepo.Branches.Returns(branchCollection);
 
         string fileContent =
 @" public void GivenLoadValidRepoAndBranch_ButDiffReturnsNull_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
@@ -251,7 +258,6 @@ public class GitDiffManagerTests
         var sourceFile = projectFileCollection.First();
         _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), Arg.Any<ProjectType>()).Returns(sourceFile);
 
-        // Mocking the Patch and Changes
         var patch = Substitute.For<Patch>();
         var change = Substitute.For<PatchEntryChanges>();
         change.Path.Returns("File.cs");

@@ -76,7 +76,7 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
             // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
             _solutionProvider.SolutionContainer.RestoreProjects();
             _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, true);
-            _eventAggregator.GetEvent<BuildMutatedSolution>().Publish();
+            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish();
         }
         else
         {

@@ -3,7 +3,7 @@
 /// <summary>
 /// Published when the mutated solution needs to be built.
 /// </summary>
-public class BuildMutatedSolution : PubSubEvent
+public class BuildMutatedSolutionEvent : PubSubEvent
 {
 
 }
