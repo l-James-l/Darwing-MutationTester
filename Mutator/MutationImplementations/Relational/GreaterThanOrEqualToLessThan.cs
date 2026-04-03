@@ -5,7 +5,7 @@ using Models.Enums;
 
 namespace Mutator.MutationImplementations.Relational;
 
-public class GreaterThanOrEqualToLessThan : BaseMutationImplementation
+public class GreaterThanOrEqualToLessThanMutator : BaseMutationImplementation
 {
     public override SpecificMutation Mutation => SpecificMutation.GreaterThanOrEqualToLessThan;
 
@@ -26,6 +26,6 @@ public class GreaterThanOrEqualToLessThan : BaseMutationImplementation
             return newSyntaxNode;
         }
 
-        throw new MutationException($"Failed to cast syntax node to required type in {nameof(GreaterThanOrEqualToLessThan)}");
+        throw new MutationException($"Failed to cast syntax node to required type in {nameof(GreaterThanOrEqualToLessThanMutator)}");
     }
 }

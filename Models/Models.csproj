@@ -10,7 +10,8 @@
     <PackageReference Include="Buildalyzer" Version="8.0.0" />
     <PackageReference Include="Buildalyzer.Workspaces" Version="8.0.0" />
     <PackageReference Include="Prism.Events" Version="9.0.537" />
-    <PackageReference Include="Serilog" Version="4.3.0" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="System.IO.Abstractions" Version="22.1.0" />
   </ItemGroup>
 
 </Project>

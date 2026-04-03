@@ -8,6 +8,8 @@ using Models.Enums;
 using Models.Events;
 using Mutator;
 using NSubstitute;
+using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using System.Windows;
 
 namespace GuiTests.ViewModels.SolutionExplorerTests;
@@ -23,6 +25,8 @@ public class SolutionExplorerViewModelTests
     private IGitDiffManager _gitDiffManager;
     private IGeminiApiHandler _geminiApiHandler;
 
+    private MockFileSystem _fileSystem;
+
     private const string TestFilePath = "ViewModels\\SolutionExplorerTests\\TestData\\TestContentCodeFile.txt";
 
     private Action? _gitCallback;
@@ -35,6 +39,7 @@ public class SolutionExplorerViewModelTests
         _mutationDiscoveryManager = Substitute.For<IMutationDiscoveryManager>();
         _gitDiffManager = Substitute.For<IGitDiffManager>();
         _geminiApiHandler = Substitute.For<IGeminiApiHandler>();
+        _fileSystem = new MockFileSystem();
 
         GitUpdateEvent gitEvent = Substitute.For<GitUpdateEvent>();
         _eventAggregator.GetEvent<DarwingOperationStatesChangedEvent>().Returns(Substitute.For<DarwingOperationStatesChangedEvent>());
@@ -47,7 +52,7 @@ public class SolutionExplorerViewModelTests
             _gitCallback = callInfo.Arg<Action>();
         });
 
-        _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager);
+        _fileExplorerViewModel = new FileExplorerViewModel(_solutionProvider, _eventAggregator, _mutationDiscoveryManager, _fileSystem);
         
         _solutionExplorer = new SolutionExplorerViewModel(_fileExplorerViewModel, _eventAggregator, _solutionProvider, _gitDiffManager, _geminiApiHandler);
     }

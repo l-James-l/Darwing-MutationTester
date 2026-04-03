@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Microsoft.CodeAnalysis;

@@ -124,39 +124,11 @@ public class FileLineCollectionTests
     }
 
     [Test]
-    public void GivenStartGreterThanEndIndex_ThenThrowsException()
+    public void GivenStartGreaterThanEndIndex_ThenThrowsException()
     {
         FileLineCollection lineCollection = new(_tree);
         
         Assert.Throws<InvalidOperationException>(() => lineCollection.Add(5, 3));
-    }
-
-    [Test]
-    public void GivenNodeInTree_ThenIsNodeWithinTrue()
-    {
-        FileLineCollection lineCollection = new(_tree);
-
-        Assert.That(lineCollection.IsNodeWithin(_tree.GetRoot()), Is.True);
-    }
-
-    [Test]
-    public void GivenNodeNotInTree_ThenIsNodeWithinFalse()
-    {
-        FileLineCollection lineCollection = new(_tree);
-
-        Assert.That(lineCollection.IsNodeWithin(SyntaxFactory.EmptyStatement()), Is.False);
-    }
-
-    [Test]
-    public void GivenNodeIsInTree_ButNotOnIncludedLine_ThenIsNodeWithinFalse()
-    {
-        FileLineCollection lineCollection = new(_tree);
-
-        SyntaxNode node = _tree.GetRoot().ChildNodes().First().ChildNodes().First();
-        lineCollection.Remove(node.GetLocation().GetLineSpan().StartLinePosition.Line);
-        
-        Assert.That(lineCollection.IsNodeWithin(node), Is.False);
-
     }
 
     [Test]

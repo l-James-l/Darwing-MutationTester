@@ -2,7 +2,12 @@
 
 namespace GUI.ViewModels;
 
-public class DashBoardViewModel : ViewModelBase
+/// <summary>
+/// Interface to the <see cref="DashBoardViewModel"/> to allow testing
+/// </summary>
+public interface IDashBoardViewModel { }
+
+public class DashBoardViewModel : ViewModelBase, IDashBoardViewModel
 {
     public StatusBarViewModel StatusBarViewModel { get; set; }
     public MutationScoreByProjectViewModel MutationScoreByProjectViewModel { get; }

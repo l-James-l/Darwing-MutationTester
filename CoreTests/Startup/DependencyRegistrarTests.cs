@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.IndustrialEstate;
 using Core.Interfaces;
 using Core.Startup;
@@ -8,6 +8,7 @@ using Models.SharedInterfaces;
 using Mutator;
 using Mutator.MutationImplementations;
 using NSubstitute;
+using System.IO.Abstractions;
 using System.Reflection;
 
 namespace CoreTests.Startup;
@@ -32,6 +33,7 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
 
         //Assert
         AssertBasicRegistration<ISolutionLoader, SolutionLoader>();
+        AssertBasicRegistration<IFileSystem, FileSystem>();
         AssertBasicRegistration<ISolutionProvider, SolutionProvider>();
         AssertBasicRegistration<EstablishLoggerConfiguration>();
         AssertBasicRegistration<IAnalyzerManagerFactory, AnalyzerManagerFactory>();
@@ -45,6 +47,7 @@ internal class DependencyRegistrarTests : DepencyRegisrationTestsHelper
         AssertBasicRegistration<IMutationRunInitiator, InitialTestRunner>();
         AssertBasicRegistration<IMutatedSolutionTester, MutatedSolutionTester>();
         AssertBasicRegistration<IGitDiffManager, GitDiffManager>();
+        AssertBasicRegistration<IRepositoryFactory, RepositoryFactory>();
         AssertBasicRegistration<IGeminiChatClientFactory, GeminiChatClientFactory>();
         AssertBasicRegistration<IGeminiApiHandler, GeminiApiHandler>();
         AssertBasicRegistration<ICoverageMapper, CoverageMapper>();

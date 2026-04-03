@@ -33,7 +33,7 @@ public sealed class FileNode : SolutionTreeNode
             //If the file is checked, check all the lines in the file. If its unchecked, uncheck all lines.
             if (!_supressFileLinesUpdate &&  value)
             {
-                File.LinesToMutate.Full();
+                File.LinesToMutate.Fill();
             }
             else if (!_supressFileLinesUpdate)
             {

@@ -1,3 +1,4 @@
+using Core.IndustrialEstate;
 using Core.Interfaces;
 using LibGit2Sharp;
 using Microsoft.CodeAnalysis;
@@ -5,6 +6,7 @@ using Models;
 using Models.Enums;
 using Models.Events;
 using Serilog;
+using System.IO.Abstractions;
 
 namespace Core;
 
@@ -18,10 +20,12 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
     private readonly ISolutionProvider _solutionProvider;
     private readonly IMutationSettings _settings;
     private readonly IEventAggregator _eventAggregator;
+    private readonly IRepositoryFactory _repositoryFactory;
+    private readonly IFileSystem _fileSystem;
+    private IRepository? _repo = null;
 
-    private Repository? _repo = null;
-
-    public GitDiffManager(ISolutionProvider solutionProvider, IMutationSettings settings, IEventAggregator eventAggregator)
+    public GitDiffManager(ISolutionProvider solutionProvider, IMutationSettings settings, IEventAggregator eventAggregator,
+        IRepositoryFactory repositoryFactory, IFileSystem fileSystem)
     {
         ArgumentNullException.ThrowIfNull(solutionProvider);
         ArgumentNullException.ThrowIfNull(settings);
@@ -29,6 +33,8 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
         _solutionProvider = solutionProvider;
         _settings = settings;
         _eventAggregator = eventAggregator;
+        _repositoryFactory = repositoryFactory;
+        _fileSystem = fileSystem;
     }
 
     public List<string> Branches => [.._repo?.Branches.Select(x => x.FriendlyName) ?? []];
@@ -38,7 +44,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
     public void InitialGitDiff()
     {
         string wouldBeGitPath = Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git");
-        if (!Directory.Exists(wouldBeGitPath))
+        if (!_fileSystem.Directory.Exists(wouldBeGitPath) && !_fileSystem.File.Exists(wouldBeGitPath))
         {
             Log.Information("No git repository detected at solution path, skipping diff.");
             LastSelectedBranch = null;
@@ -49,7 +55,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
 
         try
         {
-            _repo = new Repository(wouldBeGitPath);
+            _repo = _repositoryFactory.Get(wouldBeGitPath);
             Log.Information("Git repository loaded successfully. Branches found: {branches}", Branches);
         }
         catch (Exception ex)
@@ -110,7 +116,7 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
         }
         catch (Exception ex)
         {
-            Log.Error($"Failed to get git diff. {ex}");
+            Log.Error(ex, "Failed to get git diff.");
             return null;
         }
     }

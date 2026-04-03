@@ -7,9 +7,10 @@ namespace GUI.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private readonly DashBoardViewModel _dashBoardViewModel;
-    private readonly SolutionExplorerViewModel _solutionExplorerViewModel;
-    private readonly SettingsViewModel _settingsViewModel;
+    private readonly IDashBoardViewModel _dashBoardViewModel;
+    private readonly ISolutionExplorerViewModel _solutionExplorerViewModel;
+    private readonly ISettingsViewModel _settingsViewModel;
+
     private readonly ISolutionBuilder _solutionBuilder;
     private readonly IMutationRunInitiator _mutationRunInitiator;
     private readonly IConsoleService _consoleService;
@@ -22,8 +23,8 @@ public class MainWindowViewModel : ViewModelBase
     /// Is responsible for managing navigation between individual sub windows (namely the dashboard, solution explorer and settings page)
     /// </summary>
     public MainWindowViewModel(IFileSelectorService fileSelectorService, ISolutionLoader solutionLoader,
-        IMutationSettings mutationSettings, DashBoardViewModel dashBoard, SolutionExplorerViewModel slnExplorer,
-        SettingsViewModel settings, ISolutionBuilder solutionBuilder, IMutationRunInitiator mutationRunInitiator, 
+        IMutationSettings mutationSettings, IDashBoardViewModel dashBoard, ISolutionExplorerViewModel slnExplorer,
+        ISettingsViewModel settings, ISolutionBuilder solutionBuilder, IMutationRunInitiator mutationRunInitiator, 
         IConsoleService consoleService)
     {
         ArgumentNullException.ThrowIfNull(fileSelectorService);

@@ -10,7 +10,12 @@ using System.Windows;
 
 namespace GUI.ViewModels;
 
-public class SolutionExplorerViewModel : ViewModelBase
+/// <summary>
+/// Interface to the <see cref="SolutionExplorerViewModel"/> to allow testing
+/// </summary>
+public interface ISolutionExplorerViewModel { }
+
+public class SolutionExplorerViewModel : ViewModelBase, ISolutionExplorerViewModel
 {
     private const string _defaultFileDisplayHeader = "No File Selected";
     private const string _defactoFullSolutionTestHeader = "Test full solution";
@@ -107,7 +112,7 @@ public class SolutionExplorerViewModel : ViewModelBase
         {
             if (value == _defactoFullSolutionTestHeader)
             {
-                _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Full()));
+                _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Fill()));
                 OnPropertyChanged(nameof(FileDetails));
                 FileExplorerViewModel.UpdateCheckedStates(FileExplorerViewModel.SolutionTree);
             }

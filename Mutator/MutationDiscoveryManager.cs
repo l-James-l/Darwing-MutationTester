@@ -55,6 +55,7 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
 
         if (!_statusTracker.TryStartOperation(DarwingOperation.DiscoveringMutants))
         {
+            Log.Error($"Attempted to start invalid operation {DarwingOperation.DiscoveringMutants}.");
             return;
         }
 
@@ -75,7 +76,7 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
             // Because we have wrapped the projects and precomputed properties around them, we need to update these to match the mutated solution.
             _solutionProvider.SolutionContainer.RestoreProjects();
             _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, true);
-            _eventAggregator.GetEvent<BuildMutatedSolution>().Publish();
+            _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish();
         }
         else
         {
@@ -90,10 +91,14 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         {
             foreach (SourceCodeFileContainer file in project.FileCollection)
             {
+                if (!file.LinesToMutate.Any())
+                {
+                    continue;
+                }
                 Log.Information($"Discovering mutations for {file.Path}.");
 
                 List<DiscoveredMutation> discoveredMutationsInFile = new List<DiscoveredMutation>();
-                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(file.SyntaxTree.GetRoot(), file.LinesToMutate, discoveredMutationsInFile);
+                SyntaxNode mutatedRoot = TraverseSyntaxNodeForMutation(file.SyntaxTree.GetRoot(), discoveredMutationsInFile);
                 Log.Information($"Discovered {discoveredMutationsInFile.Count} mutations for {file.Path}.");
 
                 SyntaxTree mutatedTree = file.SyntaxTree.WithRootAndOptions(mutatedRoot, file.SyntaxTree.Options);
@@ -103,14 +108,14 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
                 discoveredMutationsInFile.ForEach(mutation => mutation.Document = file.DocumentId);
                 DiscoveredMutations.AddRange(discoveredMutationsInFile);
                 RediscoverMutationsInTree(mutatedRoot);
-
+                
                 if (discoveredMutationsInFile.Any(x => x.Status is MutantStatus.Discovered))
                 {
                     Log.Error($"Unable to rediscover a mutation(s) in {file.Path}. It will not be tested and cannot be removed if it causes build errors.");
                 }
                 if (_settings.SingleMutantPerLine)
                 {
-                    IgnoreMultipleMutationsOnSingleLine(discoveredMutationsInFile);
+                    HandleIgnoringBasedOnPosition(discoveredMutationsInFile, file.LinesToMutate);
                 }
 
                 ApplyDiscoveredMutationsToDocument(file.DocumentId, mutatedRoot);
@@ -118,14 +123,15 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         }
     }
 
-    private void IgnoreMultipleMutationsOnSingleLine(List<DiscoveredMutation> discoveredMutationsInFile)
+    private void HandleIgnoringBasedOnPosition(List<DiscoveredMutation> discoveredMutationsInFile, FileLineCollection linesToMutate)
     {
         //Must be called AFTER rediscovering mutations in tree to ensure line spans are correct.
-        IEnumerable<IGrouping<int, DiscoveredMutation>> lineGroupings = discoveredMutationsInFile.GroupBy(mutation => mutation.LineSpan.StartLinePosition.Line);
-        List<IGrouping<int, DiscoveredMutation>> linesWithMultipleMutants = [.. lineGroupings.Where(group => group.Count() > 1)];
+        if (_settings.SingleMutantPerLine)
+        {
+            IEnumerable<IGrouping<int, DiscoveredMutation>> lineGroupings = discoveredMutationsInFile.GroupBy(mutation => mutation.LineSpan.StartLinePosition.Line);
+            List<IGrouping<int, DiscoveredMutation>> linesWithMultipleMutants = [.. lineGroupings.Where(group => group.Count() > 1)];
         
-        linesWithMultipleMutants
-            .ForEach(group =>
+            linesWithMultipleMutants.ForEach(group =>
             {
                 //Keep the first mutation and ignore the rest.
                 //TODO: This is pretty naive,
@@ -133,9 +139,17 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
                 group.Skip(1).ToList().ForEach(mutation =>
                 {
                     mutation.Status = MutantStatus.IgnoredMultipleOnLine;
-                    Log.Information($"Ignoring mutation {mutation.ID} on line {mutation.LineSpan.StartLinePosition.Line} of document {mutation.Document} because there is already another mutation on that line and the setting to only allow one mutant per line is enabled.");
+                    Log.Debug($"Ignoring mutation {mutation.ID} on line {mutation.LineSpan.StartLinePosition.Line} in {mutation.OriginalNode.SyntaxTree.FilePath} because there is already another mutation on that line and the setting to only allow one mutant per line is enabled.");
                 });
             });
+        }
+
+        // Ignore mutatns which shouldn't have been made, but we didn't know shouldnt have been made at the time
+        discoveredMutationsInFile.Where(x => !linesToMutate.ContainsLine(x.LineSpan.StartLinePosition.Line)).ToList().ForEach(mutation =>
+        {
+            mutation.Status = MutantStatus.IgnoreOutsideRange;
+            Log.Debug($"Ignoring mutation {mutation.ID} on line {mutation.LineSpan.StartLinePosition.Line} in {mutation.OriginalNode.SyntaxTree.FilePath} since it is outside range of mutation.");
+        });
     }
 
     /// <summary>
@@ -177,19 +191,15 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
         Log.Debug(mutatedRoot.ToFullString());
     }
 
-    private SyntaxNode TraverseSyntaxNodeForMutation(SyntaxNode node, FileLineCollection linesToMutate, List<DiscoveredMutation> mutations)
-    {
-        // We can do this check here because while mutating will change line spans, it will never change the line numbers.
-        if (linesToMutate.IsNodeWithin(node))
-        {
-            node = TryMutateNode(mutations, node);
-        }
+    private SyntaxNode TraverseSyntaxNodeForMutation(SyntaxNode node, List<DiscoveredMutation> mutations)
+    {        
+        node = TryMutateNode(mutations, node);
 
         //Iterate/ mutate children first to achieve depth first search.
         Dictionary<SyntaxNode, SyntaxNode> mutatedChildren = new();
         foreach (SyntaxNode child in node.ChildNodes())
         {
-            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(child, linesToMutate, mutations);
+            SyntaxNode childAfterTraversal = TraverseSyntaxNodeForMutation(child, mutations);
             mutatedChildren.Add(child, childAfterTraversal);
         }
 
