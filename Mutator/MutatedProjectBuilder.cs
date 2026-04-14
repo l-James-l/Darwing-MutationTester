@@ -198,9 +198,16 @@ public class MutatedProjectBuilder : IStartUpProcess
                     mutationsInFile.Where(x => x.LineSpan.EndLinePosition.CompareTo(failureLocation.Span.Start) >= 0);
 
                 IEnumerable<DiscoveredMutation> mutantsToRemove = mutationStartBeforeErrorEnd.Intersect(mutationsEndAfterErrorStart);
+                if (!mutantsToRemove.Any())
+                {
+                    mutantsToRemove = mutationStartBeforeErrorEnd.Union(mutationsEndAfterErrorStart);
+                }
 
-                RemoveMutants(mutantsToRemove.ToList());
-                anyActioned = true;
+                if (mutantsToRemove.Any())
+                {
+                    RemoveMutants(mutantsToRemove.ToList(), file);
+                    anyActioned = true;
+                }
 
                 //TODO maybe it would be better to not remove all the mutants at once,
                 //and instead remove the most relevant one first (smallest span entirely inside?), and then if that fails, remove them all?
@@ -215,7 +222,7 @@ public class MutatedProjectBuilder : IStartUpProcess
         return anyActioned;
     }
 
-    private void RemoveMutants(List<DiscoveredMutation> mutantsToRemove)
+    private void RemoveMutants(List<DiscoveredMutation> mutantsToRemove, SourceCodeFileContainer file)
     {
         Solution slnWithMutantsRemoved = _solutionProvider.SolutionContainer.Solution;
 
@@ -240,13 +247,38 @@ public class MutatedProjectBuilder : IStartUpProcess
             mutant.Status = MutantStatus.CausedBuildError;
 
             SyntaxNode newRoot = mutant.MutationSwitcher.SyntaxTree.GetRoot().ReplaceNode(mutant.MutationSwitcher, mutant.OriginalNode);
-            
+
             slnWithMutantsRemoved = slnWithMutantsRemoved.WithDocumentSyntaxRoot(mutant.Document, newRoot);
 
             _mutationDiscovery.RediscoverMutationsInTree(newRoot);
 
             Log.Debug(mutant.OriginalNode.SyntaxTree.FilePath + " after removing mutants causing build errors:");
             Log.Debug(newRoot.ToFullString());
+
+            //SyntaxNode root = mutant.MutationSwitcher.SyntaxTree.GetRoot();
+            //if (!root.Contains(mutant.MutationSwitcher)) // sense check, should always be true.
+            //{
+            //    throw new MutationException("Build error in wrong place");
+            //}
+
+            //SyntaxNode newRoot = root.ReplaceNode(mutant.MutationSwitcher, mutant.OriginalNode);
+            //_mutationDiscovery.RediscoverMutationsInTree(newRoot);
+            //if (root.Equals(newRoot) || newRoot.Contains(mutant.MutationSwitcher))
+            //{
+            //    Log.Error("Failed to remove a mutant. Restoring whole unmutated file");
+            //    slnWithMutantsRemoved = slnWithMutantsRemoved.WithDocumentSyntaxRoot(mutant.Document, file.SyntaxTree.GetRoot());
+            //    foreach (DiscoveredMutation mutation in _mutationDiscovery.DiscoveredMutations.Where(x => x.Document == mutant.Document))
+            //    {
+            //        mutation.Status = MutantStatus.CausedBuildError;
+            //        mutantsToRemove.Remove(mutation);
+            //    }
+            //}
+            //else
+            //{
+            //    slnWithMutantsRemoved = slnWithMutantsRemoved.WithDocumentSyntaxRoot(mutant.Document, newRoot);
+            //    Log.Debug(mutant.OriginalNode.SyntaxTree.FilePath + " after removing mutants causing build errors:");
+            //    Log.Debug(newRoot.ToFullString());
+            //}
         }
 
 

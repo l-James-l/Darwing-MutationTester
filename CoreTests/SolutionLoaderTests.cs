@@ -1,13 +1,15 @@
-﻿using Buildalyzer;
+using Buildalyzer;
 using Core;
 using Core.IndustrialEstate;
 using Core.Interfaces;
+using Microsoft.CodeAnalysis;
 using Models;
 using Models.Enums;
 using Models.SharedInterfaces;
 using NSubstitute;
 using Serilog;
 using Serilog.Sinks.TestCorrelator;
+using System.IO.Abstractions;
 
 namespace CoreTests;
 
@@ -22,6 +24,7 @@ public class SolutionLoaderTests
     private ISolutionProvider _slnProvider;
     private ISolutionBuilder _solutionBuilder;
     private IGitDiffManager _gitDiffManager;
+    private IFileSystem _fileSystem;
 
     [SetUp]
     public void Setup()
@@ -33,8 +36,16 @@ public class SolutionLoaderTests
         _slnProvider = Substitute.For<ISolutionProvider>();
         _solutionBuilder = Substitute.For<ISolutionBuilder>();
         _gitDiffManager = Substitute.For<IGitDiffManager>();
+        _fileSystem = Substitute.For<IFileSystem>();
 
-        _slnLoader = new SolutionLoader(_analyzerManagerFactory, _slnProfileDeserializer, _mutationSettings, _solutionBuilder, _statusTracker, _slnProvider, _gitDiffManager);
+        _slnLoader = new SolutionLoader(_analyzerManagerFactory,
+                                        _slnProfileDeserializer,
+                                        _mutationSettings,
+                                        _solutionBuilder,
+                                        _statusTracker,
+                                        _slnProvider,
+                                        _gitDiffManager,
+                                        _fileSystem);
     }
 
     [Test]

@@ -30,7 +30,6 @@ public abstract class BaseMutationImplementation : IMutationImplementation
     public (SyntaxNode mutationSwitcher, SyntaxAnnotation identififer, SyntaxNode mutatedNode) Mutate(SyntaxNode node)
     {
         SyntaxNode mutatedNode = SpecificMutationImplementation(node);
-        (mutatedNode, SyntaxAnnotation identifier) = GenerateIdAnnotation(mutatedNode);
         mutatedNode = mutatedNode.NormalizeWhitespace();
         if (mutatedNode is not ExpressionSyntax mutatedExpression)
         {
@@ -41,7 +40,8 @@ public abstract class BaseMutationImplementation : IMutationImplementation
             throw new MutationException($"Mutation implementation {Mutation} received a non ExpressionSyntax node.");
         }
 
-        SyntaxNode mutationSwitcher = BuildMutationSwitcher(originalExpression, mutatedExpression, identifier.Data ?? throw new MutationException("Mutation identifier had no ID."));
+        (SyntaxNode mutationSwitcher, SyntaxAnnotation identifier) = BuildMutationSwitcher(originalExpression, mutatedExpression);
+
         return (mutationSwitcher, identifier, mutatedNode);
     }
 
@@ -51,14 +51,11 @@ public abstract class BaseMutationImplementation : IMutationImplementation
     /// </summary>
     protected abstract SyntaxNode SpecificMutationImplementation(SyntaxNode node);
 
-    private (SyntaxNode mutatedNode, SyntaxAnnotation identififer) GenerateIdAnnotation(SyntaxNode node)
+    private (SyntaxNode mutationSwitcher, SyntaxAnnotation identifier) BuildMutationSwitcher(ExpressionSyntax originalNode, ExpressionSyntax mutatedNode)
     {
-        var idAnnotation = new SyntaxAnnotation(_nodeIdKey, Guid.NewGuid().ToString());
-        return (node.WithAdditionalAnnotations(idAnnotation).WithAdditionalAnnotations(Annotations.DontMutateAnnotation), idAnnotation);
-    }
+        SyntaxAnnotation idAnnotation = new SyntaxAnnotation(_nodeIdKey, Guid.NewGuid().ToString());
+        ArgumentNullException.ThrowIfNull(idAnnotation.Data);
 
-    private SyntaxNode BuildMutationSwitcher(ExpressionSyntax originalNode, ExpressionSyntax mutatedNode, string id)
-    {
         //Should be equivalent to: Environment.GetEnvironmentVariable("DarwingActiveMutationIndex")
         InvocationExpressionSyntax activeMutation = SyntaxFactory.InvocationExpression(
             SyntaxFactory.MemberAccessExpression(
@@ -85,7 +82,7 @@ public abstract class BaseMutationImplementation : IMutationImplementation
                 activeMutation, 
                 SyntaxFactory.LiteralExpression(
                     SyntaxKind.StringLiteralExpression, 
-                    SyntaxFactory.Literal(id)
+                    SyntaxFactory.Literal(idAnnotation.Data)
                     )
                 );
 
@@ -95,14 +92,15 @@ public abstract class BaseMutationImplementation : IMutationImplementation
 
         // should be equivalent to: (Environment.GetEnvironmentVariable("DarwingActiveMutationIndex") == id ? mutatedNode : originalNode)
         ExpressionSyntax mutationSwitcher = SyntaxFactory.ConditionalExpression(condition, mutatedNode, originalNode).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
-        ExpressionSyntax parenthesizedSwitcher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
+        mutationSwitcher = SyntaxFactory.ParenthesizedExpression(mutationSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
         
         if (WrapInDiscardedMethod)
         {
-            parenthesizedSwitcher = WrapInDiscardMethod(parenthesizedSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
+            mutationSwitcher = WrapInDiscardMethod(mutationSwitcher).WithAdditionalAnnotations(Annotations.DontMutateAnnotation);
         }
 
-        return parenthesizedSwitcher.NormalizeWhitespace();
+        mutationSwitcher = mutationSwitcher.WithAdditionalAnnotations(idAnnotation).NormalizeWhitespace();
+        return (mutationSwitcher, idAnnotation);
     }
 
     /// <summary>

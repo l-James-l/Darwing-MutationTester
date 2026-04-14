@@ -78,6 +78,11 @@ public class MutationDiscoveryManager : IMutationDiscoveryManager
             _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, true);
             _eventAggregator.GetEvent<BuildMutatedSolutionEvent>().Publish();
         }
+        else if (DiscoveredMutations.Count == 0)
+        {
+            Log.Information("Discovery complete, no mutations found. Terminating.");
+            _statusTracker.FinishOperation(DarwingOperation.DiscoveringMutants, true);
+        }
         else
         {
             Log.Error("Failed to created mutated solution");

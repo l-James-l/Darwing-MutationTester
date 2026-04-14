@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Models;
 using Models.Enums;
 using Models.Events;
+using Mutator;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NSubstitute.ReturnsExtensions;
@@ -219,7 +220,49 @@ public class GitDiffManagerTests
         branchCollection.GetEnumerator().Returns(_ => branchList.GetEnumerator());
         ((IEnumerable)branchCollection).GetEnumerator().Returns(_ => branchList.GetEnumerator());
         _mockRepo.Branches.Returns(branchCollection);
+        SourceCodeFileContainer sourceFile = BuildSolutionContent();
 
+        var patch = Substitute.For<Patch>();
+        var change = Substitute.For<PatchEntryChanges>();
+        change.Path.Returns("File.cs");
+
+        // Create added line. doesn't have public setters and cant be mocked so use refection
+        var line = (Line)Activator.CreateInstance(
+            typeof(Line),
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+            null,
+            [10, "public void NewMethod()"],
+            null)!;
+        change.AddedLines.Returns(new List<Line> { line });
+
+        List<PatchEntryChanges> changeList = [change];
+        patch.GetEnumerator().Returns(_ => changeList.GetEnumerator());
+        ((IEnumerable)patch).GetEnumerator().Returns(_ => changeList.GetEnumerator());
+
+        _mockRepo.Diff.Compare<Patch>(Arg.Any<Tree>(), DiffTargets.WorkingDirectory).Returns(patch);
+
+        // Act
+        _sut.EstablishDiff("main");
+
+        // Assert
+        Assert.Multiple(() =>
+        {
+            for (int x = 0; x <= 28; x++)
+            {
+                if (x == 9)
+                {
+                    continue;
+                }
+                Assert.That(sourceFile.LinesToMutate.ContainsLine(x), Is.False);
+            }
+            Assert.That(sourceFile.LinesToMutate.ContainsLine(9), Is.True);
+            Assert.That(_sut.LastSelectedBranch, Is.EqualTo("main"));
+            _mockGitEvent.Received().Publish();
+        });
+    }
+
+    private SourceCodeFileContainer BuildSolutionContent()
+    {
         string fileContent =
 @" public void GivenLoadValidRepoAndBranch_ButDiffReturnsNull_WhenInitialGitDiffIsCalled_ThenNoExceptionThrown_AndNoDiffSet()
     {
@@ -257,21 +300,75 @@ public class GitDiffManagerTests
         _solutionProvider.SolutionContainer.SolutionProjects.Returns([project]);
         var sourceFile = projectFileCollection.First();
         _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), Arg.Any<ProjectType>()).Returns(sourceFile);
+        return sourceFile;
+    }
 
+    [Test]
+    public void GivenEmptyPatch_WhenEstablishDiffIsCalled_ThenDoesNotClearLinesAndPublishesEvent()
+    {
+        // Arrange
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _settings.DefaultGitComparisonBranch.Returns("main");
+        _sut.InitialGitDiff();
+
+        SourceCodeFileContainer fileContainer = BuildSolutionContent();
+
+        // Mock an empty patch
+        var patch = Substitute.For<Patch>();
+        List<PatchEntryChanges> emptyList = new();
+        patch.GetEnumerator().Returns(_ => emptyList.GetEnumerator());
+        ((IEnumerable)patch).GetEnumerator().Returns(_ => emptyList.GetEnumerator());
+
+        // Mock branch setup so we don't bail out early
+        var mockBranch = Substitute.For<Branch>();
+        mockBranch.FriendlyName.Returns("main");
+        mockBranch.Tip.Returns(Substitute.For<Commit>());
+        var branchList = new List<Branch> { mockBranch };
+        _mockRepo.Branches.GetEnumerator().Returns(_ => branchList.GetEnumerator());
+
+        _mockRepo.Diff.Compare<Patch>(Arg.Any<Tree>(), DiffTargets.WorkingDirectory).Returns(patch);
+
+        // Act
+        _sut.EstablishDiff("main");
+
+        // Assert
+        // Verify we didn't clear lines (SolutionProjects shouldn't have been iterated for clearing)
+        Assert.That(fileContainer.LinesToMutate.Count(), Is.EqualTo(1));
+        Assert.That(fileContainer.LinesToMutate.ContainsLine(0),Is.True);
+        Assert.That(fileContainer.LinesToMutate.ContainsLine(27),Is.True);
+
+        _mockGitEvent.Received(2).Publish();
+    }
+
+    [Test]
+    public void GivenPatchWithNoAddedLines_WhenEstablishDiffIsCalled_ThenFillsAllLinesToMutate()
+    {
+        // Arrange
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_solutionProvider.SolutionContainer.DirectoryPath, ".git"));
+        _settings.DefaultGitComparisonBranch.Returns("main");
+        _sut.InitialGitDiff();
+
+        // 1. Setup a patch that has an entry, but NO AddedLines (e.g. a deletion or rename only)
         var patch = Substitute.For<Patch>();
         var change = Substitute.For<PatchEntryChanges>();
         change.Path.Returns("File.cs");
+        change.AddedLines.Returns(new List<Line>()); // Empty added lines
 
-        // Create added line. doesn't have public setters and cant be mocked so use refection
-        var line = (Line)Activator.CreateInstance(
-            typeof(Line),
-            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
-            null,
-            [10, "public void NewMethod()"],
-            null)!;
-        change.AddedLines.Returns(new List<Line> { line });
+        List<PatchEntryChanges> changeList = [change];
+        patch.GetEnumerator().Returns(_ => changeList.GetEnumerator());
+        ((IEnumerable)patch).GetEnumerator().Returns(_ => changeList.GetEnumerator());
 
-        patch.GetEnumerator().Returns(new List<PatchEntryChanges> { change }.GetEnumerator());
+        // 2. Setup the file in the solution
+        var project = Substitute.For<IProjectContainer>();
+        
+        // Ensure LinesToMutate is empty after the logic runs
+        SourceCodeFileCollection fileCollection = new();
+        fileCollection.AddDocument(DocumentId.CreateNewId(ProjectId.CreateNewId()), CSharpSyntaxTree.ParseText("").WithFilePath("File.cs"));
+        project.FileCollection.Returns(fileCollection);
+        _solutionProvider.SolutionContainer.SolutionProjects.Returns([project]);
+        SourceCodeFileContainer sourceFile = fileCollection.First();
+        _solutionProvider.SolutionContainer.FindFile(Arg.Any<string>(), Arg.Any<ProjectType>()).Returns(sourceFile);
+
         _mockRepo.Diff.Compare<Patch>(Arg.Any<Tree>(), DiffTargets.WorkingDirectory).Returns(patch);
 
         // Act
@@ -280,16 +377,9 @@ public class GitDiffManagerTests
         // Assert
         Assert.Multiple(() =>
         {
-            for (int x= 0; x<=28; x++)
-            {
-                if (x == 9)
-                {
-                    continue;
-                }
-                Assert.That(sourceFile.LinesToMutate.ContainsLine(x), Is.False); 
-            }
-            Assert.That(sourceFile.LinesToMutate.ContainsLine(9), Is.True); 
-            Assert.That(_sut.LastSelectedBranch, Is.EqualTo("main"));
+            // Verify that because no lines were added, the system called Fill()
+            // (Assuming LinesToMutate.Fill() populates the internal collection)
+            Assert.That(sourceFile.LinesToMutate.None(), Is.False, "LinesToMutate should have been filled because the patch was empty of additions.");
             _mockGitEvent.Received().Publish();
         });
     }

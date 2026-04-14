@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Models;
 using Models.Enums;
 using Models.Events;
+using Mutator;
 using Serilog;
 using System.IO.Abstractions;
 
@@ -123,6 +124,14 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
 
     private void SetLinesToMutateFromPatch(Patch patch)
     {
+        if (!patch.Any())
+        {
+            // Patch contains no changes, meaning the checked out branch has not been modified, so still test entire solution.
+            Log.Information("Diff contains no changes."); 
+            _eventAggregator.GetEvent<GitUpdateEvent>().Publish();
+            return;
+        }
+
         // We now know that we have a valid diff. So clear the default selection (everything will be selected)
         _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Clear()));
         
@@ -145,6 +154,12 @@ public sealed class GitDiffManager : IGitDiffManager, IDisposable
                 file.LinesToMutate.Add(addition.LineNumber-1);
                 Log.Debug("{n}: {c}", addition.LineNumber, addition.Content.ToString().ReplaceLineEndings(""));
             }
+        }
+
+        // If after applying all the patches, we have no code to mutate, go back to mutating the entire solution.
+        if (_solutionProvider.SolutionContainer.SolutionProjects.All(x => x.FileCollection.All(f => f.LinesToMutate.None())))
+        {
+            _solutionProvider.SolutionContainer.SolutionProjects.ForEach(x => x.FileCollection.ForEach(y => y.LinesToMutate.Fill()));
         }
 
         _eventAggregator.GetEvent<GitUpdateEvent>().Publish();

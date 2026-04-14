@@ -9,7 +9,6 @@ public static class CLICommandLineParser
     private const string testProjectFlag = "--test-projects";
     private const string sourceProjectFlag = "--source-projects";
     private const string ignoreProjectFlag = "--ignore-projects";
-    private const string disabledMutations = "--disabled-mutations";
 
 
     /// <summary>
@@ -53,17 +52,6 @@ public static class CLICommandLineParser
             while (ignoreProjectIndex++ < argsList.Count - 1 && !argsList[ignoreProjectIndex].StartsWith("--"))
             {
                 mutationSettings.IgnoreProjects.Add(argsList[ignoreProjectIndex]);
-            }
-        }
-
-        if (argsList.IndexOf(disabledMutations) is int disabledMutationsIndex && disabledMutationsIndex != -1)
-        {
-            while (disabledMutationsIndex++ < argsList.Count - 1 && !argsList[disabledMutationsIndex].StartsWith("--"))
-            {
-                if (Enum.TryParse(argsList[disabledMutationsIndex], out SpecificMutation mutation))
-                {
-                    mutationSettings.DisabledMutationTypes.Add(mutation);
-                }
             }
         }
     }

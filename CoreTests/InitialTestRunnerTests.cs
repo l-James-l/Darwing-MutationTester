@@ -134,7 +134,7 @@ public class InitialTestRunnerTests
         // Assert
         installProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
         testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
-        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(10)) == 0));
+        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
         _coverageMapper.Received(1).MapFullCoverage(Path.Combine(testProject.OutputDirectory, "DarwingCoverage.xml"));
         _processWrapperFactory.Received(1).Create(Arg.Is<ProcessStartInfo>(x =>
             x.FileName == "altcover" &&
@@ -251,7 +251,7 @@ public class InitialTestRunnerTests
         // Assert
         installProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
         testProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(_mutationSettings.TestRunTimeout)) == 0));
-        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(10)) == 0));
+        collectProcess.Received(1).StartAndAwait(Arg.Is<TimeSpan>(x => x.CompareTo(TimeSpan.FromSeconds(60)) == 0));
         _coverageMapper.DidNotReceive().MapFullCoverage(Arg.Any<string>());
 
         _statusTracker.Received().FinishOperation(DarwingOperation.TestUnmutatedSolution, false);

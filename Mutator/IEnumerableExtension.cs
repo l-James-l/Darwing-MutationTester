@@ -6,14 +6,13 @@ public static class IEnumerableExtension
     /// None of the items in the list match the predicate.
     /// Inverse of any, to reduce negation and complexity
     /// </summary>
-    public static bool None<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate)
+    public static bool None<TSource>(this IEnumerable<TSource> source, Func<TSource, bool>? predicate = null)
     {
         ArgumentNullException.ThrowIfNull(source);
-        ArgumentNullException.ThrowIfNull(predicate);
 
         foreach (TSource element in source)
         {
-            if (predicate(element))
+            if (predicate is null || predicate(element))
             {
                 return false;
             }

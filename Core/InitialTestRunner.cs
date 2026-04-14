@@ -214,7 +214,7 @@ public class InitialTestRunner : IMutationRunInitiator
             RedirectStandardOutput = true,
             WorkingDirectory = testProject.OutputDirectory
         });
-        bool collectionComplete = collectProcess.StartAndAwait(TimeSpan.FromSeconds(10));
+        bool collectionComplete = collectProcess.StartAndAwait(TimeSpan.FromSeconds(60));
 
         collectProcess.Output.ForEach(Log.Debug);
         collectProcess.Errors.ForEach(Log.Error);
