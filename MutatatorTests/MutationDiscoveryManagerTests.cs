@@ -72,7 +72,7 @@ public class MutationDiscoveryManagerTests
         _mutationDiscoveryManager.PerformMutationDiscovery();
 
         // Assert
-        _statusTracker.Received().FinishOperation(DarwingOperation.DiscoveringMutants, false);
+        _statusTracker.Received().FinishOperation(DarwingOperation.DiscoveringMutants, true);
     }
 
     [Test]

@@ -3,6 +3,7 @@ using GUI.ViewModels.SettingsElements;
 using Models;
 using Serilog;
 using System.IO;
+using System.IO.Abstractions;
 using YamlDotNet.Serialization;
 
 namespace GUI.ViewModels;
@@ -16,12 +17,15 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
 {
     private readonly IMutationSettings _settings;
     private readonly IDarwingDialogService _dialogService;
+    private readonly IFileSystem _fileSystem;
 
     public SettingsViewModel(ProjectTypeCollectionSettings projectTypeSettings, GeneralSettingsViewModel generalSettingsViewModel,
-        DisabledMutationTypesViewModel disabledMutationTypesViewModel, IMutationSettings settings, IDarwingDialogService dialogService)
+        DisabledMutationTypesViewModel disabledMutationTypesViewModel, IMutationSettings settings, IDarwingDialogService dialogService,
+        IFileSystem fileSystem)
     {
         _settings = settings;
         _dialogService = dialogService;
+        _fileSystem = fileSystem;
         ProjectTypeSettings = projectTypeSettings;
         GeneralSettingsViewModel = generalSettingsViewModel;
         DisabledMutationTypesViewModel = disabledMutationTypesViewModel;
@@ -59,7 +63,7 @@ public class SettingsViewModel : ViewModelBase, ISettingsViewModel
         string ymlContent = serializer.Serialize(profileData);
 
         string path = Path.Combine(directory, ".darwingSolutionProfile.yml");
-        File.WriteAllText(path, ymlContent);
+        _fileSystem.File.WriteAllText(path, ymlContent);
 
         _dialogService.InfoDialog("Save Confirmation", $"Profile saved to file location: '{path}'");
     }

@@ -255,21 +255,28 @@ public class CLIApp
 
     private object? ParseValue(string value, Type targetType)
     {
-        // 1. Handle Lists (e.g., [proj1, proj2])
-        if (targetType == typeof(List<string>))
+        // Handle Lists
+        if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(List<>))
         {
-            return value.Trim('[', ']')
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                        .ToList();
+            Type itemType = targetType.GetGenericArguments()[0];
+            var stringValues = value.Trim('[', ']')
+                                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            var list = (System.Collections.IList)Activator.CreateInstance(targetType)!;
+            foreach (var s in stringValues)
+            {
+                list.Add(ParseValue(s, itemType)); // Recursively parse each item
+            }
+            return list;
         }
 
-        // 2. Handle Enums
+        // Handle Enums
         if (targetType.IsEnum)
         {
             return Enum.Parse(targetType, value, true);
         }
 
-        // 3. Handle Primitives (int, bool, string, etc.)
+        // Handle Primitives
         TypeConverter converter = TypeDescriptor.GetConverter(targetType);
         return converter.ConvertFromInvariantString(value);
     }

@@ -67,8 +67,8 @@ public class GeminiApiHandlerTests
         _chatClient.GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
                     .Returns(chatResponse);
 
-        string receivedCode = null;
-        string receivedDesc = null;
+        string? receivedCode = null;
+        string? receivedDesc = null;
 
         // Act
         await _sut.GenerateUnitTest(mutation, (code, desc) =>
@@ -98,7 +98,7 @@ public class GeminiApiHandlerTests
 
         // Assert
         Assert.That(callbackInvoked, Is.False);
-        await _chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default);
+        await _chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!);
     }
 
     [Test]
@@ -137,13 +137,40 @@ public class GeminiApiHandlerTests
                     .Returns(chatResponse);
 
         // Act
-        await _sut.GenerateUnitTest(mutation, (c, d) => { });
+        _sut.GenerateUnitTest(mutation, (c, d) => { }).GetAwaiter().GetResult();
 
         // Assert
         await _chatClient.Received().GetResponseAsync(
             Arg.Is<IEnumerable<ChatMessage>>(x => x.Count() == 1 && x.First().Text.Contains("Additional instructions: Use FluentAssertions.")),
             Arg.Any<ChatOptions>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public void GivenNoClient_WhenCheckingIsConfigured_ThenReturnsFalse()
+    {
+        // Arrange
+        _clientFactory.TryCreate().ReturnsNull();
+        var handler = new GeminiApiHandler(_clientFactory, _solutionProvider, _tokenFactory, _settings);
+
+        // Act
+        bool isConfigured = handler.IsConfigured;
+
+        // Assert
+        Assert.That(isConfigured, Is.False);
+    }
+
+    [Test]
+    public void GivenNullClient_WhenGeneratingUnitTest_ThenLogsWarningAndDoesNotThrow()
+    {
+        // Arrange
+        _clientFactory.TryCreate().ReturnsNull();
+        var handler = new GeminiApiHandler(_clientFactory, _solutionProvider, _tokenFactory, _settings);
+        var mutation = CreateMutation();
+        bool callbackInvoked = false;
+        // Act & Assert
+        Assert.DoesNotThrowAsync(() => handler.GenerateUnitTest(mutation, (c, d) => callbackInvoked = true));
+        Assert.That(callbackInvoked, Is.False);
     }
 
     private void SetupMockFile(DocumentId docId, string content)

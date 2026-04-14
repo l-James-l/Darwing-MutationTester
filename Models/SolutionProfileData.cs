@@ -53,7 +53,7 @@ public class SolutionProfileData
 
     /// <summary>
     /// Allows setting of a custom timeout for when a test run will be considered failed.
-    /// A generic timeout cannot be because it is impossible to know how long a test run might take before it has been completed.
+    /// A generic timeout cannot be used because it is impossible to know how long a test run might take before it has been completed.
     /// Value is in seconds.
     /// Default value an hour.
     /// </summary>

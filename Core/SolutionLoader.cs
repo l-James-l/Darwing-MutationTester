@@ -7,6 +7,7 @@ using Models;
 using Models.Enums;
 using Models.SharedInterfaces;
 using Serilog;
+using System.IO.Abstractions;
 
 namespace Core;
 
@@ -29,10 +30,11 @@ public class SolutionLoader : ISolutionLoader
     private readonly IStatusTracker _statusTracker;
     private readonly ISolutionProvider _solutionProvider;
     private readonly IGitDiffManager _gitManager;
+    private readonly IFileSystem _fileSystem;
 
     public SolutionLoader(IAnalyzerManagerFactory analyzerManagerFactory, ISolutionProfileDeserializer slnProfileDeserializer,
         IMutationSettings mutationSettings, ISolutionBuilder solutionBuilder, IStatusTracker statusTracker,
-        ISolutionProvider solutionProvider, IGitDiffManager gitManager)
+        ISolutionProvider solutionProvider, IGitDiffManager gitManager, IFileSystem fileSystem)
     {
         ArgumentNullException.ThrowIfNull(analyzerManagerFactory);
         ArgumentNullException.ThrowIfNull(slnProfileDeserializer);
@@ -49,6 +51,7 @@ public class SolutionLoader : ISolutionLoader
         _statusTracker = statusTracker;
         _solutionProvider = solutionProvider;
         _gitManager = gitManager;
+        _fileSystem = fileSystem;
     }
 
     public void Load(string solutionPath)
@@ -124,7 +127,7 @@ public class SolutionLoader : ISolutionLoader
         {
             Log.Information($"Loading source code files for {project.Name}");
 
-            List<string> files = Directory.EnumerateFiles(project.DirectoryPath, "*.cs", enumerationOptions).ToList();
+            List<string> files = _fileSystem.Directory.EnumerateFiles(project.DirectoryPath, "*.cs", enumerationOptions).ToList();
             files.RemoveAll(path => 
                 path.StartsWith(Path.Combine(project.DirectoryPath, "obj")) ||
                 path.StartsWith(Path.Combine(project.DirectoryPath, "bin")));
