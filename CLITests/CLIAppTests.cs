@@ -70,7 +70,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--load " + providedPath + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _solutionLoader.Received(1).Load(Arg.Is<string>(x => x == providedPath));
@@ -83,7 +83,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader(Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _solutionLoader.DidNotReceive().Load(Arg.Any<string>());
@@ -113,7 +113,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--build" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _solutionBuilder.DidNotReceive().InitialBuild();
@@ -128,7 +128,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--build" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _solutionBuilder.Received(1).InitialBuild();
@@ -144,7 +144,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--build" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _solutionBuilder.Received(1).InitialBuild();
@@ -160,7 +160,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _mutationRunInitiator.Received(1).Run();
@@ -175,7 +175,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _mutationRunInitiator.DidNotReceive().Run();
@@ -191,7 +191,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--test" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _mutationRunInitiator.DidNotReceive().Run();
@@ -204,12 +204,12 @@ public class CLIAppTests
         _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
         _statusTracker.CheckStatus(DarwingOperation.BuildSolution).Returns(OperationStates.Succeeded);
 
-        // We want to test setting a boolean and a list via reflection
-        // Format: --test Threshold=50 SourceCodeProjects=[ProjA,ProjB]
+        // Test setting a boolean and a list via reflection
+        // Format: --test BuildTimeout=50 SourceCodeProjects=[ProjA,ProjB]
         Console.SetIn(new StringReader("--test BuildTimeout=50 SourceCodeProjects=[ProjA,ProjB]" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _mutationSettings.Received().BuildTimeout = 50;
@@ -226,12 +226,12 @@ public class CLIAppTests
 
         var mockProject = Substitute.For<IProjectContainer>();
         mockProject.Name.Returns("MyProject");
-        _solutionProvider.SolutionContainer.AllProjects.Returns(new List<IProjectContainer> { mockProject });
+        _solutionProvider.SolutionContainer.AllProjects.Returns([mockProject]);
 
         Console.SetIn(new StringReader("--test SourceCodeProjects=[MyProject]" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         mockProject.Received().ProjectType = ProjectType.Source;
@@ -248,15 +248,15 @@ public class CLIAppTests
             LineSpan = new FileLinePositionSpan("FileA.cs", new LinePosition(26, 0), new LinePosition(26, 10)),
             Status = MutantStatus.Survived
         };
-        _mutationDiscoveryManager.DiscoveredMutations.Returns(new List<DiscoveredMutation> { mutation });
+        _mutationDiscoveryManager.DiscoveredMutations.Returns([mutation]);
 
         Console.SetIn(new StringReader("--report" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
-        // Assert - Since it logs to Serilog, we verify the Discovery Manager was accessed
-        var mutants = _mutationDiscoveryManager.Received().DiscoveredMutations;
+        // Assert
+        _ = _mutationDiscoveryManager.Received().DiscoveredMutations;
     }
 
     [Test]
@@ -266,7 +266,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--quit" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         _cancelationToken.Received(1).Cancel();
@@ -279,11 +279,10 @@ public class CLIAppTests
         _statusTracker.CheckStatus(DarwingOperation.LoadSolution).Returns(OperationStates.Succeeded);
         _statusTracker.CheckStatus(DarwingOperation.BuildSolution).Returns(OperationStates.Succeeded);
 
-        // Assuming IMutationSettings has a property 'Language' of type an Enum
         Console.SetIn(new StringReader("--test DisabledMutationTypes=[AddToSubtract]" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         // Verify the property was set with the expected Enum value
@@ -309,13 +308,13 @@ public class CLIAppTests
             Status = MutantStatus.Survived
         };
 
-        _mutationDiscoveryManager.DiscoveredMutations.Returns(new List<DiscoveredMutation> { mutation1, mutation2 });
+        _mutationDiscoveryManager.DiscoveredMutations.Returns([mutation1, mutation2]);
 
         // Pass the specific filename as a parameter
         Console.SetIn(new StringReader("--report TargetFile.cs" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         // We verify the discovery manager was accessed to get the mutations
@@ -336,7 +335,7 @@ public class CLIAppTests
         try
         {
             // Act
-            _app.Run(Array.Empty<string>());
+            _app.Run([]);
 
             // Assert
             string consoleOutput = output.ToString();
@@ -366,7 +365,7 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--test InvalidSetting BuildTimeout=50" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
         // Verify the malformed one was ignored, but the valid one was still processed
@@ -385,10 +384,10 @@ public class CLIAppTests
         Console.SetIn(new StringReader("--test FakeSetting=True BuildTimeout=10" + Environment.NewLine));
 
         // Act
-        _app.Run(Array.Empty<string>());
+        _app.Run([]);
 
         // Assert
-        // Threshold should be set, but the loop should have safely skipped FakeSetting
+        // Build timeout should be set, but the loop should have safely skipped FakeSetting
         _mutationSettings.Received().BuildTimeout = 10;
         _mutationRunInitiator.Received(1).Run();
     }
