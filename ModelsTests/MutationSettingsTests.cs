@@ -5,6 +5,9 @@ namespace ModelsTests;
 
 public class MutationSettingsTests
 {
+    /// <summary>
+    /// Test purely for coverage of getters and setters of settings
+    /// </summary>
     [Test]
     public void MutationSettings_PropertyGettersAndSetters_SetCorrectValues()
     {
@@ -19,7 +22,7 @@ public class MutationSettingsTests
         var disabledMutations = new List<SpecificMutation> { SpecificMutation.AddToSubtract };
         var aiInstructions = "Focus on edge cases.";
 
-        // Act - Set all properties
+        // Act 
         settings.SolutionPath = solutionPath;
         settings.TestProjects = testProjects;
         settings.IgnoreProjects = ignoreProjects;
@@ -34,7 +37,7 @@ public class MutationSettingsTests
         settings.MutationTestTimeoutScaler = 2.5;
         settings.AiTestGenerationAdditionalInstructions = aiInstructions;
 
-        // Assert - Get and verify all properties
+        // Assert
         Assert.Multiple(() =>
         {
             Assert.That(settings.SolutionPath, Is.EqualTo(solutionPath));
@@ -54,7 +57,7 @@ public class MutationSettingsTests
     }
 
     [Test]
-    public void MutationSettings_Defaults_AreCorrect()
+    public void MutationSettingsDefaultsAreCorrect()
     {
         // Arrange & Act
         var settings = new MutationSettings();

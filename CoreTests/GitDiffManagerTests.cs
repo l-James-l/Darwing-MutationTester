@@ -348,7 +348,7 @@ public class GitDiffManagerTests
         _settings.DefaultGitComparisonBranch.Returns("main");
         _sut.InitialGitDiff();
 
-        // 1. Setup a patch that has an entry, but NO AddedLines (e.g. a deletion or rename only)
+        // Setup a patch that has an entry, but NO AddedLines (e.g. a deletion or rename only)
         var patch = Substitute.For<Patch>();
         var change = Substitute.For<PatchEntryChanges>();
         change.Path.Returns("File.cs");
@@ -358,7 +358,7 @@ public class GitDiffManagerTests
         patch.GetEnumerator().Returns(_ => changeList.GetEnumerator());
         ((IEnumerable)patch).GetEnumerator().Returns(_ => changeList.GetEnumerator());
 
-        // 2. Setup the file in the solution
+        // Setup the file in the solution
         var project = Substitute.For<IProjectContainer>();
         
         // Ensure LinesToMutate is empty after the logic runs
@@ -378,7 +378,6 @@ public class GitDiffManagerTests
         Assert.Multiple(() =>
         {
             // Verify that because no lines were added, the system called Fill()
-            // (Assuming LinesToMutate.Fill() populates the internal collection)
             Assert.That(sourceFile.LinesToMutate.None(), Is.False, "LinesToMutate should have been filled because the patch was empty of additions.");
             _mockGitEvent.Received().Publish();
         });

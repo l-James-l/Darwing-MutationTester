@@ -35,9 +35,8 @@ public class StatusCircleTagConverterTests
     [Test]
     public void Convert_GivenNotStartedStatus_ReturnsOriginalIndexString()
     {
-        // Arrange - Assuming there's a NotStarted or similar that isn't Succeeded/Failed/Ongoing
-        // If OperationStates is only those 3, use a cast to an undefined enum value to hit the default return
-        object[] values = { "5", (OperationStates)999 };
+        // Arrange
+        object[] values = { "5", OperationStates.NotStarted };
 
         // Act
         var result = _converter.Convert(values, typeof(string), null!, CultureInfo.InvariantCulture);

@@ -51,7 +51,6 @@ public class SettingsViewModelTests
     {
         // Arrange
         const string slnPath = @"C:\Projects\MySln.sln";
-        const string expectedDir = @"C:\Projects";
         const string expectedFile = @"C:\Projects\.darwingSolutionProfile.yml";
 
         _settings.SolutionPath.Returns(slnPath);
@@ -75,12 +74,6 @@ public class SettingsViewModelTests
     {
         // Arrange
         // Path.GetDirectoryName returns null for certain malformed strings or empty strings
-        _settings.SolutionPath.Returns("NotAPath");
-
-        // Act
-        // On many systems, GetDirectoryName("NotAPath") is empty, not null. 
-        // We can force a null by setting a string that doesn't contain directory separators if needed,
-        // but often Path.GetDirectoryName("") or very short strings trigger the null check.
         _settings.SolutionPath.Returns("C:");
 
         // Act
@@ -93,7 +86,6 @@ public class SettingsViewModelTests
 
     /// <summary>
     /// This test maps ALL properties from IMutationSettings to the SolutionProfileData returned by BuildNewProfileObject.
-    /// 
     /// </summary>
     [Test]
     public void BuildNewProfileObject_MapsAllPropertiesFromSettings()

@@ -67,8 +67,8 @@ public class GeminiApiHandlerTests
         _chatClient.GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions>(), Arg.Any<CancellationToken>())
                     .Returns(chatResponse);
 
-        string receivedCode = null;
-        string receivedDesc = null;
+        string? receivedCode = null;
+        string? receivedDesc = null;
 
         // Act
         await _sut.GenerateUnitTest(mutation, (code, desc) =>
@@ -98,7 +98,7 @@ public class GeminiApiHandlerTests
 
         // Assert
         Assert.That(callbackInvoked, Is.False);
-        await _chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default);
+        await _chatClient.DidNotReceiveWithAnyArgs().GetResponseAsync(default!);
     }
 
     [Test]
